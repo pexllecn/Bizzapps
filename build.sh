@@ -1,37 +1,24 @@
 #!/usr/bin/env bash
-# Assemble the source + vendored libraries into two self-contained outputs:
+# Assemble the isometric Power Platform showcase into:
 #   index.html     – full standalone document (open by double-click, offline-ok)
 #   artifact.html  – body-only build for publishing as a Claude Artifact
+# Pure SVG/JS — no third-party libraries.
 set -euo pipefail
 cd "$(dirname "$0")"
 
-FONTS='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">'
-
-VENDOR=(
-  vendor/three.min.js
-  vendor/CopyShader.js
-  vendor/LuminosityHighPassShader.js
-  vendor/EffectComposer.js
-  vendor/RenderPass.js
-  vendor/ShaderPass.js
-  vendor/UnrealBloomPass.js
-  vendor/OrbitControls.js
-)
+FONTS='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">'
 
 emit_scripts () {
-  for f in "${VENDOR[@]}"; do
-    echo "<script>"; cat "$f"; echo ""; echo "</script>"
-  done
-  echo "<script>"; cat src/data.js; echo ""; echo "</script>"
-  echo "<script>"; cat src/app.js;  echo ""; echo "</script>"
+  echo "<script>"; cat src/ms-data.js; echo ""; echo "</script>"
+  echo "<script>"; cat src/ms-iso.js;  echo ""; echo "</script>"
 }
 
-# ---- artifact.html (no doctype/html/head/body – the platform wraps it) ----
+# ---- artifact.html (no doctype/html/head/body — the platform wraps it) ----
 {
-  echo '<title>Bizzapps City</title>'
+  echo '<title>Power Platform Landscape</title>'
   echo "$FONTS"
-  echo '<style>'; cat src/styles.css; echo '</style>'
-  cat src/body.html
+  echo '<style>'; cat src/ms-styles.css; echo '</style>'
+  cat src/ms-body.html
   emit_scripts
 } > artifact.html
 
@@ -41,14 +28,13 @@ emit_scripts () {
   echo '<html lang="en"><head>'
   echo '<meta charset="utf-8">'
   echo '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
-  echo '<title>Bizzapps City · Interactive Portfolio</title>'
+  echo '<title>Power Platform Landscape · Bizzapps</title>'
   echo "$FONTS"
-  echo '<style>'; cat src/styles.css; echo '</style>'
+  echo '<style>'; cat src/ms-styles.css; echo '</style>'
   echo '</head><body>'
-  cat src/body.html
+  cat src/ms-body.html
   emit_scripts
   echo '</body></html>'
 } > index.html
 
-echo "Built:"
-wc -c index.html artifact.html
+echo "Built:"; wc -c index.html artifact.html
