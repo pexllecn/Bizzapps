@@ -193,7 +193,7 @@ body{
 <div id="hud"></div>
 
 <div id="hint">
-  <span><b>Drag</b> to pan</span><span class="sep"></span>
+  <span><b>Drag</b> to orbit</span><span class="sep"></span>
   <span><b>Scroll</b> to zoom</span><span class="sep"></span>
   <span><b>Click</b> a solution</span>
 </div>
@@ -374,7 +374,14 @@ window.ICONS = {
 
   const TILE = 92;
   const COS30 = Math.cos(Math.PI / 6);
-  const iso = (x, y, z) => [(x - y) * COS30 * TILE, (x + y) * 0.5 * TILE - z * TILE];
+  // yaw lets the whole scene orbit: rotate (x,y) on the ground plane, then project
+  let yaw = 0, cosY = 1, sinY = 0;
+  function setYaw(a) { yaw = a; cosY = Math.cos(a); sinY = Math.sin(a); }
+  const iso = (x, y, z) => {
+    const rx = x * cosY - y * sinY, ry = x * sinY + y * cosY;
+    return [(rx - ry) * COS30 * TILE, (rx + ry) * 0.5 * TILE - z * TILE];
+  };
+  const depthOf = (p) => (p[0] * cosY - p[1] * sinY) + (p[0] * sinY + p[1] * cosY);
 
   const layerColor = {};
   D.layers.forEach((l) => (layerColor[l.id] = l.color));
@@ -453,26 +460,40 @@ window.ICONS = {
   function serverTower(parent, gx, gy, w, d, h, base, glow, units) {
     const xm = gx - w / 2, xM = gx + w / 2, ym = gy - d / 2, yM = gy + d / 2;
     const uh = h / units, gap = uh * 0.14;
-    const R = (x, y, z) => iso(x, y, z);
-    for (let i = 0; i < units; i++) {
-      const z0 = i * uh + gap * 0.5, z1 = (i + 1) * uh - gap * 0.5;
-      // front-left face (y = yM) and front-right face (x = xM)
-      poly(parent, [R(xm, yM, z1), R(xM, yM, z1), R(xM, yM, z0), R(xm, yM, z0)], shade(base, -0.02));
-      poly(parent, [R(xM, ym, z1), R(xM, yM, z1), R(xM, yM, z0), R(xM, ym, z0)], shade(base, -0.22));
-      // thin dark seam between units on both faces
-      el("line", { x1: R(xm, yM, z1)[0], y1: R(xm, yM, z1)[1], x2: R(xM, yM, z1)[0], y2: R(xM, yM, z1)[1],
-        stroke: shade(base, -0.34), "stroke-width": 1 }, parent);
-      // glowing light bar across the right face, near the top of the unit
-      const b1 = z1 - uh * 0.16, b0 = z1 - uh * 0.34;
-      poly(parent, [R(xM, ym, b1), R(xM, yM, b1), R(xM, yM, b0), R(xM, ym, b0)], glow.bar);
-      // indicator LEDs on the left face, near the bottom of the unit
-      const l1 = z0 + uh * 0.52, l0 = z0 + uh * 0.30;
-      for (let k = 0; k < 3; k++) {
-        const a0 = xm + w * (0.24 + 0.24 * k), a1 = a0 + w * 0.11;
-        poly(parent, [R(a0, yM, l1), R(a1, yM, l1), R(a1, yM, l0), R(a0, yM, l0)], k === 1 ? glow.led : "#F2F8FF");
+    // pick the two viewer-facing vertical faces for the current orbit angle
+    const faces = [
+      { axis: "x", k: xM, a0: ym, a1: yM, c: [xM, gy] },
+      { axis: "x", k: xm, a0: ym, a1: yM, c: [xm, gy] },
+      { axis: "y", k: yM, a0: xm, a1: xM, c: [gx, yM] },
+      { axis: "y", k: ym, a0: xm, a1: xM, c: [gx, ym] },
+    ];
+    faces.forEach((f) => (f.depth = depthOf(f.c)));
+    faces.sort((p, q) => q.depth - p.depth);
+    const vis = faces.slice(0, 2);
+    const P = (f, a, z) => (f.axis === "x" ? iso(f.k, a, z) : iso(a, f.k, z));
+    const faceX = (f) => iso(f.c[0], f.c[1], 0)[0];
+    vis.sort((p, q) => faceX(p) - faceX(q));   // left face first, right face last
+    vis.forEach((f, fi) => {
+      const sh = fi === 0 ? -0.04 : -0.20;     // left lighter, right darker
+      const len = f.a1 - f.a0;
+      for (let i = 0; i < units; i++) {
+        const z0 = i * uh + gap * 0.5, z1 = (i + 1) * uh - gap * 0.5;
+        poly(parent, [P(f, f.a0, z1), P(f, f.a1, z1), P(f, f.a1, z0), P(f, f.a0, z0)], shade(base, sh));
+        el("line", { x1: P(f, f.a0, z1)[0], y1: P(f, f.a0, z1)[1], x2: P(f, f.a1, z1)[0], y2: P(f, f.a1, z1)[1],
+          stroke: shade(base, -0.34), "stroke-width": 1 }, parent);
+        // glowing light bar near the top of the unit
+        const b1 = z1 - uh * 0.16, b0 = z1 - uh * 0.34;
+        poly(parent, [P(f, f.a0, b1), P(f, f.a1, b1), P(f, f.a1, b0), P(f, f.a0, b0)], glow.bar);
+        // indicator LEDs near the bottom of the unit
+        const l1 = z0 + uh * 0.52, l0 = z0 + uh * 0.30;
+        for (let k = 0; k < 3; k++) {
+          const c0 = f.a0 + len * (0.24 + 0.24 * k), c1 = c0 + len * 0.11;
+          poly(parent, [P(f, c0, l1), P(f, c1, l1), P(f, c1, l0), P(f, c0, l0)], k === 1 ? glow.led : "#F2F8FF");
+        }
       }
-    }
+    });
     // top: bright cap + inset dark "screen" with tiny code lines
+    const R = (x, y, z) => iso(x, y, z);
     const Ah = R(xm, ym, h), Bh = R(xM, ym, h), Ch = R(xM, yM, h), Dh = R(xm, yM, h);
     poly(parent, [Ah, Bh, Ch, Dh], shade(base, 0.32), { stroke: shade(base, 0.46), "stroke-width": 1 });
     const q = 0.17;
@@ -596,7 +617,8 @@ window.ICONS = {
         Lnodes = $("#Lnodes"), Llabels = $("#Llabels");
   const nodes = {};   // id -> node
   const beams = [];
-  let selected = null;
+  let selectedId = null;   // persists across orbit rebuilds
+  let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
 
   /* ---- ground slab ---- */
   function buildGround() {
@@ -610,12 +632,11 @@ window.ICONS = {
     D.apps.forEach((a) => consider(a.pos, 1.1));
     const m = 0.6;
     gxm -= m; gxM += m; gym -= m; gyM += m;
-    const th = 0.16;
     const A = iso(gxm, gym, 0), B = iso(gxM, gym, 0), C = iso(gxM, gyM, 0), G = iso(gxm, gyM, 0);
-    const Bd = iso(gxM, gym, -th), Cd = iso(gxM, gyM, -th), Gd = iso(gxm, gyM, -th);
-    // thickness
-    poly(Lground, [G, C, Cd, Gd], "#C4D5EA");
-    poly(Lground, [C, B, Bd, Cd], "#B4C7DF");
+    // rotation-proof thickness: a copy of the slab dropped straight down; the
+    // exposed lower band reads as the slab's edge from any orbit angle
+    const thPx = 13;
+    poly(Lground, [A, B, C, G].map((p) => [p[0], p[1] + thPx]), "#BCCEDF");
     // top
     poly(Lground, [A, B, C, G], "#E9F1FB", { stroke: "#D3E0F0", "stroke-width": 1.5 });
     // grid
@@ -639,7 +660,8 @@ window.ICONS = {
 
   /* ---- one node (service / core / app) ---- */
   function drawNode(id, cfg, type) {
-    const g = el("g", { class: "node" }, Lnodes);
+    // during orbit rebuilds nodes appear immediately (no rise animation)
+    const g = el("g", { class: sceneFirst ? "node" : "node in" }, Lnodes);
     const base = layerColor[cfg.layer];
     const glow = GLOW[cfg.layer] || GLOW.data;
     let geo;
@@ -678,14 +700,13 @@ window.ICONS = {
     return node;
   }
 
-  function depthKey(cfg) { return cfg.pos[0] + cfg.pos[1]; }
-
   function buildNodes() {
     const list = [];
     list.push({ id: "dataverse", cfg: D.services.dataverse, type: "core" });
     for (const k in D.services) if (k !== "dataverse") list.push({ id: k, cfg: D.services[k], type: "service" });
     D.apps.forEach((a) => list.push({ id: a.id, cfg: a, type: "app" }));
-    list.sort((a, b) => depthKey(a.cfg) - depthKey(b.cfg));
+    // painter's order follows the current orbit angle (far nodes first)
+    list.sort((a, b) => depthOf(a.cfg.pos) - depthOf(b.cfg.pos));
     list.forEach((n, i) => { const node = drawNode(n.id, n.cfg, n.type); node.order = i; });
   }
 
@@ -727,7 +748,7 @@ window.ICONS = {
   function onHover(node, on) {
     if (dragging) return;
     node.g.classList.toggle("hi", on);
-    if (on && node !== selected) {
+    if (on && node.id !== selectedId) {
       const s = screenOf(node.top);
       tag.style.left = s.x + "px"; tag.style.top = (s.y - 24) + "px";
       tag.innerHTML = node.cfg.name + (node.cfg.client ? '<span class="c">' + node.cfg.client + "</span>" : "");
@@ -744,30 +765,44 @@ window.ICONS = {
     }
     return set;
   }
-  function selectNode(node) {
-    selected = node;
-    tag.classList.remove("show");
-    const rel = relatedIds(node);
-    svg.classList.add("focus");
-    for (const id in nodes) {
-      nodes[id].g.classList.toggle("sel", id === node.id);
-      nodes[id].g.classList.toggle("rel", id !== node.id && rel.has(id));
+  // apply .sel/.rel highlight classes from the current selection or layer filter.
+  // called after selecting, filtering, and after every orbit rebuild.
+  function applyFocusStates() {
+    for (const id in nodes) nodes[id].g.classList.remove("sel", "rel");
+    beams.forEach((bm) => { bm.grp.classList.remove("rel"); bm.pg.classList.remove("rel"); });
+    if (selectedId && nodes[selectedId]) {
+      const rel = relatedIds(nodes[selectedId]);
+      for (const id in nodes) {
+        nodes[id].g.classList.toggle("sel", id === selectedId);
+        nodes[id].g.classList.toggle("rel", id !== selectedId && rel.has(id));
+      }
+      beams.forEach((bm) => {
+        const touch = bm.aId === selectedId || bm.bId === selectedId;
+        bm.grp.classList.toggle("rel", touch); bm.pg.classList.toggle("rel", touch);
+      });
+      svg.classList.add("focus");
+    } else if (layerFilter) {
+      for (const id in nodes) nodes[id].g.classList.toggle("rel", nodes[id].cfg.layer === layerFilter);
+      beams.forEach((bm) => {
+        const r = (nodes[bm.aId] && nodes[bm.aId].cfg.layer === layerFilter) ||
+          (nodes[bm.bId] && nodes[bm.bId].cfg.layer === layerFilter);
+        bm.grp.classList.toggle("rel", r); bm.pg.classList.toggle("rel", r);
+      });
+      svg.classList.add("focus");
+    } else {
+      svg.classList.remove("focus");
     }
-    beams.forEach((bm) => {
-      const on = bm.aId === node.id || bm.bId === node.id ||
-        (node.type !== "app" && rel.has(bm.aId) && rel.has(bm.bId) && (bm.aId === node.id || bm.bId === node.id));
-      const touch = bm.aId === node.id || bm.bId === node.id;
-      bm.grp.classList.toggle("rel", touch);
-      bm.pg.classList.toggle("rel", touch);
-    });
+  }
+  function selectNode(node) {
+    selectedId = node.id;
+    tag.classList.remove("show");
+    applyFocusStates();
     fillPanel(node);
     $("#panel").classList.add("open");
   }
   function clearFocus() {
-    selected = null;
-    svg.classList.remove("focus");
-    for (const id in nodes) nodes[id].g.classList.remove("sel", "rel");
-    beams.forEach((bm) => { bm.grp.classList.remove("rel"); bm.pg.classList.remove("rel"); });
+    selectedId = null;
+    applyFocusStates();
     $("#panel").classList.remove("open");
   }
 
@@ -844,14 +879,34 @@ window.ICONS = {
   let VB = { x: 0, y: 0, w: 100, h: 100 }, fit = null;
   function applyVB() { svg.setAttribute("viewBox", `${VB.x.toFixed(1)} ${VB.y.toFixed(1)} ${VB.w.toFixed(1)} ${VB.h.toFixed(1)}`); }
   function computeFit() {
-    const padX = 90, padY = 90;
-    const w = maxX - minX + padX * 2, h = maxY - minY + padY * 2;
+    const cxc = (minX + maxX) / 2, cyc = (minY + maxY) / 2;
+    // pad generously so the scene never clips as it orbits (extent grows ~diagonally)
+    const w = (maxX - minX) * 1.24 + 150, h = (maxY - minY) * 1.24 + 150;
     const r = svg.getBoundingClientRect();
     const aspect = r.width / r.height || 1.6;
     let W = w, H = h;
     if (W / H > aspect) H = W / aspect; else W = H * aspect;
-    fit = { x: (minX + maxX) / 2 - W / 2, y: (minY + maxY) / 2 - H / 2, w: W, h: H };
+    fit = { x: cxc - W / 2, y: cyc - H / 2, w: W, h: H };
     VB = Object.assign({}, fit); applyVB();
+  }
+
+  // rebuild the whole scene at the current yaw (used when orbiting)
+  function buildScene(first) {
+    sceneFirst = !!first;
+    [Lground, Lbeams, Lparts, Lnodes, Llabels].forEach((g) => g.replaceChildren());
+    minX = 1e9; minY = 1e9; maxX = -1e9; maxY = -1e9;
+    for (const k in nodes) delete nodes[k];
+    beams.length = 0;
+    buildGround();
+    buildNodes();
+    buildBeams();
+    applyFocusStates();
+  }
+  let rebuildQueued = false;
+  function queueRebuild() {
+    if (rebuildQueued) return;
+    rebuildQueued = true;
+    requestAnimationFrame(() => { rebuildQueued = false; buildScene(false); });
   }
 
   let dragging = false, dragMoved = false, dsx = 0, dsy = 0;
@@ -861,11 +916,11 @@ window.ICONS = {
   });
   svg.addEventListener("pointermove", (e) => {
     if (!dragging) return;
-    if (Math.abs(e.clientX - dsx) + Math.abs(e.clientY - dsy) > 4) { dragMoved = true; tag.classList.remove("show"); }
-    const r = svg.getBoundingClientRect();
-    VB.x -= (e.clientX - dsx) * VB.w / r.width;
-    VB.y -= (e.clientY - dsy) * VB.h / r.height;
-    dsx = e.clientX; dsy = e.clientY; applyVB();
+    if (Math.abs(e.clientX - dsx) + Math.abs(e.clientY - dsy) > 3) { dragMoved = true; tag.classList.remove("show"); }
+    // horizontal drag orbits the scene around its centre
+    setYaw(yaw - (e.clientX - dsx) * 0.006);
+    dsx = e.clientX; dsy = e.clientY;
+    queueRebuild();
   });
   const endDrag = () => (dragging = false);
   svg.addEventListener("pointerup", endDrag);
@@ -931,18 +986,18 @@ window.ICONS = {
   }
   let layerFilter = null;
   function toggleLayer(id, chip) {
-    clearFocus();
+    selectedId = null;
+    $("#panel").classList.remove("open");
     const chips = document.querySelectorAll(".lchip");
-    if (layerFilter === id) { layerFilter = null; chips.forEach((c) => c.classList.remove("active", "dim")); svg.classList.remove("focus"); }
-    else {
+    if (layerFilter === id) {
+      layerFilter = null;
+      chips.forEach((c) => c.classList.remove("active", "dim"));
+    } else {
       layerFilter = id;
       chips.forEach((c) => { c.classList.remove("active"); c.classList.add("dim"); });
       chip.classList.add("active"); chip.classList.remove("dim");
-      svg.classList.add("focus");
-      for (const nid in nodes) nodes[nid].g.classList.toggle("rel", nodes[nid].cfg.layer === id);
-      beams.forEach((bm) => { const r = (nodes[bm.aId] && nodes[bm.aId].cfg.layer === id) || (nodes[bm.bId] && nodes[bm.bId].cfg.layer === id);
-        bm.grp.classList.toggle("rel", r); bm.pg.classList.toggle("rel", r); });
     }
+    applyFocusStates();
   }
 
   /* ---- intro / reveal ---- */
@@ -975,18 +1030,20 @@ window.ICONS = {
   function boot() {
     // give the solution buildings a little more breathing room from the core
     D.apps.forEach((a) => { a.pos = [a.pos[0] * 1.12, a.pos[1] * 1.12]; });
-    buildGround();
-    buildNodes();
-    buildBeams();
+    buildScene(true);
     buildChrome();
     computeFit();
     requestAnimationFrame(tick);
 
     $("#enter").addEventListener("click", enterScene);
     $("#panel .p-close").addEventListener("click", clearFocus);
-    $("#reset").addEventListener("click", () => { clearFocus(); layerFilter = null;
+    $("#reset").addEventListener("click", () => {
+      selectedId = null; layerFilter = null;
+      $("#panel").classList.remove("open");
       document.querySelectorAll(".lchip").forEach((c) => c.classList.remove("active", "dim"));
-      VB = Object.assign({}, fit); applyVB(); });
+      setYaw(0); buildScene(false);
+      VB = Object.assign({}, fit); applyVB();
+    });
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });
     addEventListener("resize", () => computeFit());
 
