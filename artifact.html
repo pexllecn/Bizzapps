@@ -374,11 +374,28 @@ window.ICONS = {
   const layerColor = {};
   D.layers.forEach((l) => (layerColor[l.id] = l.color));
 
+  // deterministic 0..1 hash so code-screen lines stay stable across redraws
+  function hash(str) {
+    str = String(str);
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0) / 4294967295;
+  }
+
   const brandColor = {
     dataverse: "#9B63D6", powerapps: "#742774", powerautomate: "#0B53CE",
     powerbi: "#E3A200", copilot: "#7A5CD6", powerpages: "#0E7C8B",
     sharepoint: "#036C70", teams: "#5B5FC7", outlook: "#0F6CBD",
     dynamics: "#0B53CE", azure: "#0078D4",
+  };
+
+  // bright neon accents per layer for glowing bars / LEDs / on-screen code
+  const GLOW = {
+    data:    { bar: "#C9A6FF", led: "#EBDCFF", code: "#D8BEF6" },
+    apps:    { bar: "#FF8AD0", led: "#FFCCEA", code: "#FFAFDE" },
+    auto:    { bar: "#6FB0FF", led: "#CBE3FF", code: "#9FC6FF" },
+    insight: { bar: "#FFC94D", led: "#FFEBAE", code: "#FFDD7A" },
+    exp:     { bar: "#3FE3D2", led: "#BFF6EF", code: "#6BEBDD" },
   };
 
   /* ---------- svg helpers ---------- */
@@ -424,6 +441,71 @@ window.ICONS = {
     // top face
     poly(parent, [Ah, Bh, Ch, Dh], shade(base, 0.30), { stroke: shade(base, 0.42), "stroke-width": 1 });
     return { top: iso(gx, gy, h), ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- a detailed isometric SERVER TOWER: stacked rack units with glowing
+         light bars, indicator LEDs and a code screen on top ---- */
+  function serverTower(parent, gx, gy, w, d, h, base, glow, units) {
+    const xm = gx - w / 2, xM = gx + w / 2, ym = gy - d / 2, yM = gy + d / 2;
+    const uh = h / units, gap = uh * 0.14;
+    const R = (x, y, z) => iso(x, y, z);
+    for (let i = 0; i < units; i++) {
+      const z0 = i * uh + gap * 0.5, z1 = (i + 1) * uh - gap * 0.5;
+      // front-left face (y = yM) and front-right face (x = xM)
+      poly(parent, [R(xm, yM, z1), R(xM, yM, z1), R(xM, yM, z0), R(xm, yM, z0)], shade(base, -0.02));
+      poly(parent, [R(xM, ym, z1), R(xM, yM, z1), R(xM, yM, z0), R(xM, ym, z0)], shade(base, -0.22));
+      // thin dark seam between units on both faces
+      el("line", { x1: R(xm, yM, z1)[0], y1: R(xm, yM, z1)[1], x2: R(xM, yM, z1)[0], y2: R(xM, yM, z1)[1],
+        stroke: shade(base, -0.34), "stroke-width": 1 }, parent);
+      // glowing light bar across the right face, near the top of the unit
+      const b1 = z1 - uh * 0.16, b0 = z1 - uh * 0.34;
+      poly(parent, [R(xM, ym, b1), R(xM, yM, b1), R(xM, yM, b0), R(xM, ym, b0)], glow.bar);
+      // indicator LEDs on the left face, near the bottom of the unit
+      const l1 = z0 + uh * 0.52, l0 = z0 + uh * 0.30;
+      for (let k = 0; k < 3; k++) {
+        const a0 = xm + w * (0.24 + 0.24 * k), a1 = a0 + w * 0.11;
+        poly(parent, [R(a0, yM, l1), R(a1, yM, l1), R(a1, yM, l0), R(a0, yM, l0)], k === 1 ? glow.led : "#F2F8FF");
+      }
+    }
+    // top: bright cap + inset dark "screen" with tiny code lines
+    const Ah = R(xm, ym, h), Bh = R(xM, ym, h), Ch = R(xM, yM, h), Dh = R(xm, yM, h);
+    poly(parent, [Ah, Bh, Ch, Dh], shade(base, 0.32), { stroke: shade(base, 0.46), "stroke-width": 1 });
+    const q = 0.17;
+    poly(parent, [R(xm + w * q, ym + d * q, h), R(xM - w * q, ym + d * q, h),
+      R(xM - w * q, yM - d * q, h), R(xm + w * q, yM - d * q, h)], "#101D34");
+    for (let r = 0; r < 4; r++) {
+      const yy = ym + d * (0.30 + 0.13 * r);
+      const x0 = xm + w * 0.26, x1 = xm + w * (0.42 + 0.30 * hash(gx + "" + gy + r));
+      const a = R(x0, yy, h), b = R(x1, yy, h);
+      el("line", { x1: a[0].toFixed(1), y1: a[1].toFixed(1), x2: b[0].toFixed(1), y2: b[1].toFixed(1),
+        stroke: glow.code, "stroke-width": 1.5, "stroke-linecap": "round", opacity: 0.9 }, parent);
+    }
+    return { top: iso(gx, gy, h), ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- a glowing isometric DATABASE CYLINDER (for the Dataverse core) ---- */
+  function dbTower(parent, gx, gy, size, h, base, glow) {
+    const A = iso(gx, gy, 0);
+    const R = size * TILE * 0.5, ry = R * 0.5, H = h * TILE;
+    const cx = A[0], cyB = A[1], cyT = A[1] - H;
+    // base shadow + bottom cap
+    el("ellipse", { cx, cy: cyB + 6, rx: R * 1.05, ry: ry * 1.05, fill: "#1E2D46", opacity: 0.12 }, parent);
+    el("ellipse", { cx, cy: cyB, rx: R, ry, fill: shade(base, -0.16) }, parent);
+    // cylinder body
+    el("rect", { x: cx - R, y: cyT, width: R * 2, height: H, fill: shade(base, -0.04) }, parent);
+    // soft vertical gloss
+    el("rect", { x: cx - R * 0.34, y: cyT, width: R * 0.5, height: H, fill: shade(base, 0.14), opacity: 0.5 }, parent);
+    // glowing rings
+    [0.30, 0.58, 0.86].forEach((f) => {
+      const y = cyT + H * f;
+      el("ellipse", { cx, cy: y, rx: R, ry, fill: "none", stroke: glow.bar, "stroke-width": 5 }, parent);
+      el("ellipse", { cx, cy: y - 1.5, rx: R, ry, fill: "none", stroke: "#FFFFFF", "stroke-width": 1.4, opacity: 0.6 }, parent);
+    });
+    // top disk
+    el("ellipse", { cx, cy: cyT, rx: R, ry, fill: shade(base, 0.30), stroke: shade(base, 0.46), "stroke-width": 1.5 }, parent);
+    el("ellipse", { cx, cy: cyT, rx: R * 0.62, ry: ry * 0.62, fill: "none", stroke: glow.bar, "stroke-width": 2, opacity: 0.85 }, parent);
+    bd(cx - R, cyT - ry - 6); bd(cx + R, cyB + ry + 8);
+    return { top: [cx, cyT], ground: [cx, cyB] };
   }
 
   /* =====================================================================
@@ -554,8 +636,14 @@ window.ICONS = {
   function drawNode(id, cfg, type) {
     const g = el("g", { class: "node" }, Lnodes);
     const base = layerColor[cfg.layer];
-    const isTall = type !== "service";
-    const geo = isoBox(g, cfg.pos[0], cfg.pos[1], cfg.size, cfg.size, cfg.h, base, isTall ? Math.round(cfg.h * 2) : 0);
+    const glow = GLOW[cfg.layer] || GLOW.data;
+    let geo;
+    if (type === "core") {
+      geo = dbTower(g, cfg.pos[0], cfg.pos[1], cfg.size, cfg.h, base, glow);
+    } else {
+      const units = Math.max(3, Math.round(cfg.h / 0.42));
+      geo = serverTower(g, cfg.pos[0], cfg.pos[1], cfg.size, cfg.size, cfg.h, base, glow, units);
+    }
 
     // product mark billboard (services + core)
     if (cfg.logo) {
