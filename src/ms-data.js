@@ -7,7 +7,7 @@
  * ========================================================================== */
 window.SHOWCASE = {
 
-  brand: { name: "BIZZAPPS", tagline: "Business solutions on the Microsoft Power Platform" },
+  brand: { name: "BizzApps", tagline: "Microsoft AI · Business Applications" },
 
   aggregate: [
     { label: "Solutions shipped", value: 8,   suffix: ""   },

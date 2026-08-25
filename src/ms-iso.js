@@ -57,6 +57,10 @@
     if (parent) parent.appendChild(e);
     return e;
   }
+  function href(node, url) {
+    node.setAttribute("href", url);
+    node.setAttributeNS("http://www.w3.org/1999/xlink", "href", url);
+  }
   let minX = 1e9, minY = 1e9, maxX = -1e9, maxY = -1e9;
   function bd(x, y) { if (x < minX) minX = x; if (y < minY) minY = y; if (x > maxX) maxX = x; if (y > maxY) maxY = y; }
   function poly(parent, pts, fill, extra) {
@@ -288,14 +292,21 @@
       const a = iso(gxm, y, 0), b = iso(gxM, y, 0);
       el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D3E0F0", "stroke-width": 1 }, Lground);
     }
-    // Microsoft badge + label near the back corner
+    // Microsoft Cloud badge near the back corner (real logo when available)
     const bp = iso(gxm + 0.55, gym + 0.55, 0);
     const bg = el("g", { transform: `translate(${bp[0].toFixed(1)},${bp[1].toFixed(1)})` }, Lground);
-    const cols = ["#F25022", "#7FBA00", "#00A4EF", "#FFB900"];
-    cols.forEach((c, i) => rrect(bg, (i % 2) * 9 - 8.5, Math.floor(i / 2) * 9 - 8.5, 8, 8, 1.5, c));
-    const tx = el("text", { x: 14, y: 2, fill: "#5B6B85", "font-size": 13, "font-weight": 700,
-      "font-family": "Segoe UI, Inter, sans-serif" }, bg);
-    tx.textContent = "Microsoft Cloud";
+    const ic = window.ICONS || {};
+    if (ic.microsoft) {
+      href(el("image", { x: 0, y: -12, width: 122, height: 26, preserveAspectRatio: "xMidYMid meet" }, bg), ic.microsoft);
+      const tx = el("text", { x: 130, y: 2, fill: "#7286A3", "font-size": 12.5, "font-weight": 600,
+        "font-family": "Segoe UI, Inter, sans-serif" }, bg);
+      tx.textContent = "Cloud";
+    } else {
+      const cols = ["#F25022", "#7FBA00", "#00A4EF", "#FFB900"];
+      cols.forEach((c, i) => rrect(bg, (i % 2) * 9 - 8.5, Math.floor(i / 2) * 9 - 8.5, 8, 8, 1.5, c));
+      el("text", { x: 14, y: 2, fill: "#5B6B85", "font-size": 13, "font-weight": 700,
+        "font-family": "Segoe UI, Inter, sans-serif" }, bg).textContent = "Microsoft Cloud";
+    }
   }
 
   /* ---- one node (service / core / app) ---- */
@@ -603,6 +614,11 @@
    * =================================================================== */
   function buildChrome() {
     $("#brand .t").firstChild.textContent = D.brand.name;
+    // EY + Microsoft brand logos (brand lockup + intro)
+    const ic = window.ICONS || {};
+    const setLogo = (sel, url) => document.querySelectorAll(sel).forEach((im) => { if (url) im.src = url; else im.remove(); });
+    setLogo("img.ey", ic.ey);
+    setLogo("img.ms", ic.microsoft);
     // hud + intro stats
     const hud = $("#hud"), iStats = $("#intro .intro-stats");
     D.aggregate.forEach((s) => {
