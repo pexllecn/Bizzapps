@@ -9,8 +9,9 @@ cd "$(dirname "$0")"
 FONTS='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">'
 
 emit_scripts () {
-  echo "<script>"; cat src/ms-data.js; echo ""; echo "</script>"
-  echo "<script>"; cat src/ms-iso.js;  echo ""; echo "</script>"
+  echo "<script>"; cat src/ms-data.js;  echo ""; echo "</script>"
+  echo "<script>"; cat src/ms-icons.js; echo ""; echo "</script>"
+  echo "<script>"; cat src/ms-iso.js;   echo ""; echo "</script>"
 }
 
 # ---- artifact.html (no doctype/html/head/body — the platform wraps it) ----

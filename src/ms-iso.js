@@ -131,6 +131,21 @@
     },
   };
 
+  /* Draw a product mark centred at (0,0) within a `half`-radius box.
+     Uses a real inlined icon from window.ICONS[id] when available,
+     otherwise the built-in drawn mark above. */
+  function drawMark(parent, id, half) {
+    const ic = (window.ICONS || {})[id];
+    if (ic) {
+      const im = el("image", { x: -half, y: -half, width: half * 2, height: half * 2,
+        preserveAspectRatio: "xMidYMid meet" }, parent);
+      im.setAttribute("href", ic);
+      im.setAttributeNS("http://www.w3.org/1999/xlink", "href", ic);
+      return;
+    }
+    if (M[id]) M[id](el("g", { transform: `scale(${(half / 14).toFixed(3)})` }, parent));
+  }
+
   /* =====================================================================
    *  Build the scene
    * =================================================================== */
@@ -188,13 +203,13 @@
     const geo = isoBox(g, cfg.pos[0], cfg.pos[1], cfg.size, cfg.size, cfg.h, base, isTall ? Math.round(cfg.h * 2) : 0);
 
     // product mark billboard (services + core)
-    if (cfg.logo && M[cfg.logo]) {
+    if (cfg.logo) {
       const a = geo.top;
-      const mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 30).toFixed(1)}) scale(1)` }, g);
+      const mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 30).toFixed(1)})` }, g);
       // little white disc behind the mark for contrast
       el("circle", { cx: 0, cy: 0, r: 19, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5,
         filter: "url(#soft)" }, mg);
-      M[cfg.logo](el("g", { transform: "scale(0.62)" }, mg));
+      drawMark(mg, cfg.logo, 13);
       bd(a[0] - 22, a[1] - 52); bd(a[0] + 22, a[1] - 8);
     }
     // label (with a white halo so it reads over any building or beam)
@@ -351,7 +366,7 @@
         const s = D.services[sid]; if (!s) return;
         const btn = el2("button", "p-svc");
         const svgm = el("svg", { viewBox: "-16 -16 32 32" }, null);
-        if (M[s.logo]) M[s.logo](el("g", { transform: "scale(0.9)" }, svgm));
+        drawMark(svgm, s.logo, 14);
         btn.appendChild(svgm);
         const span = document.createElement("span"); span.textContent = s.name; btn.appendChild(span);
         btn.addEventListener("click", () => { if (nodes[sid]) selectNode(nodes[sid]); });
