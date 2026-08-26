@@ -274,8 +274,10 @@ window.CITY = {
   },
 
   substrate: {
-    label: "The platform underneath — a governed Dataverse per client · Azure · Fabric · Purview",
-    etched: ["dataverse", "azure", "fabric", "purview"],
+    core: "dataverse",                       // the foundation, etched at the heart of the plate
+    coreLabel: "One governed Dataverse per client",
+    label: "The platform underneath — Azure · Fabric · Purview",
+    etched: ["azure", "fabric", "purview"],
   },
 
   /* six districts — spatial groupings, colour + team. NOT filters. */
@@ -925,17 +927,37 @@ window.ICONS["sharepoint"]="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIi
       const a = iso(gxm, y, 0), b = iso(gxM, y, 0);
       el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D6E2F1", "stroke-width": 1 }, Lground);
     }
-    // platform logos etched low-opacity into the plate (Dataverse · Azure · Fabric · Purview)
+    // ---- the Dataverse foundation, etched at the HEART of the plate ----
+    // (one per client — never a shared instance; the copy makes that explicit)
+    const cx = (gxm + gxM) / 2, cy = (gym + gyM) / 2;
+    const ringPts = (r) => [iso(cx - r, cy - r, 0), iso(cx + r, cy - r, 0), iso(cx + r, cy + r, 0), iso(cx - r, cy + r, 0)]
+      .map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+    [5.4, 4.0, 2.7].forEach((r, i) => el("polygon", { points: ringPts(r), fill: "none",
+      stroke: "#B9CCE6", "stroke-width": 1.4, opacity: 0.5 - i * 0.08 }, Lground));
+    if (D.substrate.core) {
+      const cp = iso(cx, cy, 0.03);
+      const cg = el("g", { transform: `translate(${cp[0].toFixed(1)},${cp[1].toFixed(1)})`, opacity: 0.14 }, Lground);
+      L.svg(cg, D.substrate.core, 60);
+    }
+
+    // ---- supporting platform (Azure · Fabric · Purview) etched along the front ----
     const et = D.substrate.etched || [];
     et.forEach((key, i) => {
-      const fx = gxm + (gxM - gxm) * (0.30 + 0.40 * (i / Math.max(1, et.length - 1)));
-      const p = iso(fx, gyM - 1.4, 0.02);
-      const gg = el("g", { transform: `translate(${p[0].toFixed(1)},${p[1].toFixed(1)})`, opacity: 0.16 }, Lground);
-      L.svg(gg, key, 24);
+      const fx = gxm + (gxM - gxm) * (0.34 + 0.32 * (i / Math.max(1, et.length - 1)));
+      const p = iso(fx, gyM - 1.35, 0.02);
+      const gg = el("g", { transform: `translate(${p[0].toFixed(1)},${p[1].toFixed(1)})`, opacity: 0.18 }, Lground);
+      L.svg(gg, key, 22);
     });
-    const lp = iso((gxm + gxM) / 2, gyM - 0.3, 0);
-    el("text", { x: lp[0].toFixed(1), y: (lp[1] + 6).toFixed(1), "text-anchor": "middle", fill: "#8DA0BC",
-      "font-size": 12.5, "font-weight": 600, "letter-spacing": ".02em",
+    // front captions — Dataverse-per-client first, then the supporting platform
+    const lp = iso((gxm + gxM) / 2, gyM - 0.5, 0);
+    if (D.substrate.coreLabel) {
+      const tg = el("g", { transform: `translate(${lp[0].toFixed(1)},${(lp[1] - 12).toFixed(1)})` }, Lground);
+      const im = el("g", { transform: "translate(-96,-1)" }, tg); L.svg(im, "dataverse", 8);
+      el("text", { x: -84, y: 4, fill: "#5E7291", "font-size": 13, "font-weight": 700,
+        "font-family": "Segoe UI, Inter, sans-serif" }, tg).textContent = D.substrate.coreLabel;
+    }
+    el("text", { x: lp[0].toFixed(1), y: (lp[1] + 8).toFixed(1), "text-anchor": "middle", fill: "#93A4BE",
+      "font-size": 11.5, "font-weight": 500, "letter-spacing": ".02em",
       "font-family": "Segoe UI, Inter, sans-serif" }, Lground).textContent = D.substrate.label;
   }
 

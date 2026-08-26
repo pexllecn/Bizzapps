@@ -21,8 +21,10 @@ window.CITY = {
   },
 
   substrate: {
-    label: "The platform underneath — a governed Dataverse per client · Azure · Fabric · Purview",
-    etched: ["dataverse", "azure", "fabric", "purview"],
+    core: "dataverse",                       // the foundation, etched at the heart of the plate
+    coreLabel: "One governed Dataverse per client",
+    label: "The platform underneath — Azure · Fabric · Purview",
+    etched: ["azure", "fabric", "purview"],
   },
 
   /* six districts — spatial groupings, colour + team. NOT filters. */
