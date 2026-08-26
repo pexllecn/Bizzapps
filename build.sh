@@ -20,20 +20,24 @@ emit_icons () {
       echo "window.ICONS[\"$id\"]=\"data:image/svg+xml;base64,$b64\";"
     fi
   done <<'MAP'
-dataverse|Dataverse_scalable.svg
-powerapps|PowerApps_scalable.svg
-powerautomate|PowerAutomate_scalable.svg
-powerpages|PowerPages_scalable.svg
-dynamics|Dynamics365_scalable.svg
-copilot|microsoft-copilot.svg
-powerplatform|PowerPlatform_scalable.svg
-fieldservice|FieldService_scalable.svg
-sales|Sales_scalable.svg
-customerservice|CustomerServices_scalable.svg
-contactcenter|ContactCenter_scalable.svg
-projectops|ProjectOperations_scalable.svg
 microsoft|brand-microsoft.svg
 ey|brand-ey.svg
+dynamics365|Dynamics365_scalable.svg
+d365-contact-center|ContactCenter_scalable.svg
+d365-customer-service|CustomerServices_scalable.svg
+d365-field-service|FieldService_scalable.svg
+d365-sales|Sales_scalable.svg
+d365-project-ops|ProjectOperations_scalable.svg
+power-apps|PowerApps_scalable.svg
+power-automate|PowerAutomate_scalable.svg
+power-pages|PowerPages_scalable.svg
+power-platform|PowerPlatform_scalable.svg
+dataverse|Dataverse_scalable.svg
+copilot|microsoft-copilot.svg
+copilot-studio|microsoft-copilot.svg
+azure|Microsoft_Azure.svg
+teams|teams-svgrepo-com.svg
+sharepoint|ms-sharepoint-svgrepo-com.svg
 MAP
   echo "</script>"
 }
@@ -41,6 +45,7 @@ MAP
 emit_scripts () {
   echo "<script>"; cat src/ms-data.js;  echo ""; echo "</script>"
   emit_icons
+  echo "<script>"; cat src/logos.js;    echo ""; echo "</script>"
   echo "<script>"; cat src/ms-iso.js;   echo ""; echo "</script>"
 }
 

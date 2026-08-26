@@ -1,7 +1,7 @@
 <div id="stage">
-  <svg id="scene" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isometric Power Platform landscape">
+  <svg id="scene" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isometric city of the EY Microsoft Business Applications practice">
     <defs>
-      <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
         <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#1E2D46" flood-opacity="0.16"/>
       </filter>
     </defs>
@@ -13,47 +13,54 @@
   </svg>
 </div>
 
-<div id="brand">
-  <div class="logos"><img class="ey" alt="EY"><span class="bar"></span><img class="ms" alt="Microsoft"></div>
-  <div class="t">BizzApps<small>Microsoft AI &middot; Business Applications</small></div>
-</div>
+<!-- header: EY · divider · practice wordmark -->
+<header id="brand">
+  <img class="ey" alt="EY">
+  <span class="divider"></span>
+  <span class="wordmark">Microsoft AI · Business Applications</span>
+</header>
 
-<div id="legend"><div class="cap">Platform layers</div></div>
+<!-- top-right: Microsoft corporate mark, small, an alliance signal -->
+<div id="ms-corner"><img class="ms" alt="Microsoft"></div>
 
-<div id="hud"></div>
+<!-- people met, quiet, bottom-left -->
+<div id="counter">people met · <b>0</b> / 50</div>
 
 <div id="hint">
   <span><b>Drag</b> to orbit</span><span class="sep"></span>
   <span><b>Scroll</b> to zoom</span><span class="sep"></span>
-  <span><b>Click</b> a solution</span>
+  <span><b>Click</b> anything</span>
 </div>
 
 <div id="reset">&#8635;&nbsp; Reset view</div>
+<div id="footer"></div>
 <div id="tag"></div>
 
-<aside id="panel" aria-label="Solution detail">
+<!-- detail panel -->
+<aside id="panel" aria-label="Detail">
   <div class="p-head">
-    <div class="p-tag"></div>
+    <div class="p-logos"></div>
     <button class="p-close" aria-label="Close">&times;</button>
-    <div class="p-cat"></div>
+    <div class="p-eyebrow"></div>
     <h2></h2>
-    <div class="p-client"></div>
+    <div class="p-life"></div>
   </div>
   <div class="p-body">
-    <p class="p-summary"></p>
-    <div class="p-sec-metrics"><div class="p-cap">Impact</div><div class="p-metrics"></div></div>
-    <div><div class="p-cap">What it does</div><div class="p-chips"></div></div>
-    <div class="p-sec-svcs"><div class="p-cap">Built with</div><div class="p-svcs"></div></div>
+    <p class="p-does"></p>
+    <div class="p-value-sec"><div class="p-cap">The value</div><div class="p-value"></div></div>
+    <div class="p-built-sec"><div class="p-cap">Built with</div><div class="p-built"></div></div>
+    <div class="p-run-sec"><div class="p-cap">Who runs it</div><div class="p-run"></div></div>
+    <div class="p-proof-sec"><div class="p-cap">Proven at</div><div class="p-proof"></div></div>
   </div>
 </aside>
 
+<!-- intro -->
 <div id="intro">
   <div class="intro-card">
     <div class="intro-logos"><img class="ey" alt="EY"><span class="bar"></span><img class="ms" alt="Microsoft"></div>
-    <div class="ey">EY &middot; Microsoft AI — Business Applications</div>
-    <h1>Solutions, built as a city.</h1>
-    <p class="lede">Every building is a business solution we shipped on Dataverse, Power Apps, Power Automate, Power BI and more. Explore the landscape and click any solution to see its story.</p>
-    <div class="intro-stats"></div>
-    <button id="enter">Explore the platform &rarr;</button>
+    <h1></h1>
+    <p class="lede"></p>
+    <button id="enter">Explore the city &rarr;</button>
+    <div class="intro-hint">Drag to orbit · scroll to zoom · click anything</div>
   </div>
 </div>

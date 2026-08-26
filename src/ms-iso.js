@@ -7,8 +7,9 @@
  * ========================================================================== */
 (function () {
   "use strict";
-  const D = window.SHOWCASE;
+  const D = window.CITY;
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const L = window.LOGOS;
   const NS = "http://www.w3.org/2000/svg";
   const $ = (s) => document.querySelector(s);
 
@@ -23,8 +24,10 @@
   };
   const depthOf = (p) => (p[0] * cosY - p[1] * sinY) + (p[0] * sinY + p[1] * cosY);
 
-  const layerColor = {};
-  D.layers.forEach((l) => (layerColor[l.id] = l.color));
+  const districtById = {};
+  D.districts.forEach((d) => (districtById[d.id] = d));
+  const LANDMARK = "#F3B700";        // EY-yellow beacon for proof landmarks
+  const colorOf = (b) => b.landmark ? "#5A6577" : (districtById[b.district] ? districtById[b.district].color : "#5A6577");
 
   // deterministic 0..1 hash so code-screen lines stay stable across redraws
   function hash(str) {
@@ -34,21 +37,10 @@
     return (h >>> 0) / 4294967295;
   }
 
-  const brandColor = {
-    dataverse: "#9B63D6", powerapps: "#742774", powerautomate: "#0B53CE",
-    powerbi: "#E3A200", copilot: "#7A5CD6", powerpages: "#0E7C8B",
-    sharepoint: "#036C70", teams: "#5B5FC7", outlook: "#0F6CBD",
-    dynamics: "#0B53CE", azure: "#0078D4",
-  };
-
-  // bright neon accents per layer for glowing bars / LEDs / on-screen code
-  const GLOW = {
-    data:    { bar: "#C9A6FF", led: "#EBDCFF", code: "#D8BEF6" },
-    apps:    { bar: "#FF8AD0", led: "#FFCCEA", code: "#FFAFDE" },
-    auto:    { bar: "#6FB0FF", led: "#CBE3FF", code: "#9FC6FF" },
-    insight: { bar: "#FFC94D", led: "#FFEBAE", code: "#FFDD7A" },
-    exp:     { bar: "#3FE3D2", led: "#BFF6EF", code: "#6BEBDD" },
-  };
+  // neon accents (glow bar / LEDs / on-screen code) derived from a base colour
+  function glowFor(hex) {
+    return { bar: shade(hex, 0.55), led: shade(hex, 0.75), code: shade(hex, 0.6) };
+  }
 
   /* ---------- svg helpers ---------- */
   function el(tag, attrs, parent) {
@@ -264,101 +256,120 @@
   let selectedId = null;   // persists across orbit rebuilds
   let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
 
-  /* ---- ground slab ---- */
+  /* ---- the substrate (shared platform plate; not clickable) ---- */
   function buildGround() {
     let gxm = 1e9, gxM = -1e9, gym = 1e9, gyM = -1e9;
     const consider = (pos, size) => {
       gxm = Math.min(gxm, pos[0] - size); gxM = Math.max(gxM, pos[0] + size);
       gym = Math.min(gym, pos[1] - size); gyM = Math.max(gyM, pos[1] + size);
     };
-    consider(D.services.dataverse.pos, 1.4);
-    for (const k in D.services) consider(D.services[k].pos, 1.1);
-    D.apps.forEach((a) => consider(a.pos, 1.1));
-    const m = 0.6;
+    D.buildings.forEach((b) => consider(b.pos, b.size + 0.4));
+    D.landmarks.forEach((b) => consider(b.pos, b.size + 0.4));
+    const m = 1.1;
     gxm -= m; gxM += m; gym -= m; gyM += m;
     const A = iso(gxm, gym, 0), B = iso(gxM, gym, 0), C = iso(gxM, gyM, 0), G = iso(gxm, gyM, 0);
-    // rotation-proof thickness: a copy of the slab dropped straight down; the
-    // exposed lower band reads as the slab's edge from any orbit angle
     const thPx = 13;
     poly(Lground, [A, B, C, G].map((p) => [p[0], p[1] + thPx]), "#BCCEDF");
-    // top
     poly(Lground, [A, B, C, G], "#E9F1FB", { stroke: "#D3E0F0", "stroke-width": 1.5 });
-    // grid
     for (let x = Math.ceil(gxm); x <= Math.floor(gxM); x++) {
       const a = iso(x, gym, 0), b = iso(x, gyM, 0);
-      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D3E0F0", "stroke-width": 1 }, Lground);
+      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D6E2F1", "stroke-width": 1 }, Lground);
     }
     for (let y = Math.ceil(gym); y <= Math.floor(gyM); y++) {
       const a = iso(gxm, y, 0), b = iso(gxM, y, 0);
-      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D3E0F0", "stroke-width": 1 }, Lground);
+      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D6E2F1", "stroke-width": 1 }, Lground);
     }
-    // Microsoft Cloud badge near the back corner (real logo when available)
-    const bp = iso(gxm + 0.55, gym + 0.55, 0);
-    const bg = el("g", { transform: `translate(${bp[0].toFixed(1)},${bp[1].toFixed(1)})` }, Lground);
-    const ic = window.ICONS || {};
-    if (ic.microsoft) {
-      href(el("image", { x: 0, y: -12, width: 122, height: 26, preserveAspectRatio: "xMidYMid meet" }, bg), ic.microsoft);
-      const tx = el("text", { x: 130, y: 2, fill: "#7286A3", "font-size": 12.5, "font-weight": 600,
-        "font-family": "Segoe UI, Inter, sans-serif" }, bg);
-      tx.textContent = "Cloud";
-    } else {
-      const cols = ["#F25022", "#7FBA00", "#00A4EF", "#FFB900"];
-      cols.forEach((c, i) => rrect(bg, (i % 2) * 9 - 8.5, Math.floor(i / 2) * 9 - 8.5, 8, 8, 1.5, c));
-      el("text", { x: 14, y: 2, fill: "#5B6B85", "font-size": 13, "font-weight": 700,
-        "font-family": "Segoe UI, Inter, sans-serif" }, bg).textContent = "Microsoft Cloud";
-    }
+    // platform logos etched low-opacity into the plate (Dataverse · Azure · Fabric · Purview)
+    const et = D.substrate.etched || [];
+    et.forEach((key, i) => {
+      const fx = gxm + (gxM - gxm) * (0.30 + 0.40 * (i / Math.max(1, et.length - 1)));
+      const p = iso(fx, gyM - 1.4, 0.02);
+      const gg = el("g", { transform: `translate(${p[0].toFixed(1)},${p[1].toFixed(1)})`, opacity: 0.16 }, Lground);
+      L.svg(gg, key, 24);
+    });
+    const lp = iso((gxm + gxM) / 2, gyM - 0.3, 0);
+    el("text", { x: lp[0].toFixed(1), y: (lp[1] + 6).toFixed(1), "text-anchor": "middle", fill: "#8DA0BC",
+      "font-size": 12.5, "font-weight": 600, "letter-spacing": ".02em",
+      "font-family": "Segoe UI, Inter, sans-serif" }, Lground).textContent = D.substrate.label;
   }
 
-  /* ---- one node (service / core / app) ---- */
-  function drawNode(id, cfg, type) {
-    // during orbit rebuilds nodes appear immediately (no rise animation)
-    const g = el("g", { class: sceneFirst ? "node" : "node in", "data-id": id }, Lnodes);
-    const base = layerColor[cfg.layer];
-    const glow = GLOW[cfg.layer] || GLOW.data;
-    let geo;
-    if (type === "core") {
-      geo = dbTower(g, cfg.pos[0], cfg.pos[1], cfg.size, cfg.h, base, glow);
+  /* population dots under a building — density reads as scale */
+  function drawPopulation(parent, ground, n, color) {
+    const per = 8, gap = 6, r = 2.3, rows = Math.ceil(n / per);
+    let drawn = 0;
+    const y0 = ground[1] + 7;
+    for (let row = 0; row < rows; row++) {
+      const inRow = Math.min(per, n - drawn), w = (inRow - 1) * gap;
+      for (let i = 0; i < inRow; i++)
+        el("circle", { cx: (ground[0] - w / 2 + i * gap).toFixed(1), cy: (y0 + row * gap).toFixed(1),
+          r, fill: color, opacity: 0.92, stroke: "#fff", "stroke-width": 0.6 }, parent);
+      drawn += inRow;
+    }
+    bd(ground[0] - 28, y0 + rows * gap + 2);
+    return 7 + rows * gap + 8;
+  }
+
+  /* ---- one building or landmark ---- */
+  function drawNode(b) {
+    const g = el("g", { class: sceneFirst ? "node" : "node in", "data-id": b.id, tabindex: "0",
+      role: "button", "aria-label": b.name }, Lnodes);
+    const color = colorOf(b), glow = glowFor(color);
+    const units = Math.max(3, Math.round(b.h / 0.42));
+    const geo = serverTower(g, b.pos[0], b.pos[1], b.size, b.size, b.h, color, glow, units);
+
+    let beacon = null, pulse = null;
+    if (b.landmark) {
+      // EY-yellow beacon on the roof — proof, not an offering
+      const a = geo.top;
+      const bg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1]).toFixed(1)})` }, g);
+      el("line", { x1: 0, y1: 0, x2: 0, y2: -18, stroke: LANDMARK, "stroke-width": 2.5, opacity: 0.55 }, bg);
+      beacon = el("circle", { cx: 0, cy: -20, r: 9, fill: LANDMARK, opacity: 0.55, filter: "url(#soft)" }, bg);
+      el("circle", { cx: 0, cy: -20, r: 3.6, fill: "#FFF4C2" }, bg);
+      bd(a[0] - 16, a[1] - 34); bd(a[0] + 16, a[1]);
     } else {
-      const units = Math.max(3, Math.round(cfg.h / 0.42));
-      geo = serverTower(g, cfg.pos[0], cfg.pos[1], cfg.size, cfg.size, cfg.h, base, glow, units);
+      // primary Microsoft product mark on a white disc
+      const key = (b.microsoftProducts || [])[0];
+      if (key) {
+        const a = geo.top;
+        const mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 30).toFixed(1)})` }, g);
+        el("circle", { cx: 0, cy: 0, r: 19, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
+        L.svg(mg, key, 13);
+        bd(a[0] - 22, a[1] - 52); bd(a[0] + 22, a[1] - 8);
+      }
+      if (b.flagship) {
+        const a = geo.top;
+        pulse = el("circle", { cx: a[0], cy: a[1] - 2, r: 20, fill: "none", stroke: color, "stroke-width": 2, opacity: 0.5 }, g);
+      }
     }
 
-    // product mark billboard (services + core)
-    if (cfg.logo) {
-      const a = geo.top;
-      const mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 30).toFixed(1)})` }, g);
-      // little white disc behind the mark for contrast
-      el("circle", { cx: 0, cy: 0, r: 19, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5,
-        filter: "url(#soft)" }, mg);
-      drawMark(mg, cfg.logo, 13);
-      bd(a[0] - 22, a[1] - 52); bd(a[0] + 22, a[1] - 8);
-    }
-    // label (with a white halo so it reads over any building or beam)
+    // population dots
+    let labelDrop = 25;
+    if (!b.landmark && b.pod && b.pod.headcount) labelDrop = drawPopulation(g, geo.ground, b.pod.headcount, color) + 10;
+
+    // label
     const lp = geo.ground;
-    const t = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 25).toFixed(1), "text-anchor": "middle",
-      "font-size": 12.5, "font-weight": type === "app" ? 700 : 600, fill: "#2A3A57",
+    const t = el("text", { x: lp[0].toFixed(1), y: (lp[1] + labelDrop).toFixed(1), "text-anchor": "middle",
+      "font-size": b.landmark ? 12 : 12.5, "font-weight": b.flagship ? 800 : 700, fill: b.landmark ? "#7A6A16" : "#2A3A57",
       stroke: "#FFFFFF", "stroke-width": 3.5, "paint-order": "stroke", "stroke-linejoin": "round",
       "font-family": "Segoe UI, Inter, sans-serif", class: "nlabel" }, Llabels);
-    t.textContent = cfg.name;
-    bd(lp[0] - 60, lp[1] + 34); bd(lp[0] + 60, lp[1] + 34);
+    t.textContent = b.name;
+    bd(lp[0] - 74, lp[1] + labelDrop + 8); bd(lp[0] + 74, lp[1] + labelDrop + 8);
 
-    const node = { id, type, cfg, g, label: t, top: geo.top, ground: geo.ground };
-    nodes[id] = node;
+    const node = { id: b.id, b, g, top: geo.top, ground: geo.ground, beacon, pulse, flagship: !!b.flagship, landmark: !!b.landmark };
+    nodes[b.id] = node;
 
     g.addEventListener("pointerenter", () => onHover(node, true));
     g.addEventListener("pointerleave", () => onHover(node, false));
     g.addEventListener("click", (e) => { if (!dragMoved) { e.stopPropagation(); selectNode(node); } });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectNode(node); } });
     return node;
   }
 
   function buildNodes() {
-    const list = [];
-    list.push({ id: "dataverse", cfg: D.services.dataverse, type: "core" });
-    for (const k in D.services) if (k !== "dataverse") list.push({ id: k, cfg: D.services[k], type: "service" });
-    D.apps.forEach((a) => list.push({ id: a.id, cfg: a, type: "app" }));
+    const list = D.buildings.map((b) => b).concat(D.landmarks.map((b) => Object.assign({ landmark: true }, b)));
     // painter's order follows the current orbit angle (far nodes first)
-    list.sort((a, b) => depthOf(a.cfg.pos) - depthOf(b.cfg.pos));
-    list.forEach((n, i) => { const node = drawNode(n.id, n.cfg, n.type); node.order = i; });
+    list.sort((a, b) => depthOf(a.pos) - depthOf(b.pos));
+    list.forEach((b, i) => { const node = drawNode(b); node.order = i; });
   }
 
   /* ---- beams (data flows) ---- */
@@ -381,11 +392,22 @@
     for (let i = 0; i < n; i++) dots.push({ c: el("circle", { r: o.r || 2.7, fill: color, opacity: 0.95 }, pg), t: i / n });
     beams.push({ grp, pg, path, dots, len: 0, aId, bId, speed: 0.10 + Math.random() * 0.06 });
   }
+  function districtAnchor(did) {
+    const inD = D.buildings.filter((b) => b.district === did);
+    return ((inD.find((b) => b.flagship)) || inD[0] || {}).id;
+  }
   function buildBeams() {
-    // faint platform fabric: Dataverse to every service
-    for (const k in D.services) if (k !== "dataverse") addBeam("dataverse", k, brandColor.dataverse, { w: 1.5, op: 0.24, n: 1, r: 2.3 });
-    // solution -> service links (the lively flows)
-    D.apps.forEach((a) => (a.uses || []).forEach((s) => addBeam(a.id, s, brandColor[s] || layerColor[a.layer], { w: 2.4, op: 0.5 })));
+    // intra-district connectors — each district wired together (ambient drift)
+    D.districts.forEach((d) => {
+      const a = districtAnchor(d.id); if (!a) return;
+      D.buildings.forEach((b) => {
+        if (b.district === d.id && b.id !== a) addBeam(a, b.id, d.color, { w: 1.8, op: 0.34, n: 1, r: 2.3 });
+      });
+    });
+    // landmark → the districts it drew on (visible EY-yellow line)
+    D.landmarks.forEach((lm) => (lm.connectsTo || []).forEach((did) => {
+      const a = districtAnchor(did); if (a) addBeam(lm.id, a, LANDMARK, { w: 2.2, op: 0.5, n: 2, r: 2.6 });
+    }));
   }
 
   /* =====================================================================
@@ -402,22 +424,24 @@
     if (on && node.id !== selectedId) {
       const s = screenOf(node.top);
       tag.style.left = s.x + "px"; tag.style.top = (s.y - 24) + "px";
-      tag.innerHTML = node.cfg.name + (node.cfg.client ? '<span class="c">' + node.cfg.client + "</span>" : "");
+      const sub = node.landmark ? "Proof" : (node.b.pod ? node.b.pod.headcount + " people" : "");
+      tag.innerHTML = node.b.name + (sub ? '<span class="c">' + sub + "</span>" : "");
       tag.classList.add("show");
     } else if (!on) tag.classList.remove("show");
   }
 
   function relatedIds(node) {
     const set = new Set([node.id]);
-    if (node.type === "app") (node.cfg.uses || []).forEach((s) => set.add(s));
-    else { // service/core: solutions that use it + dataverse
-      D.apps.forEach((a) => { if (a.id === node.id || (a.uses || []).includes(node.id)) set.add(a.id); });
-      if (node.id !== "dataverse") set.add("dataverse");
+    if (node.landmark) {
+      D.buildings.forEach((b) => { if ((b.proof || []).includes(node.id)) set.add(b.id); });
+    } else {
+      (node.b.proof || []).forEach((id) => set.add(id));
+      D.buildings.forEach((b) => { if (b.district === node.b.district) set.add(b.id); });
     }
     return set;
   }
-  // apply .sel/.rel highlight classes from the current selection or layer filter.
-  // called after selecting, filtering, and after every orbit rebuild.
+  // apply .sel/.rel highlight classes from the current selection; called after
+  // selecting and after every orbit rebuild.
   function applyFocusStates() {
     for (const id in nodes) nodes[id].g.classList.remove("sel", "rel");
     beams.forEach((bm) => { bm.grp.classList.remove("rel"); bm.pg.classList.remove("rel"); });
@@ -432,84 +456,149 @@
         bm.grp.classList.toggle("rel", touch); bm.pg.classList.toggle("rel", touch);
       });
       svg.classList.add("focus");
-    } else if (layerFilter) {
-      for (const id in nodes) nodes[id].g.classList.toggle("rel", nodes[id].cfg.layer === layerFilter);
-      beams.forEach((bm) => {
-        const r = (nodes[bm.aId] && nodes[bm.aId].cfg.layer === layerFilter) ||
-          (nodes[bm.bId] && nodes[bm.bId].cfg.layer === layerFilter);
-        bm.grp.classList.toggle("rel", r); bm.pg.classList.toggle("rel", r);
-      });
-      svg.classList.add("focus");
     } else {
       svg.classList.remove("focus");
     }
   }
+  /* ---- people-met counter (discovered by exploring, never announced) ---- */
+  const met = new Set();
+  let peopleMet = 0;
+  const totalPeople = D.buildings.reduce((s, b) => s + (b.pod ? b.pod.headcount : 0), 0);
+  const totalBuildings = D.buildings.length;
+  function updateCounter() {
+    const c = $("#counter"); if (!c) return;
+    if (met.size >= totalBuildings) c.innerHTML = '<b>50 people</b> · one practice · Advise. Build. Run.';
+    else c.innerHTML = 'people met · <b>' + peopleMet + '</b> / ' + totalPeople;
+  }
+  function markMet(node) {
+    if (node.landmark || met.has(node.id)) return;
+    met.add(node.id); peopleMet += (node.b.pod ? node.b.pod.headcount : 0); updateCounter();
+  }
+
   function selectNode(node) {
     selectedId = node.id;
     tag.classList.remove("show");
+    markMet(node);
     applyFocusStates();
     fillPanel(node);
-    $("#panel").classList.add("open");
+    const p = $("#panel"); p.classList.add("open"); p.scrollTop = 0;
+    // NB: selecting never moves the camera — only the Reset button and a
+    // "Proven at" jump are allowed to do that.
   }
   function clearFocus() {
     selectedId = null;
     applyFocusStates();
     $("#panel").classList.remove("open");
   }
+  function el2(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
+  const cleanCopy = (s) => s.replace(/\s*\/\/\s*VERIFY\s*$/i, "");
+  const shortLandmark = (name) => name.split("—")[0].trim();
+
+  function proofLink(label) {
+    const a = el2("button", "p-proof-link");
+    a.innerHTML = '<span class="arw">&rarr;</span>'; const s = document.createElement("span");
+    s.textContent = label; a.appendChild(s); return a;
+  }
+
+  // the ONLY navigation allowed to move the camera: jump to a proof landmark
+  let vbAnim = null;
+  function tweenVBCenter(cx, cy, dur, onDone) {
+    const fromX = VB.x, fromY = VB.y, toX = cx - VB.w / 2, toY = cy - VB.h / 2;
+    if (REDUCED) { VB.x = toX; VB.y = toY; applyVB(); if (onDone) onDone(); return; }
+    const t0 = performance.now();
+    cancelAnimationFrame(vbAnim);
+    (function step(now) {
+      const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
+      VB.x = fromX + (toX - fromX) * e; VB.y = fromY + (toY - fromY) * e; applyVB();
+      if (t < 1) vbAnim = requestAnimationFrame(step); else if (onDone) onDone();
+    })(t0);
+  }
+  function flyToAndSelect(id) {
+    const n = nodes[id]; if (!n) return;
+    tweenVBCenter(n.top[0], n.top[1] - 40, 650, () => selectNode(n));
+  }
 
   /* ---- panel ---- */
   function fillPanel(node) {
-    const c = node.cfg, p = $("#panel");
-    const isApp = node.type === "app";
-    const layer = D.layers.find((l) => l.id === c.layer) || { name: "", color: "#888" };
-    p.querySelector(".p-cat").innerHTML = '<span class="dot" style="background:' + layer.color + '"></span>' +
-      (isApp ? layer.name + " solution" : (node.type === "core" ? "Data foundation" : "Platform service"));
-    p.querySelector(".p-cat").style.color = layer.color;
-    p.querySelector("h2").textContent = c.name;
-    p.querySelector(".p-client").textContent = isApp ? c.client : (c.blurb || "");
-    p.querySelector(".p-tag").textContent = isApp ? (c.year || "") : "Microsoft";
-    p.querySelector(".p-summary").textContent = isApp ? c.summary : (c.blurb || "");
+    const p = $("#panel"), b = node.b, isLm = node.landmark, dist = districtById[b.district];
+    const q = (s) => p.querySelector(s);
 
-    // metrics
-    const secM = p.querySelector(".p-sec-metrics"), mWrap = p.querySelector(".p-metrics");
-    mWrap.innerHTML = "";
-    if (isApp && c.metrics) {
-      secM.style.display = "";
-      c.metrics.forEach((m) => {
-        const cell = el2("div", "p-metric");
-        const v = el2("div", "mv " + (m.value < 0 ? "dn" : "up"));
-        const l = el2("div", "ml"); l.textContent = m.label;
-        cell.appendChild(v); cell.appendChild(l); mWrap.appendChild(cell);
-        countUp(v, m.value, m.suffix || "");
+    const eye = q(".p-eyebrow");
+    eye.textContent = isLm ? "Proof" : (dist ? dist.name : "");
+    eye.style.color = isLm ? "#B08900" : (dist ? dist.color : "#68758C");
+    q("h2").textContent = b.name;
+
+    // product logos, top-right (1–3)
+    const logos = q(".p-logos"); logos.innerHTML = "";
+    if (!isLm) (b.microsoftProducts || []).slice(0, 3).forEach((k) => logos.appendChild(L.html(k, 28)));
+
+    // lifecycle · Advise / Build / Run
+    const life = q(".p-life"); life.innerHTML = "";
+    if (!isLm && b.lifecycle) {
+      ["advise", "build", "run"].forEach((stage) => {
+        const on = b.lifecycle.indexOf(stage) >= 0;
+        const seg = el2("span", "p-life-seg" + (on ? " on" : ""));
+        seg.innerHTML = '<span class="d"></span>' + stage.charAt(0).toUpperCase() + stage.slice(1);
+        life.appendChild(seg);
       });
-    } else secM.style.display = "none";
+      life.style.display = "";
+    } else life.style.display = "none";
 
-    // features / chips
-    const chipCap = p.querySelector(".p-chips").previousElementSibling;
-    const cWrap = p.querySelector(".p-chips"); cWrap.innerHTML = "";
-    const feats = isApp ? c.features : solutionsUsing(node.id).map((a) => a.name);
-    chipCap.textContent = isApp ? "What it does" : "Solutions using it";
-    (feats || []).forEach((f) => { const ch = el2("span", "p-chip"); ch.textContent = f; cWrap.appendChild(ch); });
-    cWrap.parentElement.style.display = (feats && feats.length) ? "" : "none";
+    // what it does / landmark story
+    q(".p-does").textContent = isLm ? b.story : b.whatItDoes;
 
-    // built-with services (apps only)
-    const secS = p.querySelector(".p-sec-svcs"), sWrap = p.querySelector(".p-svcs"); sWrap.innerHTML = "";
-    if (isApp && c.uses) {
-      secS.style.display = "";
-      c.uses.forEach((sid) => {
-        const s = D.services[sid]; if (!s) return;
-        const btn = el2("button", "p-svc");
-        const svgm = el("svg", { viewBox: "-16 -16 32 32" }, null);
-        drawMark(svgm, s.logo, 14);
-        btn.appendChild(svgm);
-        const span = document.createElement("span"); span.textContent = s.name; btn.appendChild(span);
-        btn.addEventListener("click", () => { if (nodes[sid]) selectNode(nodes[sid]); });
-        sWrap.appendChild(btn);
+    // the value — exactly three lines
+    const vSec = q(".p-value-sec"), vWrap = q(".p-value"); vWrap.innerHTML = "";
+    if (!isLm && b.value) {
+      vSec.style.display = "";
+      b.value.forEach((line) => {
+        const row = el2("div", "p-vline");
+        const ar = el2("span", "p-arrow"); ar.textContent = "→";
+        const tx = document.createElement("span"); tx.textContent = cleanCopy(line);
+        row.appendChild(ar); row.appendChild(tx); vWrap.appendChild(row);
       });
-    } else secS.style.display = "none";
+    } else vSec.style.display = "none";
+
+    // built with — product chips
+    const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
+    if (!isLm && b.microsoftProducts) {
+      bSec.style.display = "";
+      b.microsoftProducts.forEach((k) => bWrap.appendChild(L.chip(k)));
+    } else bSec.style.display = "none";
+
+    // who runs it — pod dots + headcount + lead
+    const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
+    if (!isLm && b.pod) {
+      rSec.style.display = "";
+      const dots = el2("span", "p-run-dots");
+      for (let i = 0; i < b.pod.headcount; i++) dots.appendChild(document.createElement("i"));
+      const txt = el2("span", "p-run-txt");
+      txt.textContent = b.pod.headcount + " people" + (b.pod.lead ? " · " + b.pod.lead : "");
+      rWrap.appendChild(dots); rWrap.appendChild(txt);
+    } else rSec.style.display = "none";
+
+    // proven at (building) / built by (landmark)
+    const pSec = q(".p-proof-sec"), pWrap = q(".p-proof"); pWrap.innerHTML = "";
+    const cap = pSec.querySelector(".p-cap");
+    if (isLm) {
+      const contrib = D.buildings.filter((x) => (x.proof || []).includes(node.id));
+      if (contrib.length) {
+        pSec.style.display = ""; cap.textContent = "Built by";
+        contrib.forEach((x) => { const a = proofLink(x.name); a.addEventListener("click", () => selectNode(nodes[x.id])); pWrap.appendChild(a); });
+      } else pSec.style.display = "none";
+    } else {
+      const pr = (b.proof || []);
+      if (pr.length) {
+        pSec.style.display = ""; cap.textContent = "Proven at";
+        pr.forEach((id) => {
+          const lm = D.landmarks.find((l) => l.id === id); if (!lm) return;
+          const a = proofLink(shortLandmark(lm.name));
+          a.addEventListener("click", () => flyToAndSelect(id));
+          pWrap.appendChild(a);
+        });
+      } else pSec.style.display = "none";
+    }
   }
-  function solutionsUsing(id) { return D.apps.filter((a) => (a.uses || []).includes(id)); }
-  function el2(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
 
   function countUp(elm, to, suffix) {
     const s = String(to), dot = s.indexOf("."), dec = dot < 0 ? 0 : s.length - dot - 1;
@@ -617,61 +706,42 @@
           dp.c.setAttribute("cx", pt.x.toFixed(1)); dp.c.setAttribute("cy", pt.y.toFixed(1)); } catch (_) {}
       }
     }
+    // ambient: a soft pulse on the flagship, a slow glow on landmark beacons
+    const ts = now / 1000;
+    for (const id in nodes) {
+      const n = nodes[id];
+      if (n.pulse) {
+        const s = Math.sin(ts * 1.5);
+        n.pulse.setAttribute("r", (21 + s * 6).toFixed(1));
+        n.pulse.setAttribute("opacity", (0.28 + 0.22 * (0.5 + 0.5 * s)).toFixed(2));
+      }
+      if (n.beacon) n.beacon.setAttribute("opacity", (0.4 + 0.32 * (0.5 + 0.5 * Math.sin(ts * 2.1))).toFixed(2));
+    }
   }
 
   /* =====================================================================
    *  Chrome (brand / legend / hud / intro)
    * =================================================================== */
   function buildChrome() {
-    $("#brand .t").firstChild.textContent = D.brand.name;
-    // EY + Microsoft brand logos (brand lockup + intro)
+    // EY (header + intro) and the small Microsoft alliance mark (top-right)
     const ic = window.ICONS || {};
-    const setLogo = (sel, url) => document.querySelectorAll(sel).forEach((im) => { if (url) im.src = url; else im.remove(); });
-    setLogo("img.ey", ic.ey);
-    setLogo("img.ms", ic.microsoft);
-    // hud + intro stats
-    const hud = $("#hud"), iStats = $("#intro .intro-stats");
-    D.aggregate.forEach((s) => {
-      const a = el2("div", "stat");
-      a.innerHTML = '<div class="n">' + s.value.toLocaleString("en-US") + '<span class="s">' + (s.suffix || "") +
-        '</span></div><div class="l">' + s.label + "</div>";
-      hud.appendChild(a);
-      const b = el2("div", "s");
-      b.innerHTML = '<div class="n">' + s.value.toLocaleString("en-US") + '<span class="s2">' + (s.suffix || "") +
-        '</span></div><div class="l">' + s.label + "</div>";
-      iStats.appendChild(b);
-    });
-    // legend
-    const legend = $("#legend");
-    D.layers.forEach((l) => {
-      const c = el2("div", "lchip");
-      c.innerHTML = '<span class="dot" style="background:' + l.color + '"></span>' + l.name;
-      c.addEventListener("click", () => toggleLayer(l.id, c));
-      legend.appendChild(c);
-    });
-  }
-  let layerFilter = null;
-  function toggleLayer(id, chip) {
-    selectedId = null;
-    $("#panel").classList.remove("open");
-    const chips = document.querySelectorAll(".lchip");
-    if (layerFilter === id) {
-      layerFilter = null;
-      chips.forEach((c) => c.classList.remove("active", "dim"));
-    } else {
-      layerFilter = id;
-      chips.forEach((c) => { c.classList.remove("active"); c.classList.add("dim"); });
-      chip.classList.add("active"); chip.classList.remove("dim");
-    }
-    applyFocusStates();
+    document.querySelectorAll("img.ey").forEach((im) => { if (ic.ey) im.src = ic.ey; else im.remove(); });
+    document.querySelectorAll("img.ms").forEach((im) => { if (ic.microsoft) im.src = ic.microsoft; else im.remove(); });
+    // copy from content
+    const set = (sel, txt) => { const e = $(sel); if (e) e.textContent = txt; };
+    set("#brand .wordmark", D.practice.wordmark);
+    set("#intro h1", D.practice.hero.headline);
+    set("#intro .lede", D.practice.hero.sub);
+    set("#footer", D.practice.footer);
+    updateCounter();
   }
 
   /* ---- intro / reveal ---- */
   function reveal() {
-    ["#brand", "#legend", "#hud", "#hint", "#reset"].forEach((s) => $(s).classList.add("in"));
-    // stagger nodes rising, back-to-front
+    ["#brand", "#ms-corner", "#hint", "#reset", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
+    // stagger buildings rising, back-to-front
     const arr = Object.values(nodes).sort((a, b) => a.order - b.order);
-    arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 55));
+    arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 40));
   }
   function enterScene() {
     const intro = $("#intro"); intro.classList.add("gone");
@@ -694,8 +764,6 @@
    *  Boot
    * =================================================================== */
   function boot() {
-    // give the solution buildings a little more breathing room from the core
-    D.apps.forEach((a) => { a.pos = [a.pos[0] * 1.12, a.pos[1] * 1.12]; });
     buildScene(true);
     buildChrome();
     computeFit();
@@ -703,19 +771,16 @@
 
     $("#enter").addEventListener("click", enterScene);
     $("#panel .p-close").addEventListener("click", clearFocus);
-    $("#reset").addEventListener("click", () => {
-      selectedId = null; layerFilter = null;
-      $("#panel").classList.remove("open");
-      document.querySelectorAll(".lchip").forEach((c) => c.classList.remove("active", "dim"));
+    $("#reset").addEventListener("click", () => {   // the only button that moves the camera back
       setYaw(0); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
     });
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });
     addEventListener("resize", () => computeFit());
 
-    // expose small API
+    // small API (also used by automated checks)
     window.Landscape = { select: (id) => nodes[id] && selectNode(nodes[id]), reset: clearFocus,
-      enter: enterScene, ids: () => Object.keys(nodes) };
+      enter: enterScene, ids: () => Object.keys(nodes), fly: flyToAndSelect };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
