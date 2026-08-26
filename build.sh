@@ -16,8 +16,14 @@ emit_icons () {
   while IFS='|' read -r id file; do
     [ -z "$id" ] && continue
     if [ -f "icons/$file" ]; then
+      case "$file" in
+        *.png)        mime="image/png" ;;
+        *.webp)       mime="image/webp" ;;
+        *.jpg|*.jpeg) mime="image/jpeg" ;;
+        *)            mime="image/svg+xml" ;;
+      esac
       b64=$(base64 -w0 "icons/$file")
-      echo "window.ICONS[\"$id\"]=\"data:image/svg+xml;base64,$b64\";"
+      echo "window.ICONS[\"$id\"]=\"data:$mime;base64,$b64\";"
     fi
   done <<'MAP'
 microsoft|brand-microsoft.svg
@@ -32,12 +38,16 @@ power-apps|PowerApps_scalable.svg
 power-automate|PowerAutomate_scalable.svg
 power-pages|PowerPages_scalable.svg
 power-platform|PowerPlatform_scalable.svg
+power-bi|500px-New_Power_BI_Logo.svg.webp
 dataverse|Dataverse_scalable.svg
 copilot|microsoft-copilot.svg
 copilot-studio|microsoft-copilot.svg
 azure|Microsoft_Azure.svg
+fabric|Fabric_final_x256.png
+purview|500px-Microsoft_Purview_Logo.svg.webp
 teams|teams-svgrepo-com.svg
 sharepoint|ms-sharepoint-svgrepo-com.svg
+m365|500px-Microsoft_365_(2022).svg.webp
 MAP
   echo "</script>"
 }
