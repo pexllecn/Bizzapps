@@ -51,7 +51,7 @@ emit_scripts () {
 
 # ---- artifact.html (no doctype/html/head/body — the platform wraps it) ----
 {
-  echo '<title>Power Platform Landscape</title>'
+  echo '<title>EY · Microsoft Business Applications</title>'
   echo "$FONTS"
   echo '<style>'; cat src/ms-styles.css; echo '</style>'
   cat src/ms-body.html
@@ -64,7 +64,7 @@ emit_scripts () {
   echo '<html lang="en"><head>'
   echo '<meta charset="utf-8">'
   echo '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
-  echo '<title>Power Platform Landscape · Bizzapps</title>'
+  echo '<title>EY · Microsoft Business Applications</title>'
   echo "$FONTS"
   echo '<style>'; cat src/ms-styles.css; echo '</style>'
   echo '</head><body>'
