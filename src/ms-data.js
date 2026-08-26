@@ -21,7 +21,7 @@ window.CITY = {
   },
 
   substrate: {
-    label: "The platform underneath — Dataverse · Azure · Fabric · Purview",
+    label: "The platform underneath — a governed Dataverse per client · Azure · Fabric · Purview",
     etched: ["dataverse", "azure", "fabric", "purview"],
   },
 
@@ -38,7 +38,7 @@ window.CITY = {
   buildings: [
     /* ---- District A · Customer & Contact ---- */
     {
-      id: "contact-centre", district: "A", flagship: true, pos: [0.1, -0.5], h: 2.7, size: 1.45,
+      id: "contact-centre", district: "A", flagship: true, pos: [0.2, -0.9], h: 2.7, size: 1.45,
       name: "Digital Contact Centre",
       microsoftProducts: ["d365-contact-center", "copilot", "azure-ai"],
       whatItDoes: "A national-scale contact centre on Dynamics 365 — voice, chat and case in one place, with Copilot drafting replies and summarising every interaction for the agent.",
@@ -50,7 +50,7 @@ window.CITY = {
       lifecycle: ["advise", "build", "run"], pod: { headcount: 6, lead: "Terry Maguire" }, proof: ["hse"],
     },
     {
-      id: "customer-service", district: "A", pos: [-2.0, 0.6], h: 1.7, size: 1.2,
+      id: "customer-service", district: "A", pos: [-2.9, 0.3], h: 1.7, size: 1.2,
       name: "Customer Service & Case Management",
       microsoftProducts: ["d365-customer-service"],
       whatItDoes: "Case management for high-volume service teams — routing, SLAs, knowledge and reporting on Dynamics 365 Customer Service.",
@@ -62,7 +62,7 @@ window.CITY = {
       lifecycle: ["build", "run"], pod: { headcount: 4, lead: "Terry Maguire" }, proof: ["hse"],
     },
     {
-      id: "self-service", district: "A", pos: [2.0, 0.6], h: 1.5, size: 1.2,
+      id: "self-service", district: "A", pos: [3.0, 0.2], h: 1.5, size: 1.2,
       name: "Self-Service & Citizen Portals",
       microsoftProducts: ["power-pages"],
       whatItDoes: "Secure public-facing portals on Power Pages where citizens self-serve — apply, upload, track status — without calling anyone.",
@@ -74,7 +74,7 @@ window.CITY = {
       lifecycle: ["build"], pod: { headcount: 3, lead: "Terry Maguire" }, proof: ["doj"],
     },
     {
-      id: "agent-copilot", district: "A", pos: [0.2, 2.1], h: 1.6, size: 1.2,
+      id: "agent-copilot", district: "A", pos: [0.5, 2.7], h: 1.6, size: 1.2,
       name: "Agent Copilot & Conversational AI",
       microsoftProducts: ["copilot-studio", "azure-ai"],
       whatItDoes: "Custom copilots and conversational agents built in Copilot Studio, grounded in the client’s own knowledge and connected to Dynamics.",
@@ -219,11 +219,11 @@ window.CITY = {
       id: "data-foundation", district: "F", pos: [3.7, 5.3], h: 1.7, size: 1.2,
       name: "Data Foundation",
       microsoftProducts: ["dataverse", "fabric"],
-      whatItDoes: "The shared data layer under everything — Dataverse and Microsoft Fabric giving every app and report one governed source.",
+      whatItDoes: "Each client’s own governed data foundation — an isolated Dataverse environment, with Microsoft Fabric, giving that client one trusted source for every app and report.",
       value: [
-        "Apps and analytics built once on trusted data, so the next solution is weeks not months and the numbers reconcile.",
+        "Apps and analytics built once on trusted data, so the next solution is weeks not months and the numbers reconcile — inside one client’s boundary, never mixed with anyone else’s.",
         "Foundations in 8–10 weeks; from ~€160k. // VERIFY",
-        "EY’s Data & AI practice designs the foundation for the whole estate, with Assurance standing behind its integrity.",
+        "EY designs each client a separate, governed Dataverse — data residency, isolation and lineage a regulator will accept — with Assurance standing behind its integrity.",
       ],
       lifecycle: ["build", "run"], pod: { headcount: 3 }, proof: ["cso"],
     },

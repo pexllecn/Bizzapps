@@ -475,13 +475,17 @@
     met.add(node.id); peopleMet += (node.b.pod ? node.b.pod.headcount : 0); updateCounter();
   }
 
+  let returnFocusId = null;
   function selectNode(node) {
+    returnFocusId = node.id;
     selectedId = node.id;
     tag.classList.remove("show");
     markMet(node);
     applyFocusStates();
     fillPanel(node);
     const p = $("#panel"); p.classList.add("open"); p.scrollTop = 0;
+    // move keyboard focus into the panel (returned on close)
+    const close = p.querySelector(".p-close"); if (close) setTimeout(() => close.focus(), 0);
     // NB: selecting never moves the camera — only the Reset button and a
     // "Proven at" jump are allowed to do that.
   }
@@ -489,6 +493,8 @@
     selectedId = null;
     applyFocusStates();
     $("#panel").classList.remove("open");
+    // return focus to the building the user came from (keyboard users)
+    if (returnFocusId) { const g = svg.querySelector('[data-id="' + returnFocusId + '"]'); if (g) g.focus(); returnFocusId = null; }
   }
   function el2(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
   const cleanCopy = (s) => s.replace(/\s*\/\/\s*VERIFY\s*$/i, "");
@@ -649,14 +655,42 @@
     requestAnimationFrame(() => { rebuildQueued = false; buildScene(false); });
   }
 
+  // zoom the viewBox toward a client point by factor k (k<1 zooms in)
+  function zoomAt(clientX, clientY, k) {
+    const r = svg.getBoundingClientRect();
+    const mx = VB.x + (clientX - r.left) / r.width * VB.w;
+    const my = VB.y + (clientY - r.top) / r.height * VB.h;
+    const nw = Math.min(fit.w * 2.4, Math.max(fit.w * 0.4, VB.w * k));
+    const f = nw / VB.w;
+    VB.w = nw; VB.h *= f;
+    VB.x = mx - (mx - VB.x) * f; VB.y = my - (my - VB.y) * f;
+    applyVB();
+  }
+
+  const pts = new Map();               // active pointers → {x,y}
   let dragging = false, dragMoved = false, captured = false, dsx = 0, dsy = 0, pid = null;
+  let pinchDist = 0;                    // 0 = not pinching
   svg.addEventListener("pointerdown", (e) => {
-    dragging = true; dragMoved = false; captured = false; pid = e.pointerId;
-    dsx = e.clientX; dsy = e.clientY;
-    // NB: do NOT capture the pointer here — capturing on press retargets the
-    // click and (with the rebuild below) breaks click-to-select on desktop.
+    pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size === 1) {
+      dragging = true; dragMoved = false; captured = false; pid = e.pointerId;
+      dsx = e.clientX; dsy = e.clientY;
+    } else if (pts.size === 2) {
+      // second finger down → pinch-zoom, stop orbiting
+      dragging = false;
+      const a = [...pts.values()]; pinchDist = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
+      tag.classList.remove("show");
+    }
   });
   svg.addEventListener("pointermove", (e) => {
+    if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pts.size >= 2) {                // pinch
+      const a = [...pts.values()], d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
+      const cx = (a[0].x + a[1].x) / 2, cy = (a[0].y + a[1].y) / 2;
+      if (pinchDist) zoomAt(cx, cy, pinchDist / d);
+      pinchDist = d;
+      return;
+    }
     if (!dragging) return;
     if (!dragMoved) {
       // stay a "click" until the pointer clearly moves; only then start orbiting
@@ -664,17 +698,20 @@
       dragMoved = true; tag.classList.remove("show");
       if (svg.setPointerCapture) { try { svg.setPointerCapture(pid); captured = true; } catch (_) {} }
     }
-    // horizontal drag orbits the scene around its centre
-    setYaw(yaw - (e.clientX - dsx) * 0.006);
+    setYaw(yaw - (e.clientX - dsx) * 0.006);   // horizontal drag orbits
     dsx = e.clientX; dsy = e.clientY;
     queueRebuild();
   });
-  const endDrag = () => {
-    if (captured && svg.releasePointerCapture) { try { svg.releasePointerCapture(pid); } catch (_) {} }
-    dragging = false; captured = false;
+  const liftPointer = (e) => {
+    pts.delete(e.pointerId);
+    if (pts.size < 2) pinchDist = 0;
+    if (pts.size === 0) {
+      if (captured && svg.releasePointerCapture) { try { svg.releasePointerCapture(pid); } catch (_) {} }
+      dragging = false; captured = false;
+    }
   };
-  svg.addEventListener("pointerup", endDrag);
-  svg.addEventListener("pointercancel", endDrag);
+  svg.addEventListener("pointerup", liftPointer);
+  svg.addEventListener("pointercancel", liftPointer);
   svg.addEventListener("click", (e) => { if (e.target === svg && !dragMoved) clearFocus(); });
   svg.addEventListener("wheel", (e) => {
     e.preventDefault();
