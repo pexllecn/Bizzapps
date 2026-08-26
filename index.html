@@ -671,7 +671,7 @@ window.ICONS["ey"]="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZG
   /* ---- one node (service / core / app) ---- */
   function drawNode(id, cfg, type) {
     // during orbit rebuilds nodes appear immediately (no rise animation)
-    const g = el("g", { class: sceneFirst ? "node" : "node in" }, Lnodes);
+    const g = el("g", { class: sceneFirst ? "node" : "node in", "data-id": id }, Lnodes);
     const base = layerColor[cfg.layer];
     const glow = GLOW[cfg.layer] || GLOW.data;
     let geo;
@@ -919,20 +919,30 @@ window.ICONS["ey"]="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZG
     requestAnimationFrame(() => { rebuildQueued = false; buildScene(false); });
   }
 
-  let dragging = false, dragMoved = false, dsx = 0, dsy = 0;
+  let dragging = false, dragMoved = false, captured = false, dsx = 0, dsy = 0, pid = null;
   svg.addEventListener("pointerdown", (e) => {
-    dragging = true; dragMoved = false; dsx = e.clientX; dsy = e.clientY;
-    svg.setPointerCapture && svg.setPointerCapture(e.pointerId);
+    dragging = true; dragMoved = false; captured = false; pid = e.pointerId;
+    dsx = e.clientX; dsy = e.clientY;
+    // NB: do NOT capture the pointer here — capturing on press retargets the
+    // click and (with the rebuild below) breaks click-to-select on desktop.
   });
   svg.addEventListener("pointermove", (e) => {
     if (!dragging) return;
-    if (Math.abs(e.clientX - dsx) + Math.abs(e.clientY - dsy) > 3) { dragMoved = true; tag.classList.remove("show"); }
+    if (!dragMoved) {
+      // stay a "click" until the pointer clearly moves; only then start orbiting
+      if (Math.abs(e.clientX - dsx) + Math.abs(e.clientY - dsy) <= 4) return;
+      dragMoved = true; tag.classList.remove("show");
+      if (svg.setPointerCapture) { try { svg.setPointerCapture(pid); captured = true; } catch (_) {} }
+    }
     // horizontal drag orbits the scene around its centre
     setYaw(yaw - (e.clientX - dsx) * 0.006);
     dsx = e.clientX; dsy = e.clientY;
     queueRebuild();
   });
-  const endDrag = () => (dragging = false);
+  const endDrag = () => {
+    if (captured && svg.releasePointerCapture) { try { svg.releasePointerCapture(pid); } catch (_) {} }
+    dragging = false; captured = false;
+  };
   svg.addEventListener("pointerup", endDrag);
   svg.addEventListener("pointercancel", endDrag);
   svg.addEventListener("click", (e) => { if (e.target === svg && !dragMoved) clearFocus(); });
