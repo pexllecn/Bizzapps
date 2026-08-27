@@ -7,7 +7,9 @@
  * ========================================================================== */
 (function () {
   "use strict";
-  const D = window.CITY;
+  const CV = window.ContentVisibility;
+  const PRESENTATION_MODE = CV ? CV.resolveMode() : "internal";
+  const D = CV ? CV.filterCity(window.CITY, PRESENTATION_MODE) : window.CITY;
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const L = window.LOGOS;
   const NS = "http://www.w3.org/2000/svg";
@@ -592,15 +594,29 @@
     lbl.textContent = "Dataverse";
     const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
     nodes[id] = node; wireNode(node);
-    if (client.crest) drawEmblem(client, geo);
+    drawEmblem(client, geo);
     return node;
   }
 
-  /* A real client crest, floating on a glass plaque above its Dataverse core
-   * and slowly turning like a coin — readable on both faces so text never
-   * mirrors. Loaded from the supplied asset (never redrawn). */
+  const warnedMissingClientLogo = {};
+  function initials(label) {
+    const words = (label || "?").trim().split(/\s+/);
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+
+  /* Every approved client gets a rotating identity beacon above its Dataverse
+   * core: the real logo asset when one is supplied and approved for display,
+   * otherwise a neutral architectural monogram plate — never a drawn
+   * approximation of a missing mark. Loaded from window.ICONS (never redrawn
+   * or traced). Readable on both faces so text never mirrors mid-turn. */
   function drawEmblem(client, geo) {
-    const src = (window.ICONS || {})[client.crest]; if (!src) return;
+    const label = client.displayLabel || client.name;
+    const src = client.logoKey ? (window.ICONS || {})[client.logoKey] : null;
+    if (client.logoKey && !src && !warnedMissingClientLogo[client.logoKey]) {
+      warnedMissingClientLogo[client.logoKey] = 1;
+      console.warn("[city] missing client logo asset for key: " + client.logoKey + " — using monogram fallback for " + label);
+    }
     const a = geo.top;
     const cx = a[0], baseY = a[1] - 66;          // hover above the core
     const ratio = client.crestRatio || 2.4;
@@ -621,16 +637,27 @@
     const spin = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
 
     // one plaque face, drawn centred on (0,0); `back` pre-mirrors it so that
-    // when the wrapper's negative X-scale flips it, the logo reads correctly.
+    // when the wrapper's negative X-scale flips it, the content reads correctly.
     function face(back) {
       const f = el("g", { transform: back ? "scale(-1,1)" : "" }, spin);
       el("rect", { x: -W / 2, y: -H / 2, width: W, height: H, rx: 13, ry: 13,
         fill: "#ffffff", stroke: shade(col, 0.35), "stroke-width": 1.4, filter: "url(#soft)" }, f);
       el("rect", { x: -W / 2 + 3, y: -H / 2 + 3, width: W - 6, height: H - 6, rx: 10, ry: 10,
         fill: "none", stroke: shade(col, 0.72), "stroke-width": 1 }, f);
-      const img = el("image", { x: -iw / 2, y: -ih / 2, width: iw, height: ih,
-        preserveAspectRatio: "xMidYMid meet" }, f);
-      href(img, src);
+      if (src) {
+        const img = el("image", { x: -iw / 2, y: -ih / 2, width: iw, height: ih,
+          preserveAspectRatio: "xMidYMid meet" }, f);
+        href(img, src);
+      } else {
+        // neutral architectural monogram plate — a placeholder, not a logo
+        const mono = initials(label), side = Math.min(ih, W * 0.42);
+        el("rect", { x: -side / 2, y: -side / 2, width: side, height: side, rx: side * 0.22,
+          fill: "#5A6577" }, f);
+        const t = el("text", { x: 0, y: side * 0.06, "text-anchor": "middle", "dominant-baseline": "central",
+          fill: "#fff", "font-weight": 700, "font-size": side * 0.42,
+          "font-family": "Segoe UI, Inter, sans-serif" }, f);
+        t.textContent = mono;
+      }
       return f;
     }
     const front = face(false), back = face(true);
@@ -748,16 +775,30 @@
     const r = svg.getBoundingClientRect();
     return { x: r.left + (pt[0] - VB.x) / VB.w * r.width, y: r.top + (pt[1] - VB.y) / VB.h * r.height };
   }
+  function lifecycleUnion(capIds) {
+    const set = new Set();
+    (capIds || []).forEach((id) => { const cap = capById[id]; if (cap && cap.lifecycle) cap.lifecycle.forEach((s) => set.add(s)); });
+    return set;
+  }
+  function lifecycleSummary(set) {
+    return ["advise", "build", "run"].filter((s) => set.has(s)).map((s) => s[0].toUpperCase() + s.slice(1)).join(" · ");
+  }
   function onHover(node, on) {
     if (dragging) return;
     node.g.classList.toggle("hi", on);
     if (on && node.id !== selectedId) {
       const s = screenOf(node.top);
       tag.style.left = s.x + "px"; tag.style.top = (s.y - 24) + "px";
-      let title, sub;
-      if (node.kind === "core") { title = node.client.name + " — Dataverse"; sub = "isolated tenant"; }
-      else { title = node.cap.name; sub = node.client.name; }
-      tag.innerHTML = title + (sub ? '<span class="c">' + sub + "</span>" : "");
+      if (node.kind === "core") {
+        const c = node.client, name = c.displayLabel || c.name, n = (c.runs || []).length;
+        const life = lifecycleSummary(lifecycleUnion(c.runs));
+        let html = name;
+        if (c.engagementTheme) html += '<span class="c">' + c.engagementTheme + "</span>";
+        html += '<span class="c">' + n + (n === 1 ? " solution" : " solutions") + (life ? " · " + life : "") + " · Click to explore</span>";
+        tag.innerHTML = html;
+      } else {
+        tag.innerHTML = node.cap.name + '<span class="c">' + (node.client.displayLabel || node.client.name) + " · Click to explore</span>";
+      }
       tag.classList.add("show");
     } else if (!on) tag.classList.remove("show");
   }
@@ -858,12 +899,15 @@
     tweenVBCenter(n.top[0], n.top[1] - 40, 650, () => selectNode(n));
   }
 
-  /* ---- solution (building) panel ---- */
+  const VALUE_LABEL = { outcome: "Business outcome", "speed-commercial": "Speed & commercial shape", "why-ey": "Why EY" };
+
+  /* ---- solution panel: the individual BizApps solution behind a client ---- */
   function fillPanel(node) {
     const p = $("#panel"), cap = node.cap, client = node.client, q = (s) => p.querySelector(s);
+    const clientName = client.displayLabel || client.name;
 
     const eye = q(".p-eyebrow");
-    eye.textContent = client.name + " · tenant";
+    eye.textContent = clientName + " · solution";
     eye.style.color = client.color;
     q("h2").textContent = cap.name;
 
@@ -882,22 +926,34 @@
     } else life.style.display = "none";
 
     q(".p-does").textContent = cap.whatItDoes;
+    q(".p-challenge-sec").style.display = "none";
+    q(".p-outcome-sec").style.display = "none";
 
     const vSec = q(".p-value-sec"), vWrap = q(".p-value"); vWrap.innerHTML = "";
     if (cap.value) {
       vSec.style.display = "";
+      vSec.querySelector(".p-cap").textContent = "The value";
       cap.value.forEach((line) => {
         const row = el2("div", "p-vline");
         const ar = el2("span", "p-arrow"); ar.textContent = "→";
-        const tx = document.createElement("span"); tx.textContent = cleanCopy(line);
+        const tx = document.createElement("span");
+        const label = VALUE_LABEL[line.type];
+        if (label) { const b = document.createElement("b"); b.textContent = label + ". "; tx.appendChild(b); }
+        tx.appendChild(document.createTextNode(cleanCopy(line.text)));
         row.appendChild(ar); row.appendChild(tx); vWrap.appendChild(row);
       });
     } else vSec.style.display = "none";
+
+    const relevSec = q(".p-relevant-sec");
+    if (cap.reusableProposition) { relevSec.style.display = ""; q(".p-relevant").textContent = cap.reusableProposition; }
+    else relevSec.style.display = "none";
 
     const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
     bSec.querySelector(".p-cap").textContent = "Built with";
     if (cap.microsoftProducts) { bSec.style.display = ""; cap.microsoftProducts.forEach((k) => bWrap.appendChild(L.chip(k))); }
     else bSec.style.display = "none";
+    q(".p-platform-sec").style.display = "none";
+    q(".p-ey-sec").style.display = "none";
 
     const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
     rSec.querySelector(".p-cap").textContent = "Who runs it";
@@ -910,50 +966,107 @@
       rWrap.appendChild(dots); rWrap.appendChild(txt);
     } else rSec.style.display = "none";
 
-    // deployed in — link back to this client's isolated tenant
+    // "See this capability at another client" — deliberate navigation only,
+    // the one thing here allowed to move the camera when clicked.
+    const relSec = q(".p-related-sec"), relWrap = q(".p-related"); relWrap.innerHTML = "";
+    const others = D.clients.filter((c) => c.id !== client.id && (c.runs || []).indexOf(cap.id) >= 0);
+    if (others.length) {
+      relSec.style.display = ""; relSec.querySelector(".p-cap").textContent = "See this capability elsewhere";
+      others.forEach((oc) => {
+        const a = proofLink("View at " + (oc.displayLabel || oc.name));
+        a.addEventListener("click", () => flyToAndSelect(oc.id + ":" + cap.id));
+        relWrap.appendChild(a);
+      });
+    } else relSec.style.display = "none";
+
+    // back to the client overview — never closes the panel, never resets the camera
     const pSec = q(".p-proof-sec"), pWrap = q(".p-proof"); pWrap.innerHTML = "";
     pSec.style.display = ""; pSec.querySelector(".p-cap").textContent = "Deployed in";
-    const a = proofLink(client.name + " · isolated tenant");
+    const a = proofLink("← Back to " + clientName + " overview");
     a.addEventListener("click", () => selectNode(nodes["core:" + client.id]));
     pWrap.appendChild(a);
   }
 
-  /* ---- client (tenant) panel ---- */
+  /* ---- client panel: the relationship, challenge and overall value ---- */
   function fillClientPanel(client) {
     const p = $("#panel"), q = (s) => p.querySelector(s);
+    const name = client.displayLabel || client.name;
+
     const eye = q(".p-eyebrow");
-    eye.textContent = client.real ? "Client engagement" : "Illustrative client";
+    eye.textContent = client.visibility === "anonymised" ? "Anonymised client story"
+      : (client.real ? "Client engagement" : "Illustrative client");
     eye.style.color = client.color;
-    q("h2").textContent = client.name;
+    q("h2").textContent = name;
 
-    const logos = q(".p-logos"); logos.innerHTML = ""; logos.appendChild(L.html("dataverse", 28));
+    const logos = q(".p-logos"); logos.innerHTML = "";
+    logos.appendChild(L.html(client.logoKey || "dataverse", 28));
 
+    // Advise · Build · Run — union across every solution deployed here
     const life = q(".p-life"); life.innerHTML = ""; life.style.display = "";
-    const seg = el2("span", "p-life-seg on"); seg.innerHTML = '<span class="d"></span>Isolated tenant · own Dataverse';
-    life.appendChild(seg);
+    const union = lifecycleUnion(client.runs);
+    ["advise", "build", "run"].forEach((stage) => {
+      const seg = el2("span", "p-life-seg" + (union.has(stage) ? " on" : ""));
+      seg.innerHTML = '<span class="d"></span>' + stage.charAt(0).toUpperCase() + stage.slice(1);
+      life.appendChild(seg);
+    });
 
-    q(".p-does").textContent = client.story;
+    q(".p-does").textContent = client.engagementTheme || client.story;
+
+    const chSec = q(".p-challenge-sec");
+    if (client.challenge) { chSec.style.display = ""; q(".p-challenge").textContent = client.challenge; }
+    else chSec.style.display = "none";
+
+    const outSec = q(".p-outcome-sec");
+    if (client.outcome) {
+      outSec.style.display = ""; q(".p-outcome").textContent = client.outcome;
+      const mWrap = q(".p-metrics"); mWrap.innerHTML = "";
+      (client.outcomeMetrics || []).forEach((m) => {
+        const chip = el2("span", "p-metric");
+        const b = document.createElement("b"); b.textContent = m.value;
+        const s = document.createElement("span"); s.textContent = m.label;
+        chip.appendChild(b); chip.appendChild(s); mWrap.appendChild(chip);
+      });
+    } else outSec.style.display = "none";
 
     q(".p-value-sec").style.display = "none";
+    q(".p-relevant-sec").style.display = "none";
 
     const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
-    bSec.style.display = ""; bSec.querySelector(".p-cap").textContent = "Solutions deployed here";
-    client.runs.forEach((capId) => {
+    bSec.style.display = ""; bSec.querySelector(".p-cap").textContent = "Solutions";
+    (client.runs || []).forEach((capId) => {
       const cap = capById[capId]; if (!cap) return;
       const chip = el2("button", "p-chip2"); chip.style.cursor = "pointer";
+      chip.setAttribute("aria-label", "Open " + cap.name);
       const k = (cap.microsoftProducts || [])[0]; if (k) chip.appendChild(L.html(k, 16));
       const s = document.createElement("span"); s.textContent = cap.name; chip.appendChild(s);
       chip.addEventListener("click", () => selectNode(nodes[client.id + ":" + capId]));
       bWrap.appendChild(chip);
     });
 
-    const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
-    rSec.style.display = ""; rSec.querySelector(".p-cap").textContent = "Tenant";
-    const txt = el2("span", "p-run-txt");
-    const mono = document.createElement("span"); mono.className = "mono"; mono.textContent = client.tenant;
-    txt.appendChild(mono);
-    txt.appendChild(document.createTextNode(" — its own governed Dataverse, isolated from every other client."));
-    rWrap.appendChild(txt);
+    // Microsoft platform — union of products across this client's solutions
+    const platSec = q(".p-platform-sec"), platWrap = q(".p-platform"); platWrap.innerHTML = "";
+    const products = new Set();
+    (client.runs || []).forEach((id) => { const cap = capById[id]; (cap && cap.microsoftProducts || []).forEach((k) => products.add(k)); });
+    if (products.size) { platSec.style.display = ""; products.forEach((k) => platWrap.appendChild(L.chip(k))); }
+    else platSec.style.display = "none";
+
+    const eySec = q(".p-ey-sec");
+    if (client.eyDifference) { eySec.style.display = ""; q(".p-ey").textContent = client.eyDifference; }
+    else eySec.style.display = "none";
+
+    q(".p-run-sec").style.display = "none";
+
+    // related clients — deliberate navigation only
+    const relSec = q(".p-related-sec"), relWrap = q(".p-related"); relWrap.innerHTML = "";
+    const relatedClients = (client.relatedClientIds || []).map((id) => D.clients.find((c) => c.id === id)).filter(Boolean);
+    if (relatedClients.length) {
+      relSec.style.display = ""; relSec.querySelector(".p-cap").textContent = "Related";
+      relatedClients.forEach((rc) => {
+        const a = proofLink("View " + (rc.displayLabel || rc.name));
+        a.addEventListener("click", () => flyToAndSelect("core:" + rc.id));
+        relWrap.appendChild(a);
+      });
+    } else relSec.style.display = "none";
 
     q(".p-proof-sec").style.display = "none";
   }
@@ -1156,7 +1269,7 @@
   function tick(now) {
     requestAnimationFrame(tick);
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (REDUCED) return;
+    if (REDUCED || document.hidden) return;   // pause ambient motion off-screen / reduced motion
     for (const bm of beams) {
       if (!bm.len) { try { bm.len = bm.path.getTotalLength(); } catch (_) { continue; } }
       for (const dp of bm.dots) {

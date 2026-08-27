@@ -135,8 +135,8 @@ body{
 /* ---------- hover tag ---------- */
 #tag{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,-135%);padding:6px 11px;background:#fff;
   border:1px solid var(--line);border-radius:9px;font-size:12.5px;font-weight:600;white-space:nowrap;opacity:0;
-  transition:opacity .15s;box-shadow:var(--shadow)}
-#tag.show{opacity:1}#tag .c{display:block;font-weight:500;font-size:10.5px;color:var(--soft);margin-top:1px}
+  transition:opacity .15s;box-shadow:var(--shadow);max-width:280px}
+#tag.show{opacity:1}#tag .c{display:block;font-weight:500;font-size:10.5px;color:var(--soft);margin-top:1px;white-space:normal}
 
 /* ======================================================================
  *  PANEL
@@ -163,8 +163,15 @@ body{
 .p-life-seg.on .d{background:var(--good);border-color:var(--good);box-shadow:0 0 0 3px rgba(47,158,110,.14)}
 
 .p-body{padding:22px 28px 40px;display:flex;flex-direction:column;gap:22px}
-.p-does{font-size:15px;line-height:1.6;margin:0;color:var(--ink);max-width:62ch}
+.p-does,.p-challenge,.p-outcome,.p-relevant,.p-ey{font-size:15px;line-height:1.6;margin:0;color:var(--ink);max-width:62ch}
 .p-cap{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin:0 0 11px}
+
+/* verified outcome metrics */
+.p-metrics{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.p-metric{display:inline-flex;flex-direction:column;gap:2px;padding:8px 13px;border:1px solid var(--line);
+  border-radius:12px;background:var(--panel);min-width:84px}
+.p-metric b{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.p-metric span{font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--soft)}
 
 /* the three value lines */
 .p-value{display:flex;flex-direction:column;gap:12px}
