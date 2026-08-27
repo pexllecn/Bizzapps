@@ -99,58 +99,61 @@
     return { top: iso(gx, gy, h), ground: iso(gx, gy, 0) };
   }
 
-  /* ---- a detailed isometric SERVER TOWER: stacked rack units with glowing
-         light bars, indicator LEDs and a code screen on top ---- */
-  function serverTower(parent, gx, gy, w, d, h, base, glow, units) {
+  /* ---- ground shadow: a soft blurred ellipse under a footprint, correctly
+         aligned to the iso diamond so buildings read as grounded, not
+         floating blocks. ---- */
+  function groundShadow(parent, gx, gy, w, d) {
+    const a = iso(gx - w / 2, gy - d / 2, 0), b = iso(gx + w / 2, gy - d / 2, 0),
+          c = iso(gx + w / 2, gy + d / 2, 0), e = iso(gx - w / 2, gy + d / 2, 0);
+    const cx = (a[0] + b[0] + c[0] + e[0]) / 4, cy = Math.max(a[1], b[1], c[1], e[1]) - 2;
+    const rx = (Math.abs(b[0] - e[0]) + Math.abs(c[0] - a[0])) / 4;
+    el("ellipse", { cx: cx.toFixed(1), cy: cy.toFixed(1), rx: rx.toFixed(1), ry: (rx * 0.34).toFixed(1),
+      fill: "#16233B", opacity: 0.14, filter: "url(#soft)" }, parent);
+  }
+
+  /* ---- a premium architectural SOLUTION BUILDING: restrained glass-and-
+         stone volume with warm lit windows (no server-rack imagery) ---- */
+  function solutionBuilding(parent, gx, gy, w, d, h, base, glow, floors) {
+    groundShadow(parent, gx, gy, w * 1.15, d * 1.15);
+    const geo = isoBox(parent, gx, gy, w, d, h, base, floors);
     const xm = gx - w / 2, xM = gx + w / 2, ym = gy - d / 2, yM = gy + d / 2;
-    const uh = h / units, gap = uh * 0.14;
     // pick the two viewer-facing vertical faces for the current orbit angle
     const faces = [
-      { axis: "x", k: xM, a0: ym, a1: yM, c: [xM, gy] },
-      { axis: "x", k: xm, a0: ym, a1: yM, c: [xm, gy] },
-      { axis: "y", k: yM, a0: xm, a1: xM, c: [gx, yM] },
-      { axis: "y", k: ym, a0: xm, a1: xM, c: [gx, ym] },
+      { axis: "x", k: xM, a0: ym, a1: yM, c: [xM, gy], sh: -0.20 },
+      { axis: "x", k: xm, a0: ym, a1: yM, c: [xm, gy], sh: -0.20 },
+      { axis: "y", k: yM, a0: xm, a1: xM, c: [gx, yM], sh: -0.04 },
+      { axis: "y", k: ym, a0: xm, a1: xM, c: [gx, ym], sh: -0.04 },
     ];
     faces.forEach((f) => (f.depth = depthOf(f.c)));
     faces.sort((p, q) => q.depth - p.depth);
     const vis = faces.slice(0, 2);
     const P = (f, a, z) => (f.axis === "x" ? iso(f.k, a, z) : iso(a, f.k, z));
-    const faceX = (f) => iso(f.c[0], f.c[1], 0)[0];
-    vis.sort((p, q) => faceX(p) - faceX(q));   // left face first, right face last
-    vis.forEach((f, fi) => {
-      const sh = fi === 0 ? -0.04 : -0.20;     // left lighter, right darker
-      const len = f.a1 - f.a0;
-      for (let i = 0; i < units; i++) {
-        const z0 = i * uh + gap * 0.5, z1 = (i + 1) * uh - gap * 0.5;
-        poly(parent, [P(f, f.a0, z1), P(f, f.a1, z1), P(f, f.a1, z0), P(f, f.a0, z0)], shade(base, sh));
-        el("line", { x1: P(f, f.a0, z1)[0], y1: P(f, f.a0, z1)[1], x2: P(f, f.a1, z1)[0], y2: P(f, f.a1, z1)[1],
-          stroke: shade(base, -0.34), "stroke-width": 1 }, parent);
-        // glowing light bar near the top of the unit
-        const b1 = z1 - uh * 0.16, b0 = z1 - uh * 0.34;
-        poly(parent, [P(f, f.a0, b1), P(f, f.a1, b1), P(f, f.a1, b0), P(f, f.a0, b0)], glow.bar);
-        // indicator LEDs near the bottom of the unit
-        const l1 = z0 + uh * 0.52, l0 = z0 + uh * 0.30;
-        for (let k = 0; k < 3; k++) {
-          const c0 = f.a0 + len * (0.24 + 0.24 * k), c1 = c0 + len * 0.11;
-          poly(parent, [P(f, c0, l1), P(f, c1, l1), P(f, c1, l0), P(f, c0, l0)], k === 1 ? glow.led : "#F2F8FF");
+    // a restrained grid of warm-lit windows on each visible face, softly
+    // varied so the façade feels occupied rather than uniform
+    vis.forEach((f) => {
+      const len = f.a1 - f.a0, rows = Math.max(2, floors || 3), cols = 3;
+      for (let r = 0; r < rows; r++) {
+        const z0 = h * (0.14 + (r / rows) * 0.72), z1 = z0 + h * 0.72 / rows * 0.55;
+        for (let c = 0; c < cols; c++) {
+          const a0 = f.a0 + len * (0.14 + c * 0.30), a1 = a0 + len * 0.16;
+          const lit = hash(gx + "" + gy + f.k + r + c) > 0.38;
+          poly(parent, [P(f, a0, z1), P(f, a1, z1), P(f, a1, z0), P(f, a0, z0)],
+            lit ? shade(glow.bar, 0.1) : shade(base, f.sh - 0.06), { opacity: lit ? 0.85 : 0.55 });
         }
       }
     });
-    // top: bright cap + inset dark "screen" with tiny code lines
-    const R = (x, y, z) => iso(x, y, z);
-    const Ah = R(xm, ym, h), Bh = R(xM, ym, h), Ch = R(xM, yM, h), Dh = R(xm, yM, h);
-    poly(parent, [Ah, Bh, Ch, Dh], shade(base, 0.32), { stroke: shade(base, 0.46), "stroke-width": 1 });
-    const q = 0.17;
-    poly(parent, [R(xm + w * q, ym + d * q, h), R(xM - w * q, ym + d * q, h),
-      R(xM - w * q, yM - d * q, h), R(xm + w * q, yM - d * q, h)], "#101D34");
-    for (let r = 0; r < 4; r++) {
-      const yy = ym + d * (0.30 + 0.13 * r);
-      const x0 = xm + w * 0.26, x1 = xm + w * (0.42 + 0.30 * hash(gx + "" + gy + r));
-      const a = R(x0, yy, h), b = R(x1, yy, h);
-      el("line", { x1: a[0].toFixed(1), y1: a[1].toFixed(1), x2: b[0].toFixed(1), y2: b[1].toFixed(1),
-        stroke: glow.code, "stroke-width": 1.5, "stroke-linecap": "round", opacity: 0.9 }, parent);
-    }
-    return { top: iso(gx, gy, h), ground: iso(gx, gy, 0) };
+    return geo;
+  }
+
+  /* ---- a restrained cloud glyph, floating just above a building, to signal
+         "cloud-hosted solution" without literal server-rack imagery ---- */
+  function drawCloud(parent, cx, cy, s, color) {
+    const g = el("g", { transform: `translate(${cx.toFixed(1)},${cy.toFixed(1)}) scale(${s})`, opacity: 0.9 }, parent);
+    el("path", {
+      d: "M -13 3 A 6 6 0 0 1 -11 -8.6 A 8 8 0 0 1 4.6 -11.4 A 6.5 6.5 0 0 1 13 -1.5 A 5.5 5.5 0 0 1 12 9.5 L -10 9.5 A 5 5 0 0 1 -13 3 Z",
+      fill: "#FFFFFF", stroke: shade(color, 0.15), "stroke-width": 1.1, filter: "url(#soft)"
+    }, g);
+    bd(cx - 14 * s, cy - 12 * s); bd(cx + 14 * s, cy + 10 * s);
   }
 
   /* ---- a glowing isometric DATABASE CYLINDER (for the Dataverse core) ---- */
@@ -300,8 +303,8 @@
       // soft shadow so each tenant island reads as floating apart
       const scx = (top[0][0] + top[2][0]) / 2;
       const sbot = Math.max(top[0][1], top[1][1], top[2][1], top[3][1]);
-      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 6).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
-        ry: 16, fill: "#1E2D46", opacity: 0.10, filter: "url(#soft)" }, Lground);
+      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 10).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.86).toFixed(1),
+        ry: 12, fill: "#16233B", opacity: 0.07, filter: "url(#soft)" }, Lground);
       poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
       poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
       // faint client tint + soft inner grid
@@ -427,8 +430,9 @@
     const id = client.id + ":" + item.capId;
     const g = nodeShell(id, cap.name + " — deployed for " + client.name);
     const color = client.color, glow = glowFor(color);
-    const units = Math.max(3, Math.round(item.h / 0.42));
-    const geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
+    const floors = Math.max(2, Math.round(item.h / 0.42));
+    const geo = solutionBuilding(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, floors);
+    if (cap.cloudHosted !== false) drawCloud(g, geo.top[0] + 24, geo.top[1] - 22, 1, color);
     const key = (cap.microsoftProducts || [])[0];
     if (key) {
       const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 28).toFixed(1)})` }, g);
