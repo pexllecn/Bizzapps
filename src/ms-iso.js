@@ -25,6 +25,12 @@
     return [(rx - ry) * COS30 * TILE, (rx + ry) * pitch * TILE - z * TILE];
   };
   const depthOf = (p) => (p[0] * cosY - p[1] * sinY) + (p[0] * sinY + p[1] * cosY);
+  // inverse of iso() on the ground plane (z=0): screen/scene point → tile (x,y)
+  function unproject(sx, sy) {
+    const A = sx / (COS30 * TILE), B = sy / (pitch * TILE);
+    const rx = (A + B) / 2, ry = (B - A) / 2;
+    return { x: rx * cosY + ry * sinY, y: -rx * sinY + ry * cosY };
+  }
 
   const districtById = {};
   D.districts.forEach((d) => (districtById[d.id] = d));
@@ -748,7 +754,16 @@
       if (svg.setPointerCapture) { try { svg.setPointerCapture(pid); captured = true; } catch (_) {} }
     }
     if (mode === "pan") { panBy(dx, dy); }
-    else { setYaw(yaw - dx * 0.006); setPitch(pitch - dy * 0.0016); queueRebuild(); }  // orbit: yaw + tilt
+    else {
+      // orbit around the point under the cursor so the view doesn't snap
+      // back to the scene centre — pin that ground point in place as we spin.
+      const sp = scenePoint(e.clientX, e.clientY);      // scene coords under cursor
+      const piv = unproject(sp[0], sp[1]);              // tile it maps to (old yaw)
+      setYaw(yaw - dx * 0.006); setPitch(pitch - dy * 0.0016);
+      const np = iso(piv.x, piv.y, 0);                  // where that tile lands now
+      VB.x += np[0] - sp[0]; VB.y += np[1] - sp[1];     // shift so it stays put
+      applyVB(); queueRebuild();
+    }
     dsx = e.clientX; dsy = e.clientY;
   });
   const liftPointer = (e) => {
