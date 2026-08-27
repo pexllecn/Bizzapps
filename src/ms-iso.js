@@ -178,6 +178,60 @@
     return { top: [cx, cyT], ground: [cx, cyB] };
   }
 
+  /* ---- an isometric LAPTOP: a thin deck + a tilted screen leaning back,
+         with a couple of glowing "code" lines — reads as the app/run layer ---- */
+  function drawLaptop(parent, gx, gy, w, base, glow) {
+    const d = w * 0.68, hDeck = 0.10;
+    const geo = isoBox(parent, gx, gy, w, d, hDeck, base, 0);
+    const xm = gx - w / 2, xM = gx + w / 2, yBack = gy - d / 2, lean = d * 0.92, hScreen = w * 0.62;
+    const b0 = iso(xm, yBack, hDeck), b1 = iso(xM, yBack, hDeck);
+    const t0 = iso(xm, yBack - lean, hDeck + hScreen), t1 = iso(xM, yBack - lean, hDeck + hScreen);
+    poly(parent, [b0, b1, t1, t0], shade(base, -0.06), { stroke: shade(base, -0.30), "stroke-width": 1 });
+    // inset dark screen panel + code lines, echoing the server-tower screens
+    const q = 0.14;
+    const sx0 = xm + w * q, sx1 = xM - w * q, sz0 = hDeck + hScreen * q, sz1 = hDeck + hScreen * (1 - q * 0.6);
+    const sy = yBack - lean * (1 - q * 0.4);
+    poly(parent, [iso(sx0, sy, sz1), iso(sx1, sy, sz1), iso(sx1, sy, sz0), iso(sx0, sy, sz0)], "#08131C");
+    for (let r = 0; r < 3; r++) {
+      const zz = sz0 + (sz1 - sz0) * (0.25 + 0.28 * r);
+      const a = iso(sx0 + (sx1 - sx0) * 0.14, sy, zz), b = iso(sx0 + (sx1 - sx0) * (0.4 + 0.35 * hash(gx + "l" + r)), sy, zz);
+      el("line", { x1: a[0].toFixed(1), y1: a[1].toFixed(1), x2: b[0].toFixed(1), y2: b[1].toFixed(1),
+        stroke: glow.code, "stroke-width": 1.4, "stroke-linecap": "round", opacity: 0.9 }, parent);
+    }
+    // faint keyboard highlight bar on the deck top face
+    const kb0 = iso(xm + w * 0.16, gy + d * 0.06, hDeck), kb1 = iso(xM - w * 0.16, gy + d * 0.06, hDeck);
+    el("line", { x1: kb0[0].toFixed(1), y1: kb0[1].toFixed(1), x2: kb1[0].toFixed(1), y2: kb1[1].toFixed(1),
+      stroke: glow.bar, "stroke-width": 2, "stroke-linecap": "round", opacity: 0.55 }, parent);
+    bd(t0[0], t0[1]); bd(t1[0], t1[1]);
+    return geo;
+  }
+
+  /* ---- a small floating isometric CUBE — decorative data/connectivity
+         accent, drifting near a beam or tucked beside the core ---- */
+  function drawCube(parent, gx, gy, size, color, liftPx) {
+    const wrap = el("g", { transform: `translate(0,${(-liftPx).toFixed(1)})` }, parent);
+    isoBox(wrap, gx, gy, size, size, size, color, 0);
+    const a = iso(gx, gy, size);
+    return { wrap, cx: a[0], baseY: a[1] - liftPx, liftPx };
+  }
+
+  /* ---- an isometric CLOUD mark, screen-space (like the client emblem
+         plaques) — floats above an island, tethered down by a soft beam,
+         signalling "this runs on the Microsoft cloud" ---- */
+  function drawCloudMark(anchorTop, color) {
+    const cx = anchorTop[0], baseY = anchorTop[1] - 84;
+    const wrap = el("g", { class: "cloud-mark", "pointer-events": "none" }, Llabels);
+    el("line", { x1: cx, y1: anchorTop[1] - 6, x2: cx, y2: baseY + 22,
+      stroke: color, "stroke-width": 1.6, "stroke-dasharray": "1.5 5", "stroke-linecap": "round", opacity: 0.4 }, wrap);
+    const g = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
+    el("ellipse", { cx: 0, cy: 10, rx: 30, ry: 8, fill: "#020A11", opacity: 0.3, filter: "url(#soft)" }, g);
+    [[-13, 2, 13], [3, -4, 15], [16, 3, 11], [-2, 6, 17]].forEach(([x, y, r]) =>
+      el("circle", { cx: x, cy: y, r, fill: "#0F2635", stroke: shade(color, 0.1), "stroke-width": 1.2 }, g));
+    [[-9, 1], [1, -2], [10, 1]].forEach(([x, y]) => el("circle", { cx: x, cy: y, r: 1.8, fill: color, opacity: 0.9 }, g));
+    bd(cx - 32, baseY - 14); bd(cx + 32, baseY + 20);
+    return { wrap, cx, baseY };
+  }
+
   /* =====================================================================
    *  Simplified Microsoft product marks (brand-coloured, screen-aligned)
    *  drawn in a ~28px box centred at the origin.
@@ -262,6 +316,8 @@
   const nodes = {};   // id -> node
   const beams = [];
   const emblems = []; // floating spinning client crests
+  const clouds = [];  // floating "runs on the Microsoft cloud" marks
+  const cubes = [];   // decorative floating data cubes
   let selectedId = null;   // persists across orbit rebuilds
   let focusClient = null;  // which client tenant is spotlighted
   let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
@@ -301,26 +357,26 @@
       const scx = (top[0][0] + top[2][0]) / 2;
       const sbot = Math.max(top[0][1], top[1][1], top[2][1], top[3][1]);
       el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 6).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
-        ry: 16, fill: "#1E2D46", opacity: 0.10, filter: "url(#soft)" }, Lground);
-      poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
-      poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
+        ry: 16, fill: "#020A11", opacity: 0.45, filter: "url(#soft)" }, Lground);
+      poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.62));  // tenant wall (thickness)
+      poly(Lground, top, "#0F2331", { stroke: c.color, "stroke-width": 2, opacity: 1 });
       // faint client tint + soft inner grid
-      poly(Lground, top, c.color + "0F");
+      poly(Lground, top, c.color + "14");
       for (let gx = Math.ceil(gxm); gx <= Math.floor(gxM); gx++) {
         const a = iso(gx, gym, 0), b = iso(gx, gyM, 0);
-        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.16 }, Lground);
       }
       for (let gy = Math.ceil(gym); gy <= Math.floor(gyM); gy++) {
         const a = iso(gxm, gy, 0), b = iso(gxM, gy, 0);
-        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.16 }, Lground);
       }
       // island caption at the front edge: name · sector · isolated tenant
       const lp = iso((gxm + gxM) / 2, gyM - 0.2, 0);
       const cap = el("g", { transform: `translate(${lp[0].toFixed(1)},${(lp[1] + 14).toFixed(1)})` }, Lground);
-      const nm = el("text", { x: 0, y: 0, "text-anchor": "middle", fill: "#22324C", "font-size": 14, "font-weight": 800,
-        stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
+      const nm = el("text", { x: 0, y: 0, "text-anchor": "middle", fill: "#EAF6F1", "font-size": 14, "font-weight": 800,
+        stroke: "#061119", "stroke-width": 3, "paint-order": "stroke", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
       nm.textContent = c.name + (c.real ? "" : "  ·  illustrative");
-      const sub = el("text", { x: 0, y: 16, "text-anchor": "middle", fill: c.color, "font-size": 11, "font-weight": 700,
+      const sub = el("text", { x: 0, y: 16, "text-anchor": "middle", fill: shade(c.color, 0.28), "font-size": 11, "font-weight": 700,
         "letter-spacing": ".04em", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
       sub.textContent = "ISOLATED TENANT · " + c.sector.toUpperCase();
       bd(lp[0] - 120, lp[1] + 30); bd(lp[0] + 120, lp[1] + 30);
@@ -335,7 +391,7 @@
       const inRow = Math.min(per, n - drawn), w = (inRow - 1) * gap;
       for (let i = 0; i < inRow; i++)
         el("circle", { cx: (ground[0] - w / 2 + i * gap).toFixed(1), cy: (y0 + row * gap).toFixed(1),
-          r, fill: color, opacity: 0.92, stroke: "#fff", "stroke-width": 0.6 }, parent);
+          r, fill: color, opacity: 0.92, stroke: "#061119", "stroke-width": 0.6 }, parent);
       drawn += inRow;
     }
     bd(ground[0] - 28, y0 + rows * gap + 2);
@@ -365,8 +421,8 @@
     L.svg(mg, "dataverse", 12);
     bd(a[0] - 20, a[1] - 46);
     const lp = geo.ground;
-    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
-      "font-size": 11.5, "font-weight": 700, stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke",
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#CFEDE3",
+      "font-size": 11.5, "font-weight": 700, stroke: "#061119", "stroke-width": 3, "paint-order": "stroke",
       "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
     lbl.textContent = "Dataverse";
     const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
@@ -441,8 +497,8 @@
     let drop = 24;
     if (cap.pod && cap.pod.headcount) drop = drawPopulation(g, geo.ground, cap.pod.headcount, color) + 8;
     const lp = geo.ground;
-    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#2A3A57",
-      "font-size": 12, "font-weight": item.flagship ? 800 : 700, stroke: "#FFFFFF", "stroke-width": 3.4,
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#EAF6F1",
+      "font-size": 12, "font-weight": item.flagship ? 800 : 700, stroke: "#061119", "stroke-width": 3.4,
       "paint-order": "stroke", "stroke-linejoin": "round", "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
     lbl.textContent = cap.name;
     bd(lp[0] - 70, lp[1] + drop + 8); bd(lp[0] + 70, lp[1] + drop + 8);
@@ -483,6 +539,29 @@
   function buildBeams() {
     D.clients.forEach((c) => {
       c.runs.forEach((capId) => addBeam("core:" + c.id, c.id + ":" + capId, c.color, { clientId: c.id }));
+    });
+  }
+
+  /* ---- extra scenery per island: a laptop (the "run" access point), a
+         cloud mark tethered above the core, and a couple of drifting data
+         cubes — so the landscape isn't just repeated towers. ---- */
+  function buildDecor() {
+    D.clients.forEach((c) => {
+      const L2 = CL[c.id]; const [gxm, gym, gxM, gyM] = L2.box;
+      const glow = glowFor(c.color);
+      // laptop: front-left corner of the island, facing the viewer
+      const lx = gxm + 0.62, ly = gyM - 0.5;
+      drawLaptop(Lparts, lx, ly, 0.62, c.color, glow);
+      // cloud: tethered above the Dataverse core
+      const coreTop = nodes["core:" + c.id] ? nodes["core:" + c.id].top : iso(L2.corePos[0], L2.corePos[1], L2.coreH);
+      clouds.push(drawCloudMark(coreTop, c.color));
+      // a couple of small drifting cubes near the island's open corner
+      const spots = [[gxM - 0.5, gym + 0.55], [gxM - 1.15, gym + 1.25]];
+      spots.forEach((p, i) => {
+        const cu = drawCube(Lparts, p[0], p[1], 0.16 + i * 0.03, c.color, 26 + i * 16);
+        bd(cu.cx - 14, cu.baseY - 14); bd(cu.cx + 14, cu.baseY + 14 + 8);   // + bob headroom
+        cubes.push(cu);
+      });
     });
   }
 
@@ -742,10 +821,13 @@
     for (const k in nodes) delete nodes[k];
     beams.length = 0;
     emblems.length = 0;
+    clouds.length = 0;
+    cubes.length = 0;
     computeLayout();
     buildGround();
     buildNodes();
     buildBeams();
+    buildDecor();
     applyFocusStates();
   }
   let rebuildQueued = false;
@@ -932,6 +1014,16 @@
       em.front.setAttribute("opacity", facingFront ? "1" : "0");
       em.back.setAttribute("opacity", facingFront ? "0" : "1");
     }
+    // clouds: a slow, gentle bob
+    clouds.forEach((cl, i) => {
+      const bob = Math.sin(ts * 0.5 + i) * 5;
+      cl.wrap.setAttribute("transform", `translate(0,${bob.toFixed(1)})`);
+    });
+    // cubes: drift up/down at slightly different phases, on top of their base lift
+    cubes.forEach((cu, i) => {
+      const bob = Math.sin(ts * 0.9 + i * 1.7) * 6;
+      cu.wrap.setAttribute("transform", `translate(0,${(-cu.liftPx + bob).toFixed(1)})`);
+    });
   }
 
   /* =====================================================================
@@ -947,10 +1039,31 @@
     set("#brand .wordmark", D.practice.wordmark);
     const hero = D.practice.hero;
     set("#intro .intro-eyebrow", hero.eyebrow || "");
-    set("#intro h1", hero.headline);
+    set("#intro h1 .h1-a", hero.headline);
+    set("#intro h1 .h1-b", hero.headlineAccent || "");
     set("#intro .lede", hero.sub);
-    const pts2 = $("#intro .intro-points");
-    if (pts2) { pts2.innerHTML = ""; (hero.points || []).forEach((p) => { const li = el2("li"); li.textContent = p; pts2.appendChild(li); }); }
+    const stats = $("#intro .intro-stats");
+    if (stats) {
+      stats.innerHTML = "";
+      (hero.stats || []).forEach((s) => {
+        const cell = el2("div", "stat");
+        const num = el2("div", "stat-n"); num.textContent = s.n; cell.appendChild(num);
+        if (s.unit) { const u = el2("span", "stat-u"); u.textContent = s.unit; num.appendChild(u); }
+        const lbl = el2("div", "stat-l"); lbl.textContent = s.label; cell.appendChild(lbl);
+        stats.appendChild(cell);
+      });
+    }
+    const logoRow = $("#intro .intro-built-row");
+    if (logoRow) {
+      logoRow.innerHTML = "";
+      const ic = window.ICONS || {};
+      (hero.logos || []).forEach((id) => {
+        if (!ic[id]) return;
+        const im = el2("img", "built-logo");
+        im.src = ic[id]; im.alt = ""; im.loading = "lazy";
+        logoRow.appendChild(im);
+      });
+    }
     set("#intro .intro-note", hero.note || "");
     if (hero.cta) { const btn = $("#enter"); if (btn) btn.innerHTML = hero.cta + " &rarr;"; }
     set("#footer", D.practice.footer);

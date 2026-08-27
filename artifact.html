@@ -13,6 +13,11 @@
   --accent:#2E7AD1;
   --good:#2F9E6E;
   --shadow:0 24px 60px -22px rgba(23,45,85,.30);
+  /* the interactive scene runs its own dark teal theme, independent of the
+     light Microsoft-blue chrome (header, panel, intro) around it */
+  --scn-1:#0A1826; --scn-2:#0E2432; --scn-3:#0C1F2E;
+  --scn-mint:#2FE0B0; --scn-mint-dim:rgba(47,224,176,.35);
+  --scn-line:rgba(47,224,176,.20); --scn-ink:#EAF6F1; --scn-soft:#7FA79B;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -25,7 +30,11 @@ body{
   font-family:"Segoe UI","Inter",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
   -webkit-font-smoothing:antialiased; overflow:hidden;
 }
-#stage{position:fixed;inset:0;z-index:1}
+#stage{position:fixed;inset:0;z-index:1;
+  background:
+    radial-gradient(120% 70% at 22% 12%, rgba(47,224,176,.09), transparent 55%),
+    radial-gradient(100% 85% at 82% 6%, rgba(46,122,209,.12), transparent 55%),
+    linear-gradient(180deg, var(--scn-1), var(--scn-2) 55%, var(--scn-3))}
 #scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #scene.dragging{cursor:grabbing}
 
@@ -42,16 +51,20 @@ body{
 .beam{transition:opacity .3s}
 
 /* ---------- header ---------- */
-#brand{position:fixed;top:22px;left:26px;z-index:6;display:flex;align-items:center;gap:16px;
-  opacity:0;transform:translateY(-8px);transition:opacity .7s,transform .7s}
+#brand{position:fixed;top:18px;left:20px;z-index:6;display:flex;align-items:center;gap:16px;
+  opacity:0;transform:translateY(-8px);transition:opacity .7s,transform .7s;
+  background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.6);border-radius:999px;
+  padding:9px 20px 9px 16px;backdrop-filter:blur(8px);box-shadow:0 10px 26px -14px rgba(5,20,30,.5)}
 #brand.in{opacity:1;transform:none}
-#brand img.ey{height:34px;width:auto;display:block}          /* EY keeps its clear space */
-#brand .divider{width:1px;height:26px;background:var(--line)}
-#brand .wordmark{font-weight:600;font-size:15px;letter-spacing:.01em;color:var(--ink)}
+#brand img.ey{height:30px;width:auto;display:block}          /* EY keeps its clear space */
+#brand .divider{width:1px;height:24px;background:var(--line)}
+#brand .wordmark{font-weight:600;font-size:14.5px;letter-spacing:.01em;color:var(--ink)}
 
-#ms-corner{position:fixed;top:26px;right:28px;z-index:6;opacity:0;transition:opacity .8s .1s}
-#ms-corner.in{opacity:.55}
-#ms-corner img{height:17px;width:auto;display:block}
+#ms-corner{position:fixed;top:22px;right:24px;z-index:6;opacity:0;transition:opacity .8s .1s;
+  background:rgba(255,255,255,.9);border-radius:999px;padding:8px 12px;backdrop-filter:blur(8px);
+  box-shadow:0 10px 26px -14px rgba(5,20,30,.5)}
+#ms-corner.in{opacity:1}
+#ms-corner img{height:16px;width:auto;display:block}
 
 /* client tiles — pick a tenant */
 #clients{position:fixed;top:58px;right:28px;z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:8px;
@@ -69,10 +82,10 @@ body{
 @media(max-width:820px){#clients{display:none}}
 
 /* ---------- people-met counter ---------- */
-#counter{position:fixed;left:26px;bottom:22px;z-index:6;font-size:13px;color:var(--soft);
+#counter{position:fixed;left:26px;bottom:22px;z-index:6;font-size:13px;color:var(--scn-soft);
   letter-spacing:.02em;opacity:0;transform:translateY(8px);transition:opacity .9s .2s,transform .9s .2s}
 #counter.in{opacity:1;transform:none}
-#counter b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
+#counter b{color:var(--scn-ink);font-variant-numeric:tabular-nums;font-weight:700}
 
 /* ---------- hint / reset / footer ---------- */
 #hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(8px);z-index:6;display:flex;gap:16px;
@@ -126,7 +139,7 @@ body{
 #panel.open~#actions{right:calc(min(438px,94vw) + 18px)}
 @media(max-width:900px){#panel.open~#actions{right:16px}#actions{right:16px}}
 
-#footer{position:fixed;left:50%;bottom:2px;transform:translateX(-50%);z-index:5;font-size:11.5px;color:#9AA8BC;
+#footer{position:fixed;left:50%;bottom:2px;transform:translateX(-50%);z-index:5;font-size:11.5px;color:var(--scn-soft);
   text-align:center;max-width:70vw;opacity:0;transition:opacity 1s .5s;pointer-events:none}
 #footer.in{opacity:1}
 @media(max-width:900px){#footer{display:none}}
@@ -205,21 +218,42 @@ body{
 .intro-logos img{display:block;width:auto}
 .intro-logos img.ey{height:58px}.intro-logos img.ms{height:30px}
 .intro-logos .bar{width:1px;height:42px;background:var(--line)}
-.intro-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+.intro-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
   color:var(--accent);margin:0 0 16px}
-#intro h1{font-size:clamp(27px,4.2vw,44px);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin:0 0 18px;
-  color:var(--ink);text-wrap:balance;max-width:22ch;margin-inline:auto}
-#intro .lede{font-size:clamp(15px,2vw,17.5px);color:var(--ink2);line-height:1.62;margin:0 auto 26px;max-width:60ch;text-wrap:balance}
-.intro-points{list-style:none;margin:0 auto 32px;padding:0;max-width:56ch;display:flex;flex-direction:column;gap:10px;text-align:left}
-.intro-points li{position:relative;padding-left:26px;font-size:14.5px;color:var(--ink2);line-height:1.5}
-.intro-points li::before{content:"";position:absolute;left:2px;top:7px;width:8px;height:8px;border-radius:2px;
-  background:linear-gradient(135deg,#3B8AE0,var(--accent));transform:rotate(45deg)}
-.intro-note{margin:22px auto 0;font-size:12.5px;color:var(--soft);line-height:1.55;max-width:52ch;text-wrap:balance}
+#intro h1{font-size:clamp(34px,5.6vw,58px);font-weight:800;letter-spacing:-1px;line-height:1.06;margin:0 0 18px;
+  text-wrap:balance;max-width:16ch;margin-inline:auto}
+#intro h1 span{display:block}
+#intro h1 .h1-a{color:var(--ink)}
+#intro h1 .h1-b{background:linear-gradient(100deg,#2E7AD1,#12A5A5);-webkit-background-clip:text;background-clip:text;color:transparent}
+#intro .lede{font-size:clamp(15px,2vw,17.5px);color:var(--ink2);line-height:1.62;margin:0 auto 34px;max-width:52ch;text-wrap:balance}
+
+/* stat row */
+.intro-stats{display:flex;align-items:flex-start;justify-content:center;gap:clamp(22px,4.5vw,48px);
+  margin:0 auto 36px;flex-wrap:wrap}
+.stat{text-align:center;min-width:64px}
+.stat-n{font-size:clamp(28px,3.6vw,40px);font-weight:800;letter-spacing:-.5px;color:var(--ink);line-height:1;
+  font-variant-numeric:tabular-nums}
+.stat-u{font-size:.5em;font-weight:700;color:var(--accent);margin-left:2px}
+.stat-l{margin-top:7px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--soft)}
+
 #enter{font-weight:700;font-size:15px;color:#fff;background:linear-gradient(180deg,#3B8AE0,var(--accent));border:none;
   border-radius:999px;padding:15px 34px;cursor:pointer;box-shadow:0 14px 34px -12px rgba(46,122,209,.7);transition:transform .15s,box-shadow .2s}
 #enter:hover{transform:translateY(-2px);box-shadow:0 20px 44px -12px rgba(46,122,209,.85)}
 #enter:active{transform:translateY(0)}
+
+/* built-on logo strip */
+.intro-built{margin:34px auto 0;max-width:52ch}
+.intro-built-cap{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--soft);margin-bottom:14px}
+.intro-built-row{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;
+  padding-top:18px;border-top:1px solid var(--line)}
+.built-logo{height:22px;width:auto;max-width:64px;object-fit:contain;opacity:.62;filter:saturate(.7);
+  transition:opacity .2s,filter .2s}
+.built-logo:hover{opacity:1;filter:none}
+
+.intro-note{margin:22px auto 0;font-size:12.5px;color:var(--soft);line-height:1.55;max-width:52ch;text-wrap:balance}
 .intro-hint{margin-top:20px;font-size:12px;color:var(--soft);letter-spacing:.02em}
+@media(max-width:640px){.intro-stats{gap:20px}.built-logo{height:18px}}
 
 /* ======================================================================
  *  MOBILE — panel becomes a bottom sheet
@@ -326,10 +360,14 @@ body{
   <div class="intro-card">
     <div class="intro-logos"><img class="ey" alt="EY"><span class="bar"></span><img class="ms" alt="Microsoft"></div>
     <div class="intro-eyebrow"></div>
-    <h1></h1>
+    <h1><span class="h1-a"></span><span class="h1-b"></span></h1>
     <p class="lede"></p>
-    <ul class="intro-points"></ul>
-    <button id="enter">Explore the practice &rarr;</button>
+    <div class="intro-stats"></div>
+    <button id="enter">Explore the platform &rarr;</button>
+    <div class="intro-built">
+      <span class="intro-built-cap">Built on the Microsoft cloud</span>
+      <div class="intro-built-row"></div>
+    </div>
     <p class="intro-note"></p>
   </div>
 </div>
@@ -350,16 +388,19 @@ window.CITY = {
     name: "BizzApps",
     wordmark: "Microsoft AI · Business Applications",
     hero: {
-      eyebrow: "EY · Microsoft AI — Business Applications (BizzApps)",
-      headline: "We bring Microsoft AI into the organisations that run public services and industry.",
-      sub: "BizzApps is EY’s Microsoft Business Applications practice — around 50 people who advise, build and run solutions on the Microsoft cloud: Power Platform, Dynamics 365, Copilot and Azure AI. We take an idea from business case to something live and supported, and we stand behind the numbers.",
-      points: [
-        "Advise · Build · Run — the full lifecycle, one accountable EY team",
-        "Power Platform · Dynamics 365 · Copilot · Azure AI · Fabric · Purview",
-        "Every client on their own governed Microsoft tenant — never one shared platform",
+      eyebrow: "EY · Microsoft AI — Business Applications",
+      headline: "Solutions,",
+      headlineAccent: "built as a city.",
+      sub: "Every building is a solution we shipped on the Microsoft cloud — Power Platform, Dynamics 365, Copilot and Azure AI. Explore the landscape and click any building to see its story.",
+      stats: [
+        { n: "16", label: "Solutions shipped" },
+        { n: "5", label: "Client tenants" },
+        { n: "50", label: "EY specialists" },
+        { n: "200", unit: "K+", label: "Citizens reached" },
       ],
-      cta: "Explore the practice",
-      note: "What follows is a live map of the work. Each island is one client’s separate environment — drag to move, use the compass to orbit, and click any building to see what we run for them and what it’s worth.",
+      logos: ["power-platform", "power-apps", "power-automate", "power-bi", "power-pages", "dataverse", "dynamics365", "copilot", "azure", "fabric", "purview"],
+      cta: "Explore the platform",
+      note: "Each island is one client’s separate Microsoft tenant — drag to move, orbit with the compass, and click any building to see what we run and what it’s worth.",
     },
     footer: "One practice, many isolated tenants — we bring Microsoft AI into each client and run it where the stakes are highest.",
   },
@@ -943,6 +984,60 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     return { top: [cx, cyT], ground: [cx, cyB] };
   }
 
+  /* ---- an isometric LAPTOP: a thin deck + a tilted screen leaning back,
+         with a couple of glowing "code" lines — reads as the app/run layer ---- */
+  function drawLaptop(parent, gx, gy, w, base, glow) {
+    const d = w * 0.68, hDeck = 0.10;
+    const geo = isoBox(parent, gx, gy, w, d, hDeck, base, 0);
+    const xm = gx - w / 2, xM = gx + w / 2, yBack = gy - d / 2, lean = d * 0.92, hScreen = w * 0.62;
+    const b0 = iso(xm, yBack, hDeck), b1 = iso(xM, yBack, hDeck);
+    const t0 = iso(xm, yBack - lean, hDeck + hScreen), t1 = iso(xM, yBack - lean, hDeck + hScreen);
+    poly(parent, [b0, b1, t1, t0], shade(base, -0.06), { stroke: shade(base, -0.30), "stroke-width": 1 });
+    // inset dark screen panel + code lines, echoing the server-tower screens
+    const q = 0.14;
+    const sx0 = xm + w * q, sx1 = xM - w * q, sz0 = hDeck + hScreen * q, sz1 = hDeck + hScreen * (1 - q * 0.6);
+    const sy = yBack - lean * (1 - q * 0.4);
+    poly(parent, [iso(sx0, sy, sz1), iso(sx1, sy, sz1), iso(sx1, sy, sz0), iso(sx0, sy, sz0)], "#08131C");
+    for (let r = 0; r < 3; r++) {
+      const zz = sz0 + (sz1 - sz0) * (0.25 + 0.28 * r);
+      const a = iso(sx0 + (sx1 - sx0) * 0.14, sy, zz), b = iso(sx0 + (sx1 - sx0) * (0.4 + 0.35 * hash(gx + "l" + r)), sy, zz);
+      el("line", { x1: a[0].toFixed(1), y1: a[1].toFixed(1), x2: b[0].toFixed(1), y2: b[1].toFixed(1),
+        stroke: glow.code, "stroke-width": 1.4, "stroke-linecap": "round", opacity: 0.9 }, parent);
+    }
+    // faint keyboard highlight bar on the deck top face
+    const kb0 = iso(xm + w * 0.16, gy + d * 0.06, hDeck), kb1 = iso(xM - w * 0.16, gy + d * 0.06, hDeck);
+    el("line", { x1: kb0[0].toFixed(1), y1: kb0[1].toFixed(1), x2: kb1[0].toFixed(1), y2: kb1[1].toFixed(1),
+      stroke: glow.bar, "stroke-width": 2, "stroke-linecap": "round", opacity: 0.55 }, parent);
+    bd(t0[0], t0[1]); bd(t1[0], t1[1]);
+    return geo;
+  }
+
+  /* ---- a small floating isometric CUBE — decorative data/connectivity
+         accent, drifting near a beam or tucked beside the core ---- */
+  function drawCube(parent, gx, gy, size, color, liftPx) {
+    const wrap = el("g", { transform: `translate(0,${(-liftPx).toFixed(1)})` }, parent);
+    isoBox(wrap, gx, gy, size, size, size, color, 0);
+    const a = iso(gx, gy, size);
+    return { wrap, cx: a[0], baseY: a[1] - liftPx, liftPx };
+  }
+
+  /* ---- an isometric CLOUD mark, screen-space (like the client emblem
+         plaques) — floats above an island, tethered down by a soft beam,
+         signalling "this runs on the Microsoft cloud" ---- */
+  function drawCloudMark(anchorTop, color) {
+    const cx = anchorTop[0], baseY = anchorTop[1] - 84;
+    const wrap = el("g", { class: "cloud-mark", "pointer-events": "none" }, Llabels);
+    el("line", { x1: cx, y1: anchorTop[1] - 6, x2: cx, y2: baseY + 22,
+      stroke: color, "stroke-width": 1.6, "stroke-dasharray": "1.5 5", "stroke-linecap": "round", opacity: 0.4 }, wrap);
+    const g = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
+    el("ellipse", { cx: 0, cy: 10, rx: 30, ry: 8, fill: "#020A11", opacity: 0.3, filter: "url(#soft)" }, g);
+    [[-13, 2, 13], [3, -4, 15], [16, 3, 11], [-2, 6, 17]].forEach(([x, y, r]) =>
+      el("circle", { cx: x, cy: y, r, fill: "#0F2635", stroke: shade(color, 0.1), "stroke-width": 1.2 }, g));
+    [[-9, 1], [1, -2], [10, 1]].forEach(([x, y]) => el("circle", { cx: x, cy: y, r: 1.8, fill: color, opacity: 0.9 }, g));
+    bd(cx - 32, baseY - 14); bd(cx + 32, baseY + 20);
+    return { wrap, cx, baseY };
+  }
+
   /* =====================================================================
    *  Simplified Microsoft product marks (brand-coloured, screen-aligned)
    *  drawn in a ~28px box centred at the origin.
@@ -1027,6 +1122,8 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
   const nodes = {};   // id -> node
   const beams = [];
   const emblems = []; // floating spinning client crests
+  const clouds = [];  // floating "runs on the Microsoft cloud" marks
+  const cubes = [];   // decorative floating data cubes
   let selectedId = null;   // persists across orbit rebuilds
   let focusClient = null;  // which client tenant is spotlighted
   let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
@@ -1066,26 +1163,26 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       const scx = (top[0][0] + top[2][0]) / 2;
       const sbot = Math.max(top[0][1], top[1][1], top[2][1], top[3][1]);
       el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 6).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
-        ry: 16, fill: "#1E2D46", opacity: 0.10, filter: "url(#soft)" }, Lground);
-      poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
-      poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
+        ry: 16, fill: "#020A11", opacity: 0.45, filter: "url(#soft)" }, Lground);
+      poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.62));  // tenant wall (thickness)
+      poly(Lground, top, "#0F2331", { stroke: c.color, "stroke-width": 2, opacity: 1 });
       // faint client tint + soft inner grid
-      poly(Lground, top, c.color + "0F");
+      poly(Lground, top, c.color + "14");
       for (let gx = Math.ceil(gxm); gx <= Math.floor(gxM); gx++) {
         const a = iso(gx, gym, 0), b = iso(gx, gyM, 0);
-        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.16 }, Lground);
       }
       for (let gy = Math.ceil(gym); gy <= Math.floor(gyM); gy++) {
         const a = iso(gxm, gy, 0), b = iso(gxM, gy, 0);
-        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.16 }, Lground);
       }
       // island caption at the front edge: name · sector · isolated tenant
       const lp = iso((gxm + gxM) / 2, gyM - 0.2, 0);
       const cap = el("g", { transform: `translate(${lp[0].toFixed(1)},${(lp[1] + 14).toFixed(1)})` }, Lground);
-      const nm = el("text", { x: 0, y: 0, "text-anchor": "middle", fill: "#22324C", "font-size": 14, "font-weight": 800,
-        stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
+      const nm = el("text", { x: 0, y: 0, "text-anchor": "middle", fill: "#EAF6F1", "font-size": 14, "font-weight": 800,
+        stroke: "#061119", "stroke-width": 3, "paint-order": "stroke", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
       nm.textContent = c.name + (c.real ? "" : "  ·  illustrative");
-      const sub = el("text", { x: 0, y: 16, "text-anchor": "middle", fill: c.color, "font-size": 11, "font-weight": 700,
+      const sub = el("text", { x: 0, y: 16, "text-anchor": "middle", fill: shade(c.color, 0.28), "font-size": 11, "font-weight": 700,
         "letter-spacing": ".04em", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
       sub.textContent = "ISOLATED TENANT · " + c.sector.toUpperCase();
       bd(lp[0] - 120, lp[1] + 30); bd(lp[0] + 120, lp[1] + 30);
@@ -1100,7 +1197,7 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       const inRow = Math.min(per, n - drawn), w = (inRow - 1) * gap;
       for (let i = 0; i < inRow; i++)
         el("circle", { cx: (ground[0] - w / 2 + i * gap).toFixed(1), cy: (y0 + row * gap).toFixed(1),
-          r, fill: color, opacity: 0.92, stroke: "#fff", "stroke-width": 0.6 }, parent);
+          r, fill: color, opacity: 0.92, stroke: "#061119", "stroke-width": 0.6 }, parent);
       drawn += inRow;
     }
     bd(ground[0] - 28, y0 + rows * gap + 2);
@@ -1130,8 +1227,8 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     L.svg(mg, "dataverse", 12);
     bd(a[0] - 20, a[1] - 46);
     const lp = geo.ground;
-    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
-      "font-size": 11.5, "font-weight": 700, stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke",
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#CFEDE3",
+      "font-size": 11.5, "font-weight": 700, stroke: "#061119", "stroke-width": 3, "paint-order": "stroke",
       "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
     lbl.textContent = "Dataverse";
     const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
@@ -1206,8 +1303,8 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     let drop = 24;
     if (cap.pod && cap.pod.headcount) drop = drawPopulation(g, geo.ground, cap.pod.headcount, color) + 8;
     const lp = geo.ground;
-    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#2A3A57",
-      "font-size": 12, "font-weight": item.flagship ? 800 : 700, stroke: "#FFFFFF", "stroke-width": 3.4,
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#EAF6F1",
+      "font-size": 12, "font-weight": item.flagship ? 800 : 700, stroke: "#061119", "stroke-width": 3.4,
       "paint-order": "stroke", "stroke-linejoin": "round", "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
     lbl.textContent = cap.name;
     bd(lp[0] - 70, lp[1] + drop + 8); bd(lp[0] + 70, lp[1] + drop + 8);
@@ -1248,6 +1345,29 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
   function buildBeams() {
     D.clients.forEach((c) => {
       c.runs.forEach((capId) => addBeam("core:" + c.id, c.id + ":" + capId, c.color, { clientId: c.id }));
+    });
+  }
+
+  /* ---- extra scenery per island: a laptop (the "run" access point), a
+         cloud mark tethered above the core, and a couple of drifting data
+         cubes — so the landscape isn't just repeated towers. ---- */
+  function buildDecor() {
+    D.clients.forEach((c) => {
+      const L2 = CL[c.id]; const [gxm, gym, gxM, gyM] = L2.box;
+      const glow = glowFor(c.color);
+      // laptop: front-left corner of the island, facing the viewer
+      const lx = gxm + 0.62, ly = gyM - 0.5;
+      drawLaptop(Lparts, lx, ly, 0.62, c.color, glow);
+      // cloud: tethered above the Dataverse core
+      const coreTop = nodes["core:" + c.id] ? nodes["core:" + c.id].top : iso(L2.corePos[0], L2.corePos[1], L2.coreH);
+      clouds.push(drawCloudMark(coreTop, c.color));
+      // a couple of small drifting cubes near the island's open corner
+      const spots = [[gxM - 0.5, gym + 0.55], [gxM - 1.15, gym + 1.25]];
+      spots.forEach((p, i) => {
+        const cu = drawCube(Lparts, p[0], p[1], 0.16 + i * 0.03, c.color, 26 + i * 16);
+        bd(cu.cx - 14, cu.baseY - 14); bd(cu.cx + 14, cu.baseY + 14 + 8);   // + bob headroom
+        cubes.push(cu);
+      });
     });
   }
 
@@ -1507,10 +1627,13 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     for (const k in nodes) delete nodes[k];
     beams.length = 0;
     emblems.length = 0;
+    clouds.length = 0;
+    cubes.length = 0;
     computeLayout();
     buildGround();
     buildNodes();
     buildBeams();
+    buildDecor();
     applyFocusStates();
   }
   let rebuildQueued = false;
@@ -1697,6 +1820,16 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       em.front.setAttribute("opacity", facingFront ? "1" : "0");
       em.back.setAttribute("opacity", facingFront ? "0" : "1");
     }
+    // clouds: a slow, gentle bob
+    clouds.forEach((cl, i) => {
+      const bob = Math.sin(ts * 0.5 + i) * 5;
+      cl.wrap.setAttribute("transform", `translate(0,${bob.toFixed(1)})`);
+    });
+    // cubes: drift up/down at slightly different phases, on top of their base lift
+    cubes.forEach((cu, i) => {
+      const bob = Math.sin(ts * 0.9 + i * 1.7) * 6;
+      cu.wrap.setAttribute("transform", `translate(0,${(-cu.liftPx + bob).toFixed(1)})`);
+    });
   }
 
   /* =====================================================================
@@ -1712,10 +1845,31 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     set("#brand .wordmark", D.practice.wordmark);
     const hero = D.practice.hero;
     set("#intro .intro-eyebrow", hero.eyebrow || "");
-    set("#intro h1", hero.headline);
+    set("#intro h1 .h1-a", hero.headline);
+    set("#intro h1 .h1-b", hero.headlineAccent || "");
     set("#intro .lede", hero.sub);
-    const pts2 = $("#intro .intro-points");
-    if (pts2) { pts2.innerHTML = ""; (hero.points || []).forEach((p) => { const li = el2("li"); li.textContent = p; pts2.appendChild(li); }); }
+    const stats = $("#intro .intro-stats");
+    if (stats) {
+      stats.innerHTML = "";
+      (hero.stats || []).forEach((s) => {
+        const cell = el2("div", "stat");
+        const num = el2("div", "stat-n"); num.textContent = s.n; cell.appendChild(num);
+        if (s.unit) { const u = el2("span", "stat-u"); u.textContent = s.unit; num.appendChild(u); }
+        const lbl = el2("div", "stat-l"); lbl.textContent = s.label; cell.appendChild(lbl);
+        stats.appendChild(cell);
+      });
+    }
+    const logoRow = $("#intro .intro-built-row");
+    if (logoRow) {
+      logoRow.innerHTML = "";
+      const ic = window.ICONS || {};
+      (hero.logos || []).forEach((id) => {
+        if (!ic[id]) return;
+        const im = el2("img", "built-logo");
+        im.src = ic[id]; im.alt = ""; im.loading = "lazy";
+        logoRow.appendChild(im);
+      });
+    }
     set("#intro .intro-note", hero.note || "");
     if (hero.cta) { const btn = $("#enter"); if (btn) btn.innerHTML = hero.cta + " &rarr;"; }
     set("#footer", D.practice.footer);
