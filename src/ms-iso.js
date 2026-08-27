@@ -15,12 +15,14 @@
 
   const TILE = 92;
   const COS30 = Math.cos(Math.PI / 6);
-  // yaw lets the whole scene orbit: rotate (x,y) on the ground plane, then project
-  let yaw = 0, cosY = 1, sinY = 0;
+  // yaw rotates the scene on the ground plane; pitch tilts the camera elevation.
+  // Together they give a free orbit in all orientations.
+  let yaw = 0, cosY = 1, sinY = 0, pitch = 0.5;
   function setYaw(a) { yaw = a; cosY = Math.cos(a); sinY = Math.sin(a); }
+  function setPitch(p) { pitch = Math.max(0.26, Math.min(0.72, p)); }
   const iso = (x, y, z) => {
     const rx = x * cosY - y * sinY, ry = x * sinY + y * cosY;
-    return [(rx - ry) * COS30 * TILE, (rx + ry) * 0.5 * TILE - z * TILE];
+    return [(rx - ry) * COS30 * TILE, (rx + ry) * pitch * TILE - z * TILE];
   };
   const depthOf = (p) => (p[0] * cosY - p[1] * sinY) + (p[0] * sinY + p[1] * cosY);
 
@@ -288,6 +290,11 @@
       const L2 = CL[c.id]; const [gxm, gym, gxM, gyM] = L2.box;
       const top = diamond(gxm, gym, gxM, gyM);
       const thPx = 12;
+      // soft shadow so each tenant island reads as floating apart
+      const scx = (top[0][0] + top[2][0]) / 2;
+      const sbot = Math.max(top[0][1], top[1][1], top[2][1], top[3][1]);
+      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 6).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
+        ry: 16, fill: "#1E2D46", opacity: 0.10, filter: "url(#soft)" }, Lground);
       poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
       poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
       // faint client tint + soft inner grid
@@ -351,10 +358,11 @@
     L.svg(mg, "dataverse", 12);
     bd(a[0] - 20, a[1] - 46);
     const lp = geo.ground;
-    el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
       "font-size": 11.5, "font-weight": 700, stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke",
-      "font-family": "Segoe UI, Inter, sans-serif" }, Llabels).textContent = "Dataverse";
-    const node = { id, kind: "core", clientId: client.id, client, g, top: geo.top, ground: geo.ground, pulse: null };
+      "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
+    lbl.textContent = "Dataverse";
+    const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
     nodes[id] = node; wireNode(node); return node;
   }
 
@@ -378,11 +386,12 @@
     let drop = 24;
     if (cap.pod && cap.pod.headcount) drop = drawPopulation(g, geo.ground, cap.pod.headcount, color) + 8;
     const lp = geo.ground;
-    el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#2A3A57",
-      "font-size": 11.5, "font-weight": item.flagship ? 800 : 700, stroke: "#FFFFFF", "stroke-width": 3.4,
-      "paint-order": "stroke", "stroke-linejoin": "round", "font-family": "Segoe UI, Inter, sans-serif" }, Llabels).textContent = cap.name;
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#2A3A57",
+      "font-size": 12, "font-weight": item.flagship ? 800 : 700, stroke: "#FFFFFF", "stroke-width": 3.4,
+      "paint-order": "stroke", "stroke-linejoin": "round", "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
+    lbl.textContent = cap.name;
     bd(lp[0] - 70, lp[1] + drop + 8); bd(lp[0] + 70, lp[1] + drop + 8);
-    const node = { id, kind: "building", clientId: client.id, client, cap, g, top: geo.top, ground: geo.ground, pulse, flagship: !!item.flagship };
+    const node = { id, kind: "building", clientId: client.id, client, cap, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse, flagship: !!item.flagship };
     nodes[id] = node; wireNode(node); return node;
   }
 
@@ -473,6 +482,11 @@
       svg.classList.add("focus");
     } else {
       svg.classList.remove("focus");
+    }
+    // declutter: building/Dataverse labels show only for the focused tenant
+    for (const id in nodes) {
+      const n = nodes[id];
+      if (n.labelEl) n.labelEl.style.opacity = focusClient ? (n.clientId === focusClient ? 1 : 0) : 0;
     }
   }
   /* ---- tenants-seen counter (discovered by exploring, never announced) ---- */
@@ -697,16 +711,22 @@
     applyVB();
   }
 
+  function panBy(dx, dy) {
+    const r = svg.getBoundingClientRect();
+    VB.x -= dx * VB.w / r.width; VB.y -= dy * VB.h / r.height; applyVB();
+  }
   const pts = new Map();               // active pointers → {x,y}
-  let dragging = false, dragMoved = false, captured = false, dsx = 0, dsy = 0, pid = null;
-  let pinchDist = 0;                    // 0 = not pinching
+  let dragging = false, dragMoved = false, captured = false, dsx = 0, dsy = 0, pid = null, mode = "orbit";
+  let pinchDist = 0;
+  svg.addEventListener("contextmenu", (e) => e.preventDefault());   // right-drag pans
   svg.addEventListener("pointerdown", (e) => {
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pts.size === 1) {
       dragging = true; dragMoved = false; captured = false; pid = e.pointerId;
       dsx = e.clientX; dsy = e.clientY;
+      // left = orbit; right / middle / Shift / Ctrl = pan (move freely)
+      mode = (e.button === 2 || e.button === 1 || e.shiftKey || e.ctrlKey) ? "pan" : "orbit";
     } else if (pts.size === 2) {
-      // second finger down → pinch-zoom, stop orbiting
       dragging = false;
       const a = [...pts.values()]; pinchDist = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
       tag.classList.remove("show");
@@ -714,23 +734,22 @@
   });
   svg.addEventListener("pointermove", (e) => {
     if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pts.size >= 2) {                // pinch
+    if (pts.size >= 2) {                // pinch-zoom
       const a = [...pts.values()], d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
       const cx = (a[0].x + a[1].x) / 2, cy = (a[0].y + a[1].y) / 2;
       if (pinchDist) zoomAt(cx, cy, pinchDist / d);
-      pinchDist = d;
-      return;
+      pinchDist = d; return;
     }
     if (!dragging) return;
+    const dx = e.clientX - dsx, dy = e.clientY - dsy;
     if (!dragMoved) {
-      // stay a "click" until the pointer clearly moves; only then start orbiting
-      if (Math.abs(e.clientX - dsx) + Math.abs(e.clientY - dsy) <= 4) return;
+      if (Math.abs(dx) + Math.abs(dy) <= 4) return;   // still a click
       dragMoved = true; tag.classList.remove("show");
       if (svg.setPointerCapture) { try { svg.setPointerCapture(pid); captured = true; } catch (_) {} }
     }
-    setYaw(yaw - (e.clientX - dsx) * 0.006);   // horizontal drag orbits
+    if (mode === "pan") { panBy(dx, dy); }
+    else { setYaw(yaw - dx * 0.006); setPitch(pitch - dy * 0.0016); queueRebuild(); }  // orbit: yaw + tilt
     dsx = e.clientX; dsy = e.clientY;
-    queueRebuild();
   });
   const liftPointer = (e) => {
     pts.delete(e.pointerId);
@@ -742,19 +761,49 @@
   };
   svg.addEventListener("pointerup", liftPointer);
   svg.addEventListener("pointercancel", liftPointer);
-  svg.addEventListener("click", (e) => { if (e.target === svg && !dragMoved) clearFocus(); });
+
+  // click empty space: focus the island under the cursor, else back to all
+  function scenePoint(cx, cy) { const r = svg.getBoundingClientRect(); return [VB.x + (cx - r.left) / r.width * VB.w, VB.y + (cy - r.top) / r.height * VB.h]; }
+  function pointInPoly(px, py, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i][0], yi = poly[i][1], xj = poly[j][0], yj = poly[j][1];
+      if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  function islandAt(px, py) {
+    for (const c of D.clients) {
+      const [gxm, gym, gxM, gyM] = CL[c.id].box;
+      if (pointInPoly(px, py, [iso(gxm, gym, 0), iso(gxM, gym, 0), iso(gxM, gyM, 0), iso(gxm, gyM, 0)])) return c.id;
+    }
+    return null;
+  }
+  svg.addEventListener("click", (e) => {
+    if (e.target !== svg || dragMoved) return;
+    const p = scenePoint(e.clientX, e.clientY), cid = islandAt(p[0], p[1]);
+    if (cid) focusClientTile(cid); else showAllClients();
+  });
   svg.addEventListener("wheel", (e) => {
     e.preventDefault();
     const r = svg.getBoundingClientRect();
     const mx = VB.x + (e.clientX - r.left) / r.width * VB.w;
     const my = VB.y + (e.clientY - r.top) / r.height * VB.h;
     const f = e.deltaY > 0 ? 1.1 : 0.9;
-    const nw = Math.min(fit.w * 2.2, Math.max(fit.w * 0.45, VB.w * f));
+    const nw = Math.min(fit.w * 2.4, Math.max(fit.w * 0.35, VB.w * f));
     const k = nw / VB.w;
     VB.w = nw; VB.h *= k;
     VB.x = mx - (mx - VB.x) * k; VB.y = my - (my - VB.y) * k;
     applyVB();
   }, { passive: false });
+  // keyboard: arrows pan the view
+  addEventListener("keydown", (e) => {
+    const step = VB.w * 0.06;
+    if (e.key === "ArrowLeft") { VB.x -= step; applyVB(); e.preventDefault(); }
+    else if (e.key === "ArrowRight") { VB.x += step; applyVB(); e.preventDefault(); }
+    else if (e.key === "ArrowUp") { VB.y -= step; applyVB(); e.preventDefault(); }
+    else if (e.key === "ArrowDown") { VB.y += step; applyVB(); e.preventDefault(); }
+  });
 
   /* =====================================================================
    *  Particle animation
@@ -880,7 +929,7 @@
     $("#reset").addEventListener("click", () => {   // back to all clients, level view
       focusClient = null; selectedId = null; setActiveTile(null);
       $("#panel").classList.remove("open");
-      setYaw(0); buildScene(false);
+      setYaw(0); setPitch(0.5); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
     });
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });

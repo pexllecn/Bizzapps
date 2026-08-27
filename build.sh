@@ -43,6 +43,7 @@ dataverse|Dataverse_scalable.svg
 copilot|microsoft-copilot.svg
 copilot-studio|microsoft-copilot.svg
 azure|Microsoft_Azure.svg
+azure-ai|Microsoft_Azure.svg
 fabric|Fabric_final_x256.png
 purview|500px-Microsoft_Purview_Logo.svg.webp
 teams|teams-svgrepo-com.svg
