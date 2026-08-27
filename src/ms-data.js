@@ -260,6 +260,7 @@ window.CITY = {
     {
       id: "doj", name: "Department of Justice", short: "DoJ", sector: "Justice · national",
       real: true, color: "#7A57B5", center: [0, 0], tenant: "justice.crm4.dynamics.com",
+      crest: "doj-crest", crestRatio: 2.55,
       story: "Immigration Service Delivery — modernising a service the whole country depends on.",
       runs: ["self-service", "customer-service", "process-automation", "c4e"], flagship: "self-service",
     },

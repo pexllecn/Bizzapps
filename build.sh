@@ -28,6 +28,7 @@ emit_icons () {
   done <<'MAP'
 microsoft|brand-microsoft.svg
 ey|brand-ey.svg
+doj-crest|DOJ logo.png
 dynamics365|Dynamics365_scalable.svg
 d365-contact-center|ContactCenter_scalable.svg
 d365-customer-service|CustomerServices_scalable.svg

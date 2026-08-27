@@ -261,6 +261,7 @@
         Lnodes = $("#Lnodes"), Llabels = $("#Llabels");
   const nodes = {};   // id -> node
   const beams = [];
+  const emblems = []; // floating spinning client crests
   let selectedId = null;   // persists across orbit rebuilds
   let focusClient = null;  // which client tenant is spotlighted
   let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
@@ -369,7 +370,55 @@
       "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
     lbl.textContent = "Dataverse";
     const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
-    nodes[id] = node; wireNode(node); return node;
+    nodes[id] = node; wireNode(node);
+    if (client.crest) drawEmblem(client, geo);
+    return node;
+  }
+
+  /* A real client crest, floating on a glass plaque above its Dataverse core
+   * and slowly turning like a coin — readable on both faces so text never
+   * mirrors. Loaded from the supplied asset (never redrawn). */
+  function drawEmblem(client, geo) {
+    const src = (window.ICONS || {})[client.crest]; if (!src) return;
+    const a = geo.top;
+    const cx = a[0], baseY = a[1] - 66;          // hover above the core
+    const ratio = client.crestRatio || 2.4;
+    const W = 128, H = Math.round(W / ratio);    // plaque size (scene units)
+    const pad = 11, iw = W - pad * 2, ih = iw / ratio;
+    const col = client.color;
+
+    // anchor group (positioned in scene space, pans/zooms with the scene)
+    const wrap = el("g", { class: "emblem", "pointer-events": "none" }, Llabels);
+
+    // a soft light-shaft tethering the plaque to the core — feels embedded
+    el("line", { x1: cx, y1: a[1] - 24, x2: cx, y2: baseY + H / 2,
+      stroke: col, "stroke-width": 2, "stroke-linecap": "round", opacity: 0.16 }, wrap);
+    el("ellipse", { cx: cx, cy: a[1] - 22, rx: 15, ry: 6, fill: col, opacity: 0.14 }, wrap);
+
+    // the spinner: a group we translate to the plaque + scale horizontally
+    // each frame (coin flip about its own vertical centre line)
+    const spin = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
+
+    // one plaque face, drawn centred on (0,0); `back` pre-mirrors it so that
+    // when the wrapper's negative X-scale flips it, the logo reads correctly.
+    function face(back) {
+      const f = el("g", { transform: back ? "scale(-1,1)" : "" }, spin);
+      el("rect", { x: -W / 2, y: -H / 2, width: W, height: H, rx: 13, ry: 13,
+        fill: "#ffffff", stroke: shade(col, 0.35), "stroke-width": 1.4, filter: "url(#soft)" }, f);
+      el("rect", { x: -W / 2 + 3, y: -H / 2 + 3, width: W - 6, height: H - 6, rx: 10, ry: 10,
+        fill: "none", stroke: shade(col, 0.72), "stroke-width": 1 }, f);
+      const img = el("image", { x: -iw / 2, y: -ih / 2, width: iw, height: ih,
+        preserveAspectRatio: "xMidYMid meet" }, f);
+      href(img, src);
+      return f;
+    }
+    const front = face(false), back = face(true);
+    back.setAttribute("opacity", "0");   // hidden until the coin turns past edge-on
+
+    // reserve layout space so the fit-to-view maths never clips the plaque
+    bd(cx - W / 2, baseY - H / 2 - 6); bd(cx + W / 2, baseY + H / 2 + 6);
+
+    emblems.push({ spin, front, back, cx, baseY, H });
   }
 
   /* one deployed solution building inside a client's island */
@@ -692,6 +741,7 @@
     minX = 1e9; minY = 1e9; maxX = -1e9; maxY = -1e9;
     for (const k in nodes) delete nodes[k];
     beams.length = 0;
+    emblems.length = 0;
     computeLayout();
     buildGround();
     buildNodes();
@@ -869,6 +919,18 @@
         n.pulse.setAttribute("opacity", (0.28 + 0.22 * (0.5 + 0.5 * s)).toFixed(2));
       }
       if (n.beacon) n.beacon.setAttribute("opacity", (0.4 + 0.32 * (0.5 + 0.5 * Math.sin(ts * 2.1))).toFixed(2));
+    }
+    // floating client crests: slow coin-spin about the vertical axis + gentle bob
+    for (const em of emblems) {
+      const s = Math.cos(ts * 0.62);                 // +1 front … 0 edge … -1 back
+      const bob = Math.sin(ts * 1.05) * 4;
+      const y = em.baseY + bob;
+      // keep a sliver of thickness at the edge so it never fully vanishes
+      const sx = (s < 0 ? -1 : 1) * Math.max(0.06, Math.abs(s));
+      em.spin.setAttribute("transform", `translate(${em.cx.toFixed(1)},${y.toFixed(1)}) scale(${sx.toFixed(3)},1)`);
+      const facingFront = s >= 0;
+      em.front.setAttribute("opacity", facingFront ? "1" : "0");
+      em.back.setAttribute("opacity", facingFront ? "0" : "1");
     }
   }
 
