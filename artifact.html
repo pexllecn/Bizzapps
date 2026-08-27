@@ -94,6 +94,18 @@ body{
 .nav-tu{top:0;left:32px}.nav-td{bottom:0;left:32px}.nav-rl{top:32px;left:0}.nav-rr{top:32px;right:0}
 #panel.open~#nav{right:calc(min(438px,94vw) + 18px)}
 @media(max-width:900px){#nav{right:16px;bottom:auto;top:64px}#panel.open~#nav{right:16px}}
+/* zoom in / out — stacked pair on the bottom-left, above full-screen */
+#zoom{position:fixed;left:26px;bottom:100px;z-index:6;display:flex;flex-direction:column;gap:8px;
+  opacity:0;transition:opacity .9s .3s;pointer-events:none}
+#zoom.in{opacity:1}#zoom.in .zoom-btn{pointer-events:auto}
+.zoom-btn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:50%;backdrop-filter:blur(8px);
+  color:var(--ink2);font-size:19px;line-height:1;cursor:pointer;padding:0;
+  transition:color .2s,border-color .2s,background .2s;-webkit-user-select:none;user-select:none;touch-action:none}
+.zoom-btn:hover{color:var(--ink);border-color:#C3D3E6;background:#fff}
+.zoom-btn:active{background:var(--accent,#0072C6);color:#fff;border-color:transparent}
+@media(max-width:900px){#zoom{left:16px;bottom:auto;top:108px}}
+
 /* full-screen toggle — sits at bottom-left, mirrors the counter side */
 #fs{position:fixed;left:26px;bottom:56px;z-index:6;width:36px;height:36px;display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:50%;backdrop-filter:blur(8px);
@@ -102,11 +114,17 @@ body{
 #fs.in{opacity:1}#fs:hover{color:var(--ink);border-color:#C3D3E6;background:#fff}
 #fs.on .fs-i{transform:rotate(180deg)}
 @media(max-width:900px){#fs{left:16px;bottom:auto;top:16px}}
-#reset{position:fixed;right:26px;bottom:22px;z-index:6;display:inline-flex;align-items:center;gap:8px;padding:9px 15px;
+/* bottom-right action pills: Home + Reset (kept after #panel so they slide clear) */
+#actions{position:fixed;right:26px;bottom:22px;z-index:6;display:flex;gap:10px;align-items:center;
+  opacity:0;transition:opacity .9s .3s,right .3s}
+#actions.in{opacity:1}
+#home,#reset{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;
   background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:999px;backdrop-filter:blur(8px);
-  color:var(--ink2);font-size:12.5px;cursor:pointer;opacity:0;transition:opacity .9s .3s,color .2s,border-color .2s}
-#reset.in{opacity:1}#reset:hover{color:var(--ink);border-color:#C3D3E6}
-#panel.open~#reset{right:calc(min(438px,94vw) + 18px)}
+  color:var(--ink2);font-size:12.5px;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
+#home:hover,#reset:hover{color:var(--ink);border-color:#C3D3E6}
+#home{font-weight:600;color:var(--ink2)}
+#panel.open~#actions{right:calc(min(438px,94vw) + 18px)}
+@media(max-width:900px){#panel.open~#actions{right:16px}#actions{right:16px}}
 
 #footer{position:fixed;left:50%;bottom:2px;transform:translateX(-50%);z-index:5;font-size:11.5px;color:#9AA8BC;
   text-align:center;max-width:70vw;opacity:0;transition:opacity 1s .5s;pointer-events:none}
@@ -260,17 +278,14 @@ body{
   <span><b>Click</b> a tenant</span>
 </div>
 
-<!-- orbit compass: rotate + tilt without a modifier key -->
-<div id="nav" role="group" aria-label="Orbit the view">
-  <button class="nav-btn nav-tu" data-act="tilt-u" aria-label="Tilt up">&#9650;</button>
-  <button class="nav-btn nav-rl" data-act="rot-l" aria-label="Rotate left">&#8634;</button>
-  <button class="nav-btn nav-rr" data-act="rot-r" aria-label="Rotate right">&#8635;</button>
-  <button class="nav-btn nav-td" data-act="tilt-d" aria-label="Tilt down">&#9660;</button>
+<!-- zoom in / out (bottom-left, clear of the detail panel) -->
+<div id="zoom" role="group" aria-label="Zoom">
+  <button class="zoom-btn" data-act="in" aria-label="Zoom in">&#43;</button>
+  <button class="zoom-btn" data-act="out" aria-label="Zoom out">&#8722;</button>
 </div>
 
 <button id="fs" aria-label="Toggle full screen" title="Full screen"><span class="fs-i">&#9974;</span></button>
 
-<div id="reset">&#8635;&nbsp; Reset view</div>
 <div id="footer"></div>
 <div id="tag"></div>
 
@@ -291,6 +306,20 @@ body{
     <div class="p-proof-sec"><div class="p-cap">Proven at</div><div class="p-proof"></div></div>
   </div>
 </aside>
+
+<!-- right-side controls: kept after the panel so they slide clear when it opens -->
+<!-- orbit compass: rotate + tilt without a modifier key -->
+<div id="nav" role="group" aria-label="Orbit the view">
+  <button class="nav-btn nav-tu" data-act="tilt-u" aria-label="Tilt up">&#9650;</button>
+  <button class="nav-btn nav-rl" data-act="rot-l" aria-label="Rotate left">&#8634;</button>
+  <button class="nav-btn nav-rr" data-act="rot-r" aria-label="Rotate right">&#8635;</button>
+  <button class="nav-btn nav-td" data-act="tilt-d" aria-label="Tilt down">&#9660;</button>
+</div>
+
+<div id="actions">
+  <button id="home">&#8962;&nbsp; Home</button>
+  <div id="reset">&#8635;&nbsp; Reset view</div>
+</div>
 
 <!-- intro -->
 <div id="intro">
@@ -1451,6 +1480,15 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     applyVB();
   }
 
+  // zoom by factor k toward the middle of the current view (for the +/- buttons)
+  function zoomCenter(k) {
+    const nw = Math.min(fit.w * 2.4, Math.max(fit.w * 0.35, VB.w * k));
+    const f = nw / VB.w, cx = VB.x + VB.w / 2, cy = VB.y + VB.h / 2;
+    VB.w = nw; VB.h *= f;
+    VB.x = cx - VB.w / 2; VB.y = cy - VB.h / 2;
+    applyVB();
+  }
+
   function panBy(dx, dy) {
     const r = svg.getBoundingClientRect();
     VB.x -= dx * VB.w / r.width; VB.y -= dy * VB.h / r.height; applyVB();
@@ -1661,7 +1699,7 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
 
   /* ---- intro / reveal ---- */
   function reveal() {
-    ["#brand", "#ms-corner", "#clients", "#hint", "#reset", "#nav", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
+    ["#brand", "#ms-corner", "#clients", "#hint", "#actions", "#nav", "#zoom", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
     // stagger buildings rising, back-to-front
     const arr = Object.values(nodes).sort((a, b) => a.order - b.order);
     arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 40));
@@ -1700,6 +1738,16 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       setYaw(0); setPitch(0.5); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
     });
+    // Home: return to the intro overlay (and reset the scene behind it)
+    const homeBtn = $("#home");
+    if (homeBtn) homeBtn.addEventListener("click", () => {
+      focusClient = null; selectedId = null; setActiveTile(null);
+      $("#panel").classList.remove("open");
+      setYaw(0); setPitch(0.5); buildScene(false);
+      VB = Object.assign({}, fit); applyVB();
+      const intro = $("#intro");
+      if (intro) { intro.style.display = ""; requestAnimationFrame(() => intro.classList.remove("gone")); }
+    });
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });
     addEventListener("resize", () => computeFit());
 
@@ -1717,21 +1765,25 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       document.addEventListener("webkitfullscreenchange", sync);
     }
 
-    // orbit compass: press (or hold) to rotate / tilt around the view centre
-    const nav = $("#nav");
-    if (nav) {
-      const STEP = { "rot-l": [0.14, 0], "rot-r": [-0.14, 0], "tilt-u": [0, 0.05], "tilt-d": [0, -0.05] };
-      let timer = null;
-      const act = (a) => { const s = STEP[a]; if (s) orbitBy(s[0], s[1], null); };
-      nav.addEventListener("pointerdown", (e) => {
-        const b = e.target.closest(".nav-btn"); if (!b) return;
+    // press-and-hold helper for the on-screen control clusters
+    function holdRepeat(container, btnSel, run) {
+      if (!container) return;
+      container.addEventListener("pointerdown", (e) => {
+        const b = e.target.closest(btnSel); if (!b) return;
         e.preventDefault();
-        const a = b.dataset.act; act(a);
-        timer = setInterval(() => act(a), 90);
-        const stop = () => { if (timer) { clearInterval(timer); timer = null; } removeEventListener("pointerup", stop); removeEventListener("pointercancel", stop); };
+        const a = b.dataset.act; run(a);
+        const timer = setInterval(() => run(a), 90);
+        const stop = () => { clearInterval(timer); removeEventListener("pointerup", stop); removeEventListener("pointercancel", stop); };
         addEventListener("pointerup", stop); addEventListener("pointercancel", stop);
       });
     }
+
+    // orbit compass: press (or hold) to rotate / tilt around the view centre
+    const STEP = { "rot-l": [0.14, 0], "rot-r": [-0.14, 0], "tilt-u": [0, 0.05], "tilt-d": [0, -0.05] };
+    holdRepeat($("#nav"), ".nav-btn", (a) => { const s = STEP[a]; if (s) orbitBy(s[0], s[1], null); });
+
+    // zoom buttons: press (or hold) to zoom the view centre in / out
+    holdRepeat($("#zoom"), ".zoom-btn", (a) => zoomCenter(a === "in" ? 0.88 : 1.14));
 
     // small API (also used by automated checks)
     window.Landscape = { select: (id) => nodes[id] && selectNode(nodes[id]), reset: clearFocus,

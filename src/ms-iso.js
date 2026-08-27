@@ -717,6 +717,15 @@
     applyVB();
   }
 
+  // zoom by factor k toward the middle of the current view (for the +/- buttons)
+  function zoomCenter(k) {
+    const nw = Math.min(fit.w * 2.4, Math.max(fit.w * 0.35, VB.w * k));
+    const f = nw / VB.w, cx = VB.x + VB.w / 2, cy = VB.y + VB.h / 2;
+    VB.w = nw; VB.h *= f;
+    VB.x = cx - VB.w / 2; VB.y = cy - VB.h / 2;
+    applyVB();
+  }
+
   function panBy(dx, dy) {
     const r = svg.getBoundingClientRect();
     VB.x -= dx * VB.w / r.width; VB.y -= dy * VB.h / r.height; applyVB();
@@ -927,7 +936,7 @@
 
   /* ---- intro / reveal ---- */
   function reveal() {
-    ["#brand", "#ms-corner", "#clients", "#hint", "#reset", "#nav", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
+    ["#brand", "#ms-corner", "#clients", "#hint", "#actions", "#nav", "#zoom", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
     // stagger buildings rising, back-to-front
     const arr = Object.values(nodes).sort((a, b) => a.order - b.order);
     arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 40));
@@ -966,6 +975,16 @@
       setYaw(0); setPitch(0.5); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
     });
+    // Home: return to the intro overlay (and reset the scene behind it)
+    const homeBtn = $("#home");
+    if (homeBtn) homeBtn.addEventListener("click", () => {
+      focusClient = null; selectedId = null; setActiveTile(null);
+      $("#panel").classList.remove("open");
+      setYaw(0); setPitch(0.5); buildScene(false);
+      VB = Object.assign({}, fit); applyVB();
+      const intro = $("#intro");
+      if (intro) { intro.style.display = ""; requestAnimationFrame(() => intro.classList.remove("gone")); }
+    });
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });
     addEventListener("resize", () => computeFit());
 
@@ -983,21 +1002,25 @@
       document.addEventListener("webkitfullscreenchange", sync);
     }
 
-    // orbit compass: press (or hold) to rotate / tilt around the view centre
-    const nav = $("#nav");
-    if (nav) {
-      const STEP = { "rot-l": [0.14, 0], "rot-r": [-0.14, 0], "tilt-u": [0, 0.05], "tilt-d": [0, -0.05] };
-      let timer = null;
-      const act = (a) => { const s = STEP[a]; if (s) orbitBy(s[0], s[1], null); };
-      nav.addEventListener("pointerdown", (e) => {
-        const b = e.target.closest(".nav-btn"); if (!b) return;
+    // press-and-hold helper for the on-screen control clusters
+    function holdRepeat(container, btnSel, run) {
+      if (!container) return;
+      container.addEventListener("pointerdown", (e) => {
+        const b = e.target.closest(btnSel); if (!b) return;
         e.preventDefault();
-        const a = b.dataset.act; act(a);
-        timer = setInterval(() => act(a), 90);
-        const stop = () => { if (timer) { clearInterval(timer); timer = null; } removeEventListener("pointerup", stop); removeEventListener("pointercancel", stop); };
+        const a = b.dataset.act; run(a);
+        const timer = setInterval(() => run(a), 90);
+        const stop = () => { clearInterval(timer); removeEventListener("pointerup", stop); removeEventListener("pointercancel", stop); };
         addEventListener("pointerup", stop); addEventListener("pointercancel", stop);
       });
     }
+
+    // orbit compass: press (or hold) to rotate / tilt around the view centre
+    const STEP = { "rot-l": [0.14, 0], "rot-r": [-0.14, 0], "tilt-u": [0, 0.05], "tilt-d": [0, -0.05] };
+    holdRepeat($("#nav"), ".nav-btn", (a) => { const s = STEP[a]; if (s) orbitBy(s[0], s[1], null); });
+
+    // zoom buttons: press (or hold) to zoom the view centre in / out
+    holdRepeat($("#zoom"), ".zoom-btn", (a) => zoomCenter(a === "in" ? 0.88 : 1.14));
 
     // small API (also used by automated checks)
     window.Landscape = { select: (id) => nodes[id] && selectNode(nodes[id]), reset: clearFocus,

@@ -36,17 +36,14 @@
   <span><b>Click</b> a tenant</span>
 </div>
 
-<!-- orbit compass: rotate + tilt without a modifier key -->
-<div id="nav" role="group" aria-label="Orbit the view">
-  <button class="nav-btn nav-tu" data-act="tilt-u" aria-label="Tilt up">&#9650;</button>
-  <button class="nav-btn nav-rl" data-act="rot-l" aria-label="Rotate left">&#8634;</button>
-  <button class="nav-btn nav-rr" data-act="rot-r" aria-label="Rotate right">&#8635;</button>
-  <button class="nav-btn nav-td" data-act="tilt-d" aria-label="Tilt down">&#9660;</button>
+<!-- zoom in / out (bottom-left, clear of the detail panel) -->
+<div id="zoom" role="group" aria-label="Zoom">
+  <button class="zoom-btn" data-act="in" aria-label="Zoom in">&#43;</button>
+  <button class="zoom-btn" data-act="out" aria-label="Zoom out">&#8722;</button>
 </div>
 
 <button id="fs" aria-label="Toggle full screen" title="Full screen"><span class="fs-i">&#9974;</span></button>
 
-<div id="reset">&#8635;&nbsp; Reset view</div>
 <div id="footer"></div>
 <div id="tag"></div>
 
@@ -67,6 +64,20 @@
     <div class="p-proof-sec"><div class="p-cap">Proven at</div><div class="p-proof"></div></div>
   </div>
 </aside>
+
+<!-- right-side controls: kept after the panel so they slide clear when it opens -->
+<!-- orbit compass: rotate + tilt without a modifier key -->
+<div id="nav" role="group" aria-label="Orbit the view">
+  <button class="nav-btn nav-tu" data-act="tilt-u" aria-label="Tilt up">&#9650;</button>
+  <button class="nav-btn nav-rl" data-act="rot-l" aria-label="Rotate left">&#8634;</button>
+  <button class="nav-btn nav-rr" data-act="rot-r" aria-label="Rotate right">&#8635;</button>
+  <button class="nav-btn nav-td" data-act="tilt-d" aria-label="Tilt down">&#9660;</button>
+</div>
+
+<div id="actions">
+  <button id="home">&#8962;&nbsp; Home</button>
+  <div id="reset">&#8635;&nbsp; Reset view</div>
+</div>
 
 <!-- intro -->
 <div id="intro">
