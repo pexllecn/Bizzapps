@@ -14,16 +14,15 @@ window.CITY = {
     name: "BizzApps",
     wordmark: "Microsoft AI · Business Applications",
     hero: {
-      headline: "Fifty people. One platform. Ireland’s most critical services run on it.",
-      sub: "Every building is something this practice does on Microsoft — advise, build, or run. Explore the city and click anything to see what it’s worth.",
+      headline: "Every client on their own tenant. Never one shared platform.",
+      sub: "Each island is a separate Microsoft tenant with its own governed Dataverse — isolated by design. Explore each client’s environment; click any building to see what we run for them and what it’s worth.",
     },
-    footer: "We bring Microsoft AI into the business and run it where the stakes are highest.",
+    footer: "One practice, many isolated tenants — we bring Microsoft AI into each client and run it where the stakes are highest.",
   },
 
   substrate: {
-    core: "dataverse",                       // the foundation, etched at the heart of the plate
-    coreLabel: "One governed Dataverse per client",
-    label: "The platform underneath — Azure · Fabric · Purview",
+    core: "dataverse",
+    label: "Separate tenants · isolated Dataverse · Azure · Fabric · Purview",
     etched: ["azure", "fabric", "purview"],
   },
 
@@ -243,22 +242,42 @@ window.CITY = {
     },
   ],
 
-  /* three proof landmarks — rendered distinctly, connected back to districts */
-  landmarks: [
+  /* ---------------------------------------------------------------------------
+   *  CLIENT TENANTS — each is a SEPARATE Microsoft tenant with its OWN isolated
+   *  Dataverse. Islands never touch; there are no wires between them. `runs`
+   *  lists the capability ids (from `buildings` above) deployed for that client.
+   *  `center` places the island; `tenant` strings are illustrative only.
+   * ------------------------------------------------------------------------- */
+  clients: [
     {
-      id: "hse", name: "HSE — National breach response", pos: [0.2, -6.7], h: 2.0, size: 1.3,
-      story: "Designed and ran the digital contact centre engaging 200,000+ affected citizens. Around 100 agents at peak. Operated over 2.5 years.",
-      connectsTo: ["A", "E"],
+      id: "doj", name: "Department of Justice", short: "DoJ", sector: "Justice · national",
+      real: true, color: "#7A57B5", center: [0, 0], tenant: "justice.crm4.dynamics.com",
+      story: "Immigration Service Delivery — modernising a service the whole country depends on.",
+      runs: ["self-service", "customer-service", "process-automation", "c4e"], flagship: "self-service",
     },
     {
-      id: "cso", name: "CSO — Census 2027", pos: [-10.6, 1.0], h: 1.9, size: 1.3,
-      story: "Delivery partner and managed service provider for a multi-year national programme.",
-      connectsTo: ["C", "E", "F"],
+      id: "hse", name: "HSE", short: "HSE", sector: "Health · national",
+      real: true, color: "#C4399B", center: [-11.5, -8], tenant: "hse.crm4.dynamics.com",
+      story: "National breach response — we designed and ran the digital contact centre engaging 200,000+ affected citizens, around 100 agents at peak, over 2.5 years.",
+      runs: ["contact-centre", "customer-service", "agent-copilot", "platform-health", "managed-run"], flagship: "contact-centre",
     },
     {
-      id: "doj", name: "Department of Justice — Immigration Service Delivery", pos: [10.6, 4.2], h: 1.9, size: 1.3,
-      story: "Modernising a service the whole country depends on.",
-      connectsTo: ["A", "B"],
+      id: "cso", name: "Central Statistics Office", short: "CSO", sector: "Statistics · national",
+      real: true, color: "#2E7AD1", center: [11.5, -8], tenant: "cso.crm4.dynamics.com",
+      story: "Census 2027 — delivery partner and managed service provider for a multi-year national programme.",
+      runs: ["data-foundation", "insight-reporting", "portfolio", "responsible-ai", "managed-run"], flagship: "data-foundation",
+    },
+    {
+      id: "council", name: "County Council", short: "Council", sector: "Local government",
+      real: false, color: "#12A5A5", center: [-11.5, 8], tenant: "council.crm4.dynamics.com",
+      story: "[Placeholder] A county council digitising resident-facing services and back-office process. Swap for a real reference.",
+      runs: ["self-service", "power-activate", "app-factory", "process-automation"], flagship: "self-service",
+    },
+    {
+      id: "utility", name: "National Utility", short: "Utility", sector: "Utilities",
+      real: false, color: "#E2A310", center: [11.5, 8], tenant: "utility.crm4.dynamics.com",
+      story: "[Placeholder] A national utility running field operations and predictive maintenance on Dynamics 365. Swap for a real reference.",
+      runs: ["field-service", "asset-maintenance", "insight-reporting", "managed-run"], flagship: "field-service",
     },
   ],
 };

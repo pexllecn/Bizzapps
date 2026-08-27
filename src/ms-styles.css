@@ -50,6 +50,21 @@ body{
 #ms-corner.in{opacity:.55}
 #ms-corner img{height:17px;width:auto;display:block}
 
+/* client tiles — pick a tenant */
+#clients{position:fixed;top:58px;right:28px;z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:8px;
+  opacity:0;transform:translateY(-8px);transition:opacity .8s .15s,transform .8s .15s}
+#clients.in{opacity:1;transform:none}
+#clients .cap{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft)}
+.ctiles{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;max-width:60vw}
+.ctile{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border:1px solid var(--line);border-radius:999px;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(6px);color:var(--ink2);font-size:12.5px;font-weight:600;cursor:pointer;transition:.16s}
+.ctile .dot{width:9px;height:9px;border-radius:50%}
+.ctile:hover{border-color:#C3D3E6;color:var(--ink)}
+.ctile.on{background:#fff;border-color:#C3D3E6;color:var(--ink);box-shadow:0 2px 10px rgba(23,45,85,.08)}
+.p-run-txt .mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--ink);
+  background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
+@media(max-width:820px){#clients{display:none}}
+
 /* ---------- people-met counter ---------- */
 #counter{position:fixed;left:26px;bottom:22px;z-index:6;font-size:13px;color:var(--soft);
   letter-spacing:.02em;opacity:0;transform:translateY(8px);transition:opacity .9s .2s,transform .9s .2s}

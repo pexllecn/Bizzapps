@@ -254,70 +254,69 @@
   const nodes = {};   // id -> node
   const beams = [];
   let selectedId = null;   // persists across orbit rebuilds
+  let focusClient = null;  // which client tenant is spotlighted
   let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
 
-  /* ---- the substrate (shared platform plate; not clickable) ---- */
-  function buildGround() {
-    let gxm = 1e9, gxM = -1e9, gym = 1e9, gyM = -1e9;
-    const consider = (pos, size) => {
-      gxm = Math.min(gxm, pos[0] - size); gxM = Math.max(gxM, pos[0] + size);
-      gym = Math.min(gym, pos[1] - size); gyM = Math.max(gyM, pos[1] + size);
-    };
-    D.buildings.forEach((b) => consider(b.pos, b.size + 0.4));
-    D.landmarks.forEach((b) => consider(b.pos, b.size + 0.4));
-    const m = 1.1;
-    gxm -= m; gxM += m; gym -= m; gyM += m;
-    const A = iso(gxm, gym, 0), B = iso(gxM, gym, 0), C = iso(gxM, gyM, 0), G = iso(gxm, gyM, 0);
-    const thPx = 13;
-    poly(Lground, [A, B, C, G].map((p) => [p[0], p[1] + thPx]), "#BCCEDF");
-    poly(Lground, [A, B, C, G], "#E9F1FB", { stroke: "#D3E0F0", "stroke-width": 1.5 });
-    for (let x = Math.ceil(gxm); x <= Math.floor(gxM); x++) {
-      const a = iso(x, gym, 0), b = iso(x, gyM, 0);
-      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D6E2F1", "stroke-width": 1 }, Lground);
-    }
-    for (let y = Math.ceil(gym); y <= Math.floor(gyM); y++) {
-      const a = iso(gxm, y, 0), b = iso(gxM, y, 0);
-      el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: "#D6E2F1", "stroke-width": 1 }, Lground);
-    }
-    // ---- the Dataverse foundation, etched at the HEART of the plate ----
-    // (one per client — never a shared instance; the copy makes that explicit)
-    const cx = (gxm + gxM) / 2, cy = (gym + gyM) / 2;
-    const ringPts = (r) => [iso(cx - r, cy - r, 0), iso(cx + r, cy - r, 0), iso(cx + r, cy + r, 0), iso(cx - r, cy + r, 0)]
-      .map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
-    [5.4, 4.0, 2.7].forEach((r, i) => el("polygon", { points: ringPts(r), fill: "none",
-      stroke: "#B9CCE6", "stroke-width": 1.4, opacity: 0.5 - i * 0.08 }, Lground));
-    if (D.substrate.core) {
-      const cp = iso(cx, cy, 0.03);
-      const cg = el("g", { transform: `translate(${cp[0].toFixed(1)},${cp[1].toFixed(1)})`, opacity: 0.14 }, Lground);
-      L.svg(cg, D.substrate.core, 60);
-    }
-
-    // ---- supporting platform (Azure · Fabric · Purview) etched along the front ----
-    const et = D.substrate.etched || [];
-    et.forEach((key, i) => {
-      const fx = gxm + (gxM - gxm) * (0.34 + 0.32 * (i / Math.max(1, et.length - 1)));
-      const p = iso(fx, gyM - 1.35, 0.02);
-      const gg = el("g", { transform: `translate(${p[0].toFixed(1)},${p[1].toFixed(1)})`, opacity: 0.18 }, Lground);
-      L.svg(gg, key, 22);
+  /* ---- capability catalogue + per-client island layout ---- */
+  const capById = {};
+  D.buildings.forEach((b) => (capById[b.id] = b));
+  const CL = {};   // clientId -> { client, corePos, ring:[{capId,pos,h,size,flagship}], box:[gxm,gym,gxM,gyM] }
+  function computeLayout() {
+    for (const k in CL) delete CL[k];
+    D.clients.forEach((c) => {
+      const cx = c.center[0], cy = c.center[1], n = c.runs.length, R = 2.25;
+      const ring = c.runs.map((capId, i) => {
+        const a = -Math.PI / 2 + (i / n) * Math.PI * 2;
+        const cap = capById[capId] || {};
+        const isFlag = capId === c.flagship;
+        return { capId, pos: [cx + Math.cos(a) * R, cy + Math.sin(a) * R],
+          h: 1.35 * (isFlag ? 1.3 : 1) + (i % 3) * 0.12, size: 1.12, flagship: isFlag };
+      });
+      let gxm = cx, gxM = cx, gym = cy, gyM = cy;
+      const consider = (p, s) => { gxm = Math.min(gxm, p[0] - s); gxM = Math.max(gxM, p[0] + s); gym = Math.min(gym, p[1] - s); gyM = Math.max(gyM, p[1] + s); };
+      consider(c.center, 1.0);
+      ring.forEach((b) => consider(b.pos, b.size * 0.6 + 0.35));
+      const pad = 0.75; gxm -= pad; gxM += pad; gym -= pad; gyM += pad;
+      CL[c.id] = { client: c, corePos: c.center.slice(), coreH: 1.5, coreSize: 1.15, ring, box: [gxm, gym, gxM, gyM] };
     });
-    // front captions — Dataverse-per-client first, then the supporting platform
-    const lp = iso((gxm + gxM) / 2, gyM - 0.5, 0);
-    if (D.substrate.coreLabel) {
-      const tg = el("g", { transform: `translate(${lp[0].toFixed(1)},${(lp[1] - 12).toFixed(1)})` }, Lground);
-      const im = el("g", { transform: "translate(-96,-1)" }, tg); L.svg(im, "dataverse", 8);
-      el("text", { x: -84, y: 4, fill: "#5E7291", "font-size": 13, "font-weight": 700,
-        "font-family": "Segoe UI, Inter, sans-serif" }, tg).textContent = D.substrate.coreLabel;
-    }
-    el("text", { x: lp[0].toFixed(1), y: (lp[1] + 8).toFixed(1), "text-anchor": "middle", fill: "#93A4BE",
-      "font-size": 11.5, "font-weight": 500, "letter-spacing": ".02em",
-      "font-family": "Segoe UI, Inter, sans-serif" }, Lground).textContent = D.substrate.label;
+  }
+
+  /* ---- per-client island plates (each a separate tenant; no shared plate) ---- */
+  function buildGround() {
+    const diamond = (gxm, gym, gxM, gyM) => [iso(gxm, gym, 0), iso(gxM, gym, 0), iso(gxM, gyM, 0), iso(gxm, gyM, 0)];
+    D.clients.forEach((c) => {
+      const L2 = CL[c.id]; const [gxm, gym, gxM, gyM] = L2.box;
+      const top = diamond(gxm, gym, gxM, gyM);
+      const thPx = 12;
+      poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
+      poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
+      // faint client tint + soft inner grid
+      poly(Lground, top, c.color + "0F");
+      for (let gx = Math.ceil(gxm); gx <= Math.floor(gxM); gx++) {
+        const a = iso(gx, gym, 0), b = iso(gx, gyM, 0);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
+      }
+      for (let gy = Math.ceil(gym); gy <= Math.floor(gyM); gy++) {
+        const a = iso(gxm, gy, 0), b = iso(gxM, gy, 0);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
+      }
+      // island caption at the front edge: name · sector · isolated tenant
+      const lp = iso((gxm + gxM) / 2, gyM - 0.2, 0);
+      const cap = el("g", { transform: `translate(${lp[0].toFixed(1)},${(lp[1] + 14).toFixed(1)})` }, Lground);
+      const nm = el("text", { x: 0, y: 0, "text-anchor": "middle", fill: "#22324C", "font-size": 14, "font-weight": 800,
+        stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
+      nm.textContent = c.name + (c.real ? "" : "  ·  illustrative");
+      const sub = el("text", { x: 0, y: 16, "text-anchor": "middle", fill: c.color, "font-size": 11, "font-weight": 700,
+        "letter-spacing": ".04em", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
+      sub.textContent = "ISOLATED TENANT · " + c.sector.toUpperCase();
+      bd(lp[0] - 120, lp[1] + 30); bd(lp[0] + 120, lp[1] + 30);
+    });
   }
 
   /* population dots under a building — density reads as scale */
   function drawPopulation(parent, ground, n, color) {
     const per = 8, gap = 6, r = 2.3, rows = Math.ceil(n / per);
-    let drawn = 0;
-    const y0 = ground[1] + 7;
+    let drawn = 0; const y0 = ground[1] + 7;
     for (let row = 0; row < rows; row++) {
       const inRow = Math.min(per, n - drawn), w = (inRow - 1) * gap;
       for (let i = 0; i < inRow; i++)
@@ -329,105 +328,98 @@
     return 7 + rows * gap + 8;
   }
 
-  /* ---- one building or landmark ---- */
-  function drawNode(b) {
-    const g = el("g", { class: sceneFirst ? "node" : "node in", "data-id": b.id, tabindex: "0",
-      role: "button", "aria-label": b.name }, Lnodes);
-    const color = colorOf(b), glow = glowFor(color);
-    const units = Math.max(3, Math.round(b.h / 0.42));
-    const geo = serverTower(g, b.pos[0], b.pos[1], b.size, b.size, b.h, color, glow, units);
-
-    let beacon = null, pulse = null;
-    if (b.landmark) {
-      // EY-yellow beacon on the roof — proof, not an offering
-      const a = geo.top;
-      const bg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1]).toFixed(1)})` }, g);
-      el("line", { x1: 0, y1: 0, x2: 0, y2: -18, stroke: LANDMARK, "stroke-width": 2.5, opacity: 0.55 }, bg);
-      beacon = el("circle", { cx: 0, cy: -20, r: 9, fill: LANDMARK, opacity: 0.55, filter: "url(#soft)" }, bg);
-      el("circle", { cx: 0, cy: -20, r: 3.6, fill: "#FFF4C2" }, bg);
-      bd(a[0] - 16, a[1] - 34); bd(a[0] + 16, a[1]);
-    } else {
-      // primary Microsoft product mark on a white disc
-      const key = (b.microsoftProducts || [])[0];
-      if (key) {
-        const a = geo.top;
-        const mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 30).toFixed(1)})` }, g);
-        el("circle", { cx: 0, cy: 0, r: 19, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
-        L.svg(mg, key, 13);
-        bd(a[0] - 22, a[1] - 52); bd(a[0] + 22, a[1] - 8);
-      }
-      if (b.flagship) {
-        const a = geo.top;
-        pulse = el("circle", { cx: a[0], cy: a[1] - 2, r: 20, fill: "none", stroke: color, "stroke-width": 2, opacity: 0.5 }, g);
-      }
-    }
-
-    // population dots
-    let labelDrop = 25;
-    if (!b.landmark && b.pod && b.pod.headcount) labelDrop = drawPopulation(g, geo.ground, b.pod.headcount, color) + 10;
-
-    // label
-    const lp = geo.ground;
-    const t = el("text", { x: lp[0].toFixed(1), y: (lp[1] + labelDrop).toFixed(1), "text-anchor": "middle",
-      "font-size": b.landmark ? 12 : 12.5, "font-weight": b.flagship ? 800 : 700, fill: b.landmark ? "#7A6A16" : "#2A3A57",
-      stroke: "#FFFFFF", "stroke-width": 3.5, "paint-order": "stroke", "stroke-linejoin": "round",
-      "font-family": "Segoe UI, Inter, sans-serif", class: "nlabel" }, Llabels);
-    t.textContent = b.name;
-    bd(lp[0] - 74, lp[1] + labelDrop + 8); bd(lp[0] + 74, lp[1] + labelDrop + 8);
-
-    const node = { id: b.id, b, g, top: geo.top, ground: geo.ground, beacon, pulse, flagship: !!b.flagship, landmark: !!b.landmark };
-    nodes[b.id] = node;
-
+  function nodeShell(id, ariaLabel) {
+    return el("g", { class: sceneFirst ? "node" : "node in", "data-id": id, tabindex: "0", role: "button", "aria-label": ariaLabel }, Lnodes);
+  }
+  function wireNode(node) {
+    const g = node.g;
     g.addEventListener("pointerenter", () => onHover(node, true));
     g.addEventListener("pointerleave", () => onHover(node, false));
     g.addEventListener("click", (e) => { if (!dragMoved) { e.stopPropagation(); selectNode(node); } });
     g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); selectNode(node); } });
-    return node;
+  }
+
+  /* each client's OWN Dataverse core (a glowing cylinder at the island centre) */
+  function drawCore(client, pos) {
+    const id = "core:" + client.id;
+    const g = nodeShell(id, client.name + " — isolated Dataverse tenant");
+    const color = client.color, glow = glowFor(color);
+    const geo = dbTower(g, pos[0], pos[1], 1.15, 1.6, color, glow);
+    // Dataverse mark on a disc above the core
+    const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 26).toFixed(1)})` }, g);
+    el("circle", { cx: 0, cy: 0, r: 17, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
+    L.svg(mg, "dataverse", 12);
+    bd(a[0] - 20, a[1] - 46);
+    const lp = geo.ground;
+    el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
+      "font-size": 11.5, "font-weight": 700, stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke",
+      "font-family": "Segoe UI, Inter, sans-serif" }, Llabels).textContent = "Dataverse";
+    const node = { id, kind: "core", clientId: client.id, client, g, top: geo.top, ground: geo.ground, pulse: null };
+    nodes[id] = node; wireNode(node); return node;
+  }
+
+  /* one deployed solution building inside a client's island */
+  function drawBuilding(client, item) {
+    const cap = capById[item.capId]; if (!cap) return null;
+    const id = client.id + ":" + item.capId;
+    const g = nodeShell(id, cap.name + " — deployed for " + client.name);
+    const color = client.color, glow = glowFor(color);
+    const units = Math.max(3, Math.round(item.h / 0.42));
+    const geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
+    const key = (cap.microsoftProducts || [])[0];
+    if (key) {
+      const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 28).toFixed(1)})` }, g);
+      el("circle", { cx: 0, cy: 0, r: 18, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
+      L.svg(mg, key, 12.5);
+      bd(a[0] - 22, a[1] - 50);
+    }
+    let pulse = null;
+    if (item.flagship) { const a = geo.top; pulse = el("circle", { cx: a[0], cy: a[1] - 2, r: 20, fill: "none", stroke: color, "stroke-width": 2, opacity: 0.5 }, g); }
+    let drop = 24;
+    if (cap.pod && cap.pod.headcount) drop = drawPopulation(g, geo.ground, cap.pod.headcount, color) + 8;
+    const lp = geo.ground;
+    el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#2A3A57",
+      "font-size": 11.5, "font-weight": item.flagship ? 800 : 700, stroke: "#FFFFFF", "stroke-width": 3.4,
+      "paint-order": "stroke", "stroke-linejoin": "round", "font-family": "Segoe UI, Inter, sans-serif" }, Llabels).textContent = cap.name;
+    bd(lp[0] - 70, lp[1] + drop + 8); bd(lp[0] + 70, lp[1] + drop + 8);
+    const node = { id, kind: "building", clientId: client.id, client, cap, g, top: geo.top, ground: geo.ground, pulse, flagship: !!item.flagship };
+    nodes[id] = node; wireNode(node); return node;
   }
 
   function buildNodes() {
-    const list = D.buildings.map((b) => b).concat(D.landmarks.map((b) => Object.assign({ landmark: true }, b)));
-    // painter's order follows the current orbit angle (far nodes first)
-    list.sort((a, b) => depthOf(a.pos) - depthOf(b.pos));
-    list.forEach((b, i) => { const node = drawNode(b); node.order = i; });
+    const list = [];
+    D.clients.forEach((c) => {
+      const L2 = CL[c.id];
+      list.push({ depth: depthOf(L2.corePos), draw: () => drawCore(c, L2.corePos) });
+      L2.ring.forEach((it) => list.push({ depth: depthOf(it.pos), draw: () => drawBuilding(c, it) }));
+    });
+    list.sort((a, b) => a.depth - b.depth);
+    list.forEach((n, i) => { const node = n.draw(); if (node) node.order = i; });
   }
 
-  /* ---- beams (data flows) ---- */
+  /* ---- beams: WITHIN a client only (its Dataverse to its solutions). Never
+         between clients — the whole point is that tenants don't touch. ---- */
   function addBeam(aId, bId, color, o) {
     o = o || {};
-    const a = nodes[aId], b = nodes[bId];
-    if (!a || !b) return;
+    const a = nodes[aId], b = nodes[bId]; if (!a || !b) return;
     const p0 = a.top, p1 = b.top;
     const mx = (p0[0] + p1[0]) / 2, my = (p0[1] + p1[1]) / 2;
     const dist = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
-    const cy = my - (dist * 0.28 + 52);
+    const cy = my - (dist * 0.30 + 40);
     const d = `M ${p0[0].toFixed(1)} ${p0[1].toFixed(1)} Q ${mx.toFixed(1)} ${cy.toFixed(1)} ${p1[0].toFixed(1)} ${p1[1].toFixed(1)}`;
     const grp = el("g", { class: "beam" }, Lbeams);
-    const path = el("path", { d, fill: "none", stroke: color, "stroke-width": o.w || 2.2,
-      "stroke-linecap": "round", opacity: o.op || 0.42 }, grp);
+    const path = el("path", { d, fill: "none", stroke: color, "stroke-width": o.w || 1.8, "stroke-linecap": "round", opacity: o.op || 0.36 }, grp);
     bd(mx, cy);
     const pg = el("g", { class: "beam" }, Lparts);
     const dots = [];
-    const n = REDUCED ? 0 : (o.n || 2);
-    for (let i = 0; i < n; i++) dots.push({ c: el("circle", { r: o.r || 2.7, fill: color, opacity: 0.95 }, pg), t: i / n });
-    beams.push({ grp, pg, path, dots, len: 0, aId, bId, speed: 0.10 + Math.random() * 0.06 });
-  }
-  function districtAnchor(did) {
-    const inD = D.buildings.filter((b) => b.district === did);
-    return ((inD.find((b) => b.flagship)) || inD[0] || {}).id;
+    const n = REDUCED ? 0 : (o.n || 1);
+    for (let i = 0; i < n; i++) dots.push({ c: el("circle", { r: o.r || 2.4, fill: color, opacity: 0.95 }, pg), t: i / n });
+    beams.push({ grp, pg, path, dots, len: 0, aId, bId, clientId: o.clientId, speed: 0.10 + Math.random() * 0.06 });
   }
   function buildBeams() {
-    // intra-district connectors — each district wired together (ambient drift)
-    D.districts.forEach((d) => {
-      const a = districtAnchor(d.id); if (!a) return;
-      D.buildings.forEach((b) => {
-        if (b.district === d.id && b.id !== a) addBeam(a, b.id, d.color, { w: 1.8, op: 0.34, n: 1, r: 2.3 });
-      });
+    D.clients.forEach((c) => {
+      c.runs.forEach((capId) => addBeam("core:" + c.id, c.id + ":" + capId, c.color, { clientId: c.id }));
     });
-    // landmark → the districts it drew on (visible EY-yellow line)
-    D.landmarks.forEach((lm) => (lm.connectsTo || []).forEach((did) => {
-      const a = districtAnchor(did); if (a) addBeam(lm.id, a, LANDMARK, { w: 2.2, op: 0.5, n: 2, r: 2.6 });
-    }));
   }
 
   /* =====================================================================
@@ -444,20 +436,18 @@
     if (on && node.id !== selectedId) {
       const s = screenOf(node.top);
       tag.style.left = s.x + "px"; tag.style.top = (s.y - 24) + "px";
-      const sub = node.landmark ? "Proof" : (node.b.pod ? node.b.pod.headcount + " people" : "");
-      tag.innerHTML = node.b.name + (sub ? '<span class="c">' + sub + "</span>" : "");
+      let title, sub;
+      if (node.kind === "core") { title = node.client.name + " — Dataverse"; sub = "isolated tenant"; }
+      else { title = node.cap.name; sub = node.client.name; }
+      tag.innerHTML = title + (sub ? '<span class="c">' + sub + "</span>" : "");
       tag.classList.add("show");
     } else if (!on) tag.classList.remove("show");
   }
 
+  // everything in the same client tenant is "related" (the island lights up)
   function relatedIds(node) {
-    const set = new Set([node.id]);
-    if (node.landmark) {
-      D.buildings.forEach((b) => { if ((b.proof || []).includes(node.id)) set.add(b.id); });
-    } else {
-      (node.b.proof || []).forEach((id) => set.add(id));
-      D.buildings.forEach((b) => { if (b.district === node.b.district) set.add(b.id); });
-    }
+    const set = new Set();
+    for (const id in nodes) if (nodes[id].clientId === node.clientId) set.add(id);
     return set;
   }
   // apply .sel/.rel highlight classes from the current selection; called after
@@ -471,49 +461,50 @@
         nodes[id].g.classList.toggle("sel", id === selectedId);
         nodes[id].g.classList.toggle("rel", id !== selectedId && rel.has(id));
       }
+      const cid = nodes[selectedId].clientId;
       beams.forEach((bm) => {
-        const touch = bm.aId === selectedId || bm.bId === selectedId;
-        bm.grp.classList.toggle("rel", touch); bm.pg.classList.toggle("rel", touch);
+        const on = bm.clientId === cid;
+        bm.grp.classList.toggle("rel", on); bm.pg.classList.toggle("rel", on);
       });
+      svg.classList.add("focus");
+    } else if (focusClient) {
+      for (const id in nodes) nodes[id].g.classList.toggle("rel", nodes[id].clientId === focusClient);
+      beams.forEach((bm) => { const on = bm.clientId === focusClient; bm.grp.classList.toggle("rel", on); bm.pg.classList.toggle("rel", on); });
       svg.classList.add("focus");
     } else {
       svg.classList.remove("focus");
     }
   }
-  /* ---- people-met counter (discovered by exploring, never announced) ---- */
-  const met = new Set();
-  let peopleMet = 0;
-  const totalPeople = D.buildings.reduce((s, b) => s + (b.pod ? b.pod.headcount : 0), 0);
-  const totalBuildings = D.buildings.length;
+  /* ---- tenants-seen counter (discovered by exploring, never announced) ---- */
+  const explored = new Set();
+  const totalClients = D.clients.length;
   function updateCounter() {
     const c = $("#counter"); if (!c) return;
-    if (met.size >= totalBuildings) c.innerHTML = '<b>50 people</b> · one practice · Advise. Build. Run.';
-    else c.innerHTML = 'people met · <b>' + peopleMet + '</b> / ' + totalPeople;
+    if (explored.size >= totalClients) c.innerHTML = '<b>' + totalClients + ' clients</b> · ' + totalClients + ' isolated tenants';
+    else c.innerHTML = 'tenants seen · <b>' + explored.size + '</b> / ' + totalClients;
   }
-  function markMet(node) {
-    if (node.landmark || met.has(node.id)) return;
-    met.add(node.id); peopleMet += (node.b.pod ? node.b.pod.headcount : 0); updateCounter();
+  function markExplored(node) {
+    if (node.clientId && !explored.has(node.clientId)) { explored.add(node.clientId); updateCounter(); }
   }
 
   let returnFocusId = null;
   function selectNode(node) {
     returnFocusId = node.id;
     selectedId = node.id;
+    focusClient = node.clientId;               // keep the island highlighted
     tag.classList.remove("show");
-    markMet(node);
+    markExplored(node);
     applyFocusStates();
-    fillPanel(node);
+    if (node.kind === "core") fillClientPanel(node.client); else fillPanel(node);
     const p = $("#panel"); p.classList.add("open"); p.scrollTop = 0;
-    // move keyboard focus into the panel (returned on close)
     const close = p.querySelector(".p-close"); if (close) setTimeout(() => close.focus(), 0);
-    // NB: selecting never moves the camera — only the Reset button and a
-    // "Proven at" jump are allowed to do that.
+    // NB: selecting a node never moves the camera. Only Reset and picking a
+    // client from the top tiles move it.
   }
   function clearFocus() {
     selectedId = null;
     applyFocusStates();
     $("#panel").classList.remove("open");
-    // return focus to the building the user came from (keyboard users)
     if (returnFocusId) { const g = svg.querySelector('[data-id="' + returnFocusId + '"]'); if (g) g.focus(); returnFocusId = null; }
   }
   function el2(tag, cls) { const e = document.createElement(tag); if (cls) e.className = cls; return e; }
@@ -544,25 +535,22 @@
     tweenVBCenter(n.top[0], n.top[1] - 40, 650, () => selectNode(n));
   }
 
-  /* ---- panel ---- */
+  /* ---- solution (building) panel ---- */
   function fillPanel(node) {
-    const p = $("#panel"), b = node.b, isLm = node.landmark, dist = districtById[b.district];
-    const q = (s) => p.querySelector(s);
+    const p = $("#panel"), cap = node.cap, client = node.client, q = (s) => p.querySelector(s);
 
     const eye = q(".p-eyebrow");
-    eye.textContent = isLm ? "Proof" : (dist ? dist.name : "");
-    eye.style.color = isLm ? "#B08900" : (dist ? dist.color : "#68758C");
-    q("h2").textContent = b.name;
+    eye.textContent = client.name + " · tenant";
+    eye.style.color = client.color;
+    q("h2").textContent = cap.name;
 
-    // product logos, top-right (1–3)
     const logos = q(".p-logos"); logos.innerHTML = "";
-    if (!isLm) (b.microsoftProducts || []).slice(0, 3).forEach((k) => logos.appendChild(L.html(k, 28)));
+    (cap.microsoftProducts || []).slice(0, 3).forEach((k) => logos.appendChild(L.html(k, 28)));
 
-    // lifecycle · Advise / Build / Run
     const life = q(".p-life"); life.innerHTML = "";
-    if (!isLm && b.lifecycle) {
+    if (cap.lifecycle) {
       ["advise", "build", "run"].forEach((stage) => {
-        const on = b.lifecycle.indexOf(stage) >= 0;
+        const on = cap.lifecycle.indexOf(stage) >= 0;
         const seg = el2("span", "p-life-seg" + (on ? " on" : ""));
         seg.innerHTML = '<span class="d"></span>' + stage.charAt(0).toUpperCase() + stage.slice(1);
         life.appendChild(seg);
@@ -570,14 +558,12 @@
       life.style.display = "";
     } else life.style.display = "none";
 
-    // what it does / landmark story
-    q(".p-does").textContent = isLm ? b.story : b.whatItDoes;
+    q(".p-does").textContent = cap.whatItDoes;
 
-    // the value — exactly three lines
     const vSec = q(".p-value-sec"), vWrap = q(".p-value"); vWrap.innerHTML = "";
-    if (!isLm && b.value) {
+    if (cap.value) {
       vSec.style.display = "";
-      b.value.forEach((line) => {
+      cap.value.forEach((line) => {
         const row = el2("div", "p-vline");
         const ar = el2("span", "p-arrow"); ar.textContent = "→";
         const tx = document.createElement("span"); tx.textContent = cleanCopy(line);
@@ -585,45 +571,68 @@
       });
     } else vSec.style.display = "none";
 
-    // built with — product chips
     const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
-    if (!isLm && b.microsoftProducts) {
-      bSec.style.display = "";
-      b.microsoftProducts.forEach((k) => bWrap.appendChild(L.chip(k)));
-    } else bSec.style.display = "none";
+    bSec.querySelector(".p-cap").textContent = "Built with";
+    if (cap.microsoftProducts) { bSec.style.display = ""; cap.microsoftProducts.forEach((k) => bWrap.appendChild(L.chip(k))); }
+    else bSec.style.display = "none";
 
-    // who runs it — pod dots + headcount + lead
     const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
-    if (!isLm && b.pod) {
+    rSec.querySelector(".p-cap").textContent = "Who runs it";
+    if (cap.pod) {
       rSec.style.display = "";
       const dots = el2("span", "p-run-dots");
-      for (let i = 0; i < b.pod.headcount; i++) dots.appendChild(document.createElement("i"));
+      for (let i = 0; i < cap.pod.headcount; i++) dots.appendChild(document.createElement("i"));
       const txt = el2("span", "p-run-txt");
-      txt.textContent = b.pod.headcount + " people" + (b.pod.lead ? " · " + b.pod.lead : "");
+      txt.textContent = cap.pod.headcount + " people" + (cap.pod.lead ? " · " + cap.pod.lead : "");
       rWrap.appendChild(dots); rWrap.appendChild(txt);
     } else rSec.style.display = "none";
 
-    // proven at (building) / built by (landmark)
+    // deployed in — link back to this client's isolated tenant
     const pSec = q(".p-proof-sec"), pWrap = q(".p-proof"); pWrap.innerHTML = "";
-    const cap = pSec.querySelector(".p-cap");
-    if (isLm) {
-      const contrib = D.buildings.filter((x) => (x.proof || []).includes(node.id));
-      if (contrib.length) {
-        pSec.style.display = ""; cap.textContent = "Built by";
-        contrib.forEach((x) => { const a = proofLink(x.name); a.addEventListener("click", () => selectNode(nodes[x.id])); pWrap.appendChild(a); });
-      } else pSec.style.display = "none";
-    } else {
-      const pr = (b.proof || []);
-      if (pr.length) {
-        pSec.style.display = ""; cap.textContent = "Proven at";
-        pr.forEach((id) => {
-          const lm = D.landmarks.find((l) => l.id === id); if (!lm) return;
-          const a = proofLink(shortLandmark(lm.name));
-          a.addEventListener("click", () => flyToAndSelect(id));
-          pWrap.appendChild(a);
-        });
-      } else pSec.style.display = "none";
-    }
+    pSec.style.display = ""; pSec.querySelector(".p-cap").textContent = "Deployed in";
+    const a = proofLink(client.name + " · isolated tenant");
+    a.addEventListener("click", () => selectNode(nodes["core:" + client.id]));
+    pWrap.appendChild(a);
+  }
+
+  /* ---- client (tenant) panel ---- */
+  function fillClientPanel(client) {
+    const p = $("#panel"), q = (s) => p.querySelector(s);
+    const eye = q(".p-eyebrow");
+    eye.textContent = client.real ? "Client engagement" : "Illustrative client";
+    eye.style.color = client.color;
+    q("h2").textContent = client.name;
+
+    const logos = q(".p-logos"); logos.innerHTML = ""; logos.appendChild(L.html("dataverse", 28));
+
+    const life = q(".p-life"); life.innerHTML = ""; life.style.display = "";
+    const seg = el2("span", "p-life-seg on"); seg.innerHTML = '<span class="d"></span>Isolated tenant · own Dataverse';
+    life.appendChild(seg);
+
+    q(".p-does").textContent = client.story;
+
+    q(".p-value-sec").style.display = "none";
+
+    const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
+    bSec.style.display = ""; bSec.querySelector(".p-cap").textContent = "Solutions deployed here";
+    client.runs.forEach((capId) => {
+      const cap = capById[capId]; if (!cap) return;
+      const chip = el2("button", "p-chip2"); chip.style.cursor = "pointer";
+      const k = (cap.microsoftProducts || [])[0]; if (k) chip.appendChild(L.html(k, 16));
+      const s = document.createElement("span"); s.textContent = cap.name; chip.appendChild(s);
+      chip.addEventListener("click", () => selectNode(nodes[client.id + ":" + capId]));
+      bWrap.appendChild(chip);
+    });
+
+    const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
+    rSec.style.display = ""; rSec.querySelector(".p-cap").textContent = "Tenant";
+    const txt = el2("span", "p-run-txt");
+    const mono = document.createElement("span"); mono.className = "mono"; mono.textContent = client.tenant;
+    txt.appendChild(mono);
+    txt.appendChild(document.createTextNode(" — its own governed Dataverse, isolated from every other client."));
+    rWrap.appendChild(txt);
+
+    q(".p-proof-sec").style.display = "none";
   }
 
   function countUp(elm, to, suffix) {
@@ -663,6 +672,7 @@
     minX = 1e9; minY = 1e9; maxX = -1e9; maxY = -1e9;
     for (const k in nodes) delete nodes[k];
     beams.length = 0;
+    computeLayout();
     buildGround();
     buildNodes();
     buildBeams();
@@ -791,11 +801,50 @@
     set("#intro .lede", D.practice.hero.sub);
     set("#footer", D.practice.footer);
     updateCounter();
+
+    // client tiles (top-right): pick a tenant to fly into its environment
+    const tiles = $("#clients"); if (tiles) {
+      tiles.innerHTML = '<span class="cap">Clients · separate tenants</span>';
+      const row = el2("div", "ctiles");
+      const all = el2("button", "ctile all on"); all.textContent = "All"; all.setAttribute("data-client", "");
+      all.addEventListener("click", showAllClients); row.appendChild(all);
+      D.clients.forEach((c) => {
+        const t = el2("button", "ctile"); t.setAttribute("data-client", c.id);
+        t.innerHTML = '<span class="dot" style="background:' + c.color + '"></span>' + c.short + (c.real ? "" : "*");
+        t.addEventListener("click", () => focusClientTile(c.id));
+        row.appendChild(t);
+      });
+      tiles.appendChild(row);
+    }
+  }
+
+  function setActiveTile(clientId) {
+    document.querySelectorAll(".ctile").forEach((t) => t.classList.toggle("on", t.getAttribute("data-client") === (clientId || "")));
+  }
+  function islandCentreScreen(clientId) {
+    const [gxm, gym, gxM, gyM] = CL[clientId].box;
+    return iso((gxm + gxM) / 2, (gym + gyM) / 2, 0.8);
+  }
+  function focusClientTile(clientId) {
+    focusClient = clientId; selectedId = null;
+    markExplored({ clientId });
+    applyFocusStates();
+    setActiveTile(clientId);
+    fillClientPanel(CL[clientId].client);
+    const p = $("#panel"); p.classList.add("open"); p.scrollTop = 0;
+    const c = islandCentreScreen(clientId); tweenVBCenter(c[0], c[1] - 30, 650);
+  }
+  function showAllClients() {
+    focusClient = null; selectedId = null;
+    applyFocusStates();
+    setActiveTile(null);
+    $("#panel").classList.remove("open");
+    tweenVBCenter(fit.x + fit.w / 2, fit.y + fit.h / 2, 650);
   }
 
   /* ---- intro / reveal ---- */
   function reveal() {
-    ["#brand", "#ms-corner", "#hint", "#reset", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
+    ["#brand", "#ms-corner", "#clients", "#hint", "#reset", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
     // stagger buildings rising, back-to-front
     const arr = Object.values(nodes).sort((a, b) => a.order - b.order);
     arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 40));
@@ -828,7 +877,9 @@
 
     $("#enter").addEventListener("click", enterScene);
     $("#panel .p-close").addEventListener("click", clearFocus);
-    $("#reset").addEventListener("click", () => {   // the only button that moves the camera back
+    $("#reset").addEventListener("click", () => {   // back to all clients, level view
+      focusClient = null; selectedId = null; setActiveTile(null);
+      $("#panel").classList.remove("open");
       setYaw(0); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
     });
@@ -837,7 +888,7 @@
 
     // small API (also used by automated checks)
     window.Landscape = { select: (id) => nodes[id] && selectNode(nodes[id]), reset: clearFocus,
-      enter: enterScene, ids: () => Object.keys(nodes), fly: flyToAndSelect };
+      enter: enterScene, ids: () => Object.keys(nodes), client: focusClientTile, allClients: showAllClients };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
