@@ -17,11 +17,6 @@
   --accent:#2E7AD1;
   --good:#2F9E6E;
   --shadow:0 24px 60px -22px rgba(23,45,85,.30);
-  /* the interactive scene runs its own dark teal theme, independent of the
-     light Microsoft-blue chrome (header, panel, intro) around it */
-  --scn-1:#0A1826; --scn-2:#0E2432; --scn-3:#0C1F2E;
-  --scn-mint:#2FE0B0; --scn-mint-dim:rgba(47,224,176,.35);
-  --scn-line:rgba(47,224,176,.20); --scn-ink:#EAF6F1; --scn-soft:#7FA79B;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -34,11 +29,7 @@ body{
   font-family:"Segoe UI","Inter",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
   -webkit-font-smoothing:antialiased; overflow:hidden;
 }
-#stage{position:fixed;inset:0;z-index:1;
-  background:
-    radial-gradient(120% 70% at 22% 12%, rgba(47,224,176,.09), transparent 55%),
-    radial-gradient(100% 85% at 82% 6%, rgba(46,122,209,.12), transparent 55%),
-    linear-gradient(180deg, var(--scn-1), var(--scn-2) 55%, var(--scn-3))}
+#stage{position:fixed;inset:0;z-index:1}
 #scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
 #scene.dragging{cursor:grabbing}
 
@@ -86,10 +77,10 @@ body{
 @media(max-width:820px){#clients{display:none}}
 
 /* ---------- people-met counter ---------- */
-#counter{position:fixed;left:26px;bottom:22px;z-index:6;font-size:13px;color:var(--scn-soft);
+#counter{position:fixed;left:26px;bottom:22px;z-index:6;font-size:13px;color:var(--soft);
   letter-spacing:.02em;opacity:0;transform:translateY(8px);transition:opacity .9s .2s,transform .9s .2s}
 #counter.in{opacity:1;transform:none}
-#counter b{color:var(--scn-ink);font-variant-numeric:tabular-nums;font-weight:700}
+#counter b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}
 
 /* ---------- hint / reset / footer ---------- */
 #hint{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(8px);z-index:6;display:flex;gap:16px;
@@ -143,7 +134,7 @@ body{
 #panel.open~#actions{right:calc(min(438px,94vw) + 18px)}
 @media(max-width:900px){#panel.open~#actions{right:16px}#actions{right:16px}}
 
-#footer{position:fixed;left:50%;bottom:2px;transform:translateX(-50%);z-index:5;font-size:11.5px;color:var(--scn-soft);
+#footer{position:fixed;left:50%;bottom:2px;transform:translateX(-50%);z-index:5;font-size:11.5px;color:#9AA8BC;
   text-align:center;max-width:70vw;opacity:0;transition:opacity 1s .5s;pointer-events:none}
 #footer.in{opacity:1}
 @media(max-width:900px){#footer{display:none}}
@@ -283,8 +274,14 @@ body{
   <svg id="scene" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isometric city of the EY Microsoft Business Applications practice">
     <defs>
       <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
-        <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#1E2D46" flood-opacity="0.16"/>
+        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#3A4E76" flood-opacity="0.10"/>
       </filter>
+      <!-- radial contact-shadow for building bases: dark centre, feathered edge -->
+      <radialGradient id="contact" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#1E2D46" stop-opacity="0.34"/>
+        <stop offset="60%" stop-color="#1E2D46" stop-opacity="0.10"/>
+        <stop offset="100%" stop-color="#1E2D46" stop-opacity="0"/>
+      </radialGradient>
     </defs>
     <g id="Lground"></g>
     <g id="Lbeams"></g>
@@ -396,7 +393,7 @@ window.CITY = {
       eyebrow: "EY · Microsoft AI — Business Applications",
       headline: "Solutions,",
       headlineAccent: "built as a city.",
-      sub: "Every building is a solution we shipped on the Microsoft cloud — Power Platform, Dynamics 365, Copilot and Azure AI. Explore the landscape and click any building to see its story.",
+      sub: "Every building is a real client engagement EY has delivered on the Microsoft cloud — Power Platform, Dynamics 365, Copilot and Azure AI. Explore the landscape and click any building to see its story.",
       stats: [
         { n: "16", label: "Solutions shipped" },
         { n: "5", label: "Client tenants" },
@@ -404,8 +401,8 @@ window.CITY = {
         { n: "200", unit: "K+", label: "Citizens reached" },
       ],
       logos: ["power-platform", "power-apps", "power-automate", "power-bi", "power-pages", "dataverse", "dynamics365", "copilot", "azure", "fabric", "purview"],
-      cta: "Explore the platform",
-      note: "Each island is one client’s separate Microsoft tenant — drag to move, orbit with the compass, and click any building to see what we run and what it’s worth.",
+      cta: "Explore the city",
+      note: "Each island is one client’s separate Microsoft tenant. Drag to orbit, scroll to zoom, and click a building — the camera stays where you left it while you read.",
     },
     footer: "One practice, many isolated tenants — we bring Microsoft AI into each client and run it where the stakes are highest.",
   },
@@ -1035,12 +1032,141 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     el("line", { x1: cx, y1: anchorTop[1] - 6, x2: cx, y2: baseY + 22,
       stroke: color, "stroke-width": 1.6, "stroke-dasharray": "1.5 5", "stroke-linecap": "round", opacity: 0.4 }, wrap);
     const g = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
-    el("ellipse", { cx: 0, cy: 10, rx: 30, ry: 8, fill: "#020A11", opacity: 0.3, filter: "url(#soft)" }, g);
+    el("ellipse", { cx: 0, cy: 10, rx: 30, ry: 8, fill: "#1E2D46", opacity: 0.14, filter: "url(#soft)" }, g);
     [[-13, 2, 13], [3, -4, 15], [16, 3, 11], [-2, 6, 17]].forEach(([x, y, r]) =>
-      el("circle", { cx: x, cy: y, r, fill: "#0F2635", stroke: shade(color, 0.1), "stroke-width": 1.2 }, g));
+      el("circle", { cx: x, cy: y, r, fill: "#FFFFFF", stroke: shade(color, -0.15), "stroke-width": 1.2 }, g));
     [[-9, 1], [1, -2], [10, 1]].forEach(([x, y]) => el("circle", { cx: x, cy: y, r: 1.8, fill: color, opacity: 0.9 }, g));
     bd(cx - 32, baseY - 14); bd(cx + 32, baseY + 20);
     return { wrap, cx, baseY };
+  }
+
+  /* =====================================================================
+   *  Solution-shape vocabulary — each returns {top, ground} like isoBox.
+   *  Every solution is one of a few architectural forms so the city reads
+   *  as varied structures, not identical racks: cloud pavilion, insight
+   *  gallery, low-code cube stack, secure vault, portal (laptop), or a
+   *  civic tower (default d365 case). All sit on a shared plinth.
+   * =================================================================== */
+
+  // soft contact-shadow ellipse under any building at ground z=0
+  function groundShadow(parent, gx, gy, rTiles) {
+    const c = iso(gx, gy, 0), rx = rTiles * TILE * COS30 * 1.05, ry = rTiles * TILE * pitch * 1.05;
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + 4).toFixed(1),
+      rx: rx.toFixed(1), ry: ry.toFixed(1), fill: "url(#contact)", opacity: 0.9 }, parent);
+    return c;
+  }
+
+  // a low plinth (podium) that every non-tower solution sits on
+  // (isoBox already shades its own faces from a raw hex — never pre-shade here)
+  function plinth(parent, gx, gy, w, d, base) {
+    isoBox(parent, gx, gy, w, d, 0.28, base, 0);
+  }
+
+  /* ---- CLOUD PAVILION: a fluffy isometric cloud floating over a plinth
+         with dashed rain-of-data lines — reads as the AI / cloud layer ---- */
+  function cloudBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const c = iso(gx, gy, 0.28 + h * 0.55);
+    const R = w * TILE * 0.42;
+    const g = el("g", {}, parent);
+    // soft shadow disc under the cloud (in scene space, at cloud height)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + R * 0.85).toFixed(1),
+      rx: (R * 1.15).toFixed(1), ry: (R * 0.28).toFixed(1),
+      fill: "url(#contact)", opacity: 0.7 }, g);
+    // three overlapping puffs (front-facing so it reads from any orbit angle)
+    const puffs = [[-R * 0.5, 0, R * 0.62], [R * 0.55, R * 0.05, R * 0.55], [0, -R * 0.28, R * 0.7]];
+    puffs.forEach(([dx, dy, r]) => {
+      el("ellipse", { cx: (c[0] + dx).toFixed(1), cy: (c[1] + dy).toFixed(1),
+        rx: r.toFixed(1), ry: (r * 0.78).toFixed(1),
+        fill: shade(base, 0.42), stroke: shade(base, 0.10), "stroke-width": 1.4 }, g);
+    });
+    // subtle inner highlight (top puff)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] - R * 0.35).toFixed(1),
+      rx: (R * 0.45).toFixed(1), ry: (R * 0.16).toFixed(1),
+      fill: "#FFFFFF", opacity: 0.55 }, g);
+    // dashed data-rain from cloud down to plinth
+    const plinthTop = iso(gx, gy, 0.28);
+    for (let i = -1; i <= 1; i++) {
+      const sx = c[0] + i * R * 0.5;
+      el("line", { x1: sx.toFixed(1), y1: (c[1] + R * 0.6).toFixed(1),
+        x2: (plinthTop[0] + i * R * 0.4).toFixed(1), y2: (plinthTop[1] - 4).toFixed(1),
+        stroke: glow.bar, "stroke-width": 1.6, "stroke-dasharray": "2 4",
+        "stroke-linecap": "round", opacity: 0.75 }, g);
+    }
+    bd(c[0] - R * 1.4, c[1] - R * 1.2); bd(c[0] + R * 1.4, c[1] + R * 1.2);
+    return { top: [c[0], c[1] - R * 0.9], ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- INSIGHT GALLERY: three growing bars (Power BI silhouette) rising
+         from a plinth, with a soft glow behind — reads as analytics ---- */
+  function chartBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const bw = w * 0.22, gap = w * 0.06, xs = [-bw - gap, 0, bw + gap];
+    const heights = [h * 0.55, h * 0.8, h * 1.05];
+    xs.forEach((dx, i) => {
+      const bx = gx + dx * 0.55;
+      isoBox(parent, bx, gy, bw, bw, heights[i], base, 0);
+      // glowing top strip
+      const t = iso(bx, gy, heights[i]);
+      el("ellipse", { cx: t[0].toFixed(1), cy: t[1].toFixed(1),
+        rx: (bw * TILE * COS30 * 0.5).toFixed(1), ry: (bw * TILE * pitch * 0.5).toFixed(1),
+        fill: glow.bar, opacity: 0.85 }, parent);
+    });
+    return { top: iso(gx, gy, heights[2]), ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- LOW-CODE CUBE STACK: three translucent cubes ascending in a
+         zig-zag on a plinth — reads as composable low-code building blocks ---- */
+  function cubesBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const s = w * 0.44;
+    const seats = [
+      { dx: -s * 0.35, dy: s * 0.20, z: 0.28,        sz: s * 0.95 },
+      { dx:  s * 0.30, dy: -s * 0.15, z: 0.28 + s * 0.85, sz: s * 0.82 },
+      { dx: -s * 0.10, dy: -s * 0.35, z: 0.28 + s * 1.60, sz: s * 0.66 },
+    ];
+    seats.forEach((c) => {
+      const cx = gx + c.dx, cy = gy + c.dy;
+      // per-cube faux plinth (bottom cap) then the cube
+      isoBox(parent, cx, cy, c.sz, c.sz, c.sz, base, 0);
+      // glow band under the cube
+      const b = iso(cx, cy, c.z + c.sz);
+      el("ellipse", { cx: b[0].toFixed(1), cy: (b[1] + 1).toFixed(1),
+        rx: (c.sz * TILE * COS30 * 0.55).toFixed(1), ry: (c.sz * TILE * pitch * 0.55).toFixed(1),
+        fill: glow.bar, opacity: 0.7 }, parent);
+    });
+    const t = iso(gx + seats[2].dx, gy + seats[2].dy, seats[2].z + seats[2].sz);
+    return { top: t, ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- SECURE VAULT: a low, wide block with a bright chevron-shield mark
+         etched on its front — reads as governance / Purview ---- */
+  function vaultBuilding(parent, gx, gy, w, h, base, glow) {
+    const vw = w * 1.05, vd = w * 0.9, vh = h * 0.62;
+    isoBox(parent, gx, gy, vw, vd, vh, base, 0);
+    // shield mark on the front face
+    const front = gy + vd / 2;
+    const cx0 = gx, z0 = vh * 0.28, z1 = vh * 0.78;
+    const s0 = iso(cx0, front, z1), s1 = iso(cx0 - vw * 0.22, front, z1 * 0.75),
+          s2 = iso(cx0, front, z0), s3 = iso(cx0 + vw * 0.22, front, z1 * 0.75);
+    poly(parent, [s0, s1, s2, s3], glow.bar, { stroke: shade(base, 0.55), "stroke-width": 1.4 });
+    // beacon on top
+    const top = iso(gx, gy, vh);
+    el("circle", { cx: top[0].toFixed(1), cy: (top[1] - 6).toFixed(1), r: 4,
+      fill: glow.led, stroke: "#FFFFFF", "stroke-width": 1 }, parent);
+    return { top, ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- shape picker: infer form from the solution's primary product ---- */
+  function formOfCap(cap) {
+    const p = (cap.microsoftProducts || [])[0] || "";
+    if (p === "copilot" || p === "copilot-studio" || p === "azure-ai" || p === "azure") return "cloud";
+    if (p === "power-pages") return "laptop";
+    if (p === "power-bi" || p === "fabric") return "chart";
+    if (p === "power-apps" || p === "power-automate" || p === "power-platform") return "cubes";
+    if (p === "purview") return "vault";
+    if (p === "dataverse") return "db";
+    return "tower"; // d365-*, dynamics365, m365 → civic tower
   }
 
   /* =====================================================================
@@ -1167,31 +1293,67 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       // soft shadow so each tenant island reads as floating apart
       const scx = (top[0][0] + top[2][0]) / 2;
       const sbot = Math.max(top[0][1], top[1][1], top[2][1], top[3][1]);
-      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 6).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
-        ry: 16, fill: "#020A11", opacity: 0.45, filter: "url(#soft)" }, Lground);
-      poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.62));  // tenant wall (thickness)
-      poly(Lground, top, "#0F2331", { stroke: c.color, "stroke-width": 2, opacity: 1 });
+      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 10).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
+        ry: 20, fill: "url(#contact)", opacity: 0.62 }, Lground);
+      poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
+      poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
       // faint client tint + soft inner grid
-      poly(Lground, top, c.color + "14");
+      poly(Lground, top, c.color + "0F");
       for (let gx = Math.ceil(gxm); gx <= Math.floor(gxM); gx++) {
         const a = iso(gx, gym, 0), b = iso(gx, gyM, 0);
-        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.16 }, Lground);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
       }
       for (let gy = Math.ceil(gym); gy <= Math.floor(gyM); gy++) {
         const a = iso(gxm, gy, 0), b = iso(gxM, gy, 0);
-        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.16 }, Lground);
+        el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: c.color, "stroke-width": 0.6, opacity: 0.10 }, Lground);
       }
       // island caption at the front edge: name · sector · isolated tenant
       const lp = iso((gxm + gxM) / 2, gyM - 0.2, 0);
       const cap = el("g", { transform: `translate(${lp[0].toFixed(1)},${(lp[1] + 14).toFixed(1)})` }, Lground);
-      const nm = el("text", { x: 0, y: 0, "text-anchor": "middle", fill: "#EAF6F1", "font-size": 14, "font-weight": 800,
-        stroke: "#061119", "stroke-width": 3, "paint-order": "stroke", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
+      const nm = el("text", { x: 0, y: 0, "text-anchor": "middle", fill: "#22324C", "font-size": 14, "font-weight": 800,
+        stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
       nm.textContent = c.name + (c.real ? "" : "  ·  illustrative");
-      const sub = el("text", { x: 0, y: 16, "text-anchor": "middle", fill: shade(c.color, 0.28), "font-size": 11, "font-weight": 700,
+      const sub = el("text", { x: 0, y: 16, "text-anchor": "middle", fill: c.color, "font-size": 11, "font-weight": 700,
         "letter-spacing": ".04em", "font-family": "Segoe UI, Inter, sans-serif" }, cap);
       sub.textContent = "ISOLATED TENANT · " + c.sector.toUpperCase();
       bd(lp[0] - 120, lp[1] + 30); bd(lp[0] + 120, lp[1] + 30);
     });
+    // ambient MICROSOFT CLOUD — a large, quiet cloud over the whole city,
+    // signalling the platform underneath every tenant. Behind everything.
+    drawAmbientCloud();
+  }
+
+  /* soft, screen-space cloud floating high above the city centre. Behind
+     all buildings; re-drawn each orbit rebuild so it tracks the view. */
+  function drawAmbientCloud() {
+    const c = iso(0, 0, 4.6);
+    const R = 130;
+    const g = el("g", { class: "ambient-cloud", "pointer-events": "none", opacity: 0.75 }, Lground);
+    // very soft shadow disc under it (still in scene space, above buildings)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + R * 0.85).toFixed(1),
+      rx: (R * 1.4).toFixed(1), ry: (R * 0.28).toFixed(1),
+      fill: "url(#contact)", opacity: 0.25 }, g);
+    // stacked puffs (soft, brand-neutral)
+    const puffs = [[-R * 0.7, R * 0.1, R * 0.72], [R * 0.65, R * 0.14, R * 0.66],
+                   [-R * 0.15, -R * 0.20, R * 0.85], [R * 0.35, -R * 0.05, R * 0.62]];
+    puffs.forEach(([dx, dy, r]) => {
+      el("ellipse", { cx: (c[0] + dx).toFixed(1), cy: (c[1] + dy).toFixed(1),
+        rx: r.toFixed(1), ry: (r * 0.72).toFixed(1),
+        fill: "#FFFFFF", stroke: "#C8D9F1", "stroke-width": 1.4 }, g);
+    });
+    // inner highlight (top of the cloud)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] - R * 0.35).toFixed(1),
+      rx: (R * 0.55).toFixed(1), ry: (R * 0.13).toFixed(1),
+      fill: "#F5FAFF", opacity: 0.9 }, g);
+    // small Azure mark on the cloud
+    const mg = el("g", { transform: `translate(${c[0].toFixed(1)},${(c[1] + 4).toFixed(1)}) scale(0.9)` }, g);
+    L.svg(mg, "azure", 14);
+    // quiet label under it
+    el("text", { x: c[0].toFixed(1), y: (c[1] + R * 0.68).toFixed(1),
+      "text-anchor": "middle", fill: "#2E7AD1", "font-size": 11.5, "font-weight": 700,
+      "letter-spacing": ".09em", opacity: 0.7,
+      "font-family": "Segoe UI, Inter, sans-serif" }, g).textContent = "MICROSOFT CLOUD";
+    bd(c[0] - R * 1.4, c[1] - R * 1.1); bd(c[0] + R * 1.4, c[1] + R * 1.1);
   }
 
   /* population dots under a building — density reads as scale */
@@ -1202,7 +1364,7 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       const inRow = Math.min(per, n - drawn), w = (inRow - 1) * gap;
       for (let i = 0; i < inRow; i++)
         el("circle", { cx: (ground[0] - w / 2 + i * gap).toFixed(1), cy: (y0 + row * gap).toFixed(1),
-          r, fill: color, opacity: 0.92, stroke: "#061119", "stroke-width": 0.6 }, parent);
+          r, fill: color, opacity: 0.92, stroke: "#fff", "stroke-width": 0.6 }, parent);
       drawn += inRow;
     }
     bd(ground[0] - 28, y0 + rows * gap + 2);
@@ -1232,8 +1394,8 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     L.svg(mg, "dataverse", 12);
     bd(a[0] - 20, a[1] - 46);
     const lp = geo.ground;
-    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#CFEDE3",
-      "font-size": 11.5, "font-weight": 700, stroke: "#061119", "stroke-width": 3, "paint-order": "stroke",
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
+      "font-size": 11.5, "font-weight": 700, stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke",
       "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
     lbl.textContent = "Dataverse";
     const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
@@ -1295,7 +1457,17 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     const g = nodeShell(id, cap.name + " — deployed for " + client.name);
     const color = client.color, glow = glowFor(color);
     const units = Math.max(3, Math.round(item.h / 0.42));
-    const geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
+    // soft ground contact-shadow so no shape looks like it's floating
+    groundShadow(g, item.pos[0], item.pos[1], item.size * 0.72);
+    const form = formOfCap(cap);
+    let geo;
+    if (form === "cloud")       geo = cloudBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "laptop") geo = drawLaptop(g, item.pos[0], item.pos[1], item.size * 1.15, color, glow);
+    else if (form === "chart")  geo = chartBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "cubes")  geo = cubesBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "vault")  geo = vaultBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "db")     geo = dbTower(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else                        geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
     const key = (cap.microsoftProducts || [])[0];
     if (key) {
       const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 28).toFixed(1)})` }, g);
@@ -1308,8 +1480,8 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     let drop = 24;
     if (cap.pod && cap.pod.headcount) drop = drawPopulation(g, geo.ground, cap.pod.headcount, color) + 8;
     const lp = geo.ground;
-    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#EAF6F1",
-      "font-size": 12, "font-weight": item.flagship ? 800 : 700, stroke: "#061119", "stroke-width": 3.4,
+    const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + drop).toFixed(1), "text-anchor": "middle", fill: "#2A3A57",
+      "font-size": 12, "font-weight": item.flagship ? 800 : 700, stroke: "#FFFFFF", "stroke-width": 3.4,
       "paint-order": "stroke", "stroke-linejoin": "round", "font-family": "Segoe UI, Inter, sans-serif" }, Llabels);
     lbl.textContent = cap.name;
     bd(lp[0] - 70, lp[1] + drop + 8); bd(lp[0] + 70, lp[1] + drop + 8);
