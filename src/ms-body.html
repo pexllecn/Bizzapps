@@ -30,8 +30,8 @@
 <div id="counter" role="status" aria-live="polite">people met · <b>0</b> / 50</div>
 
 <div id="hint">
-  <span><b>Drag</b> to move</span><span class="sep"></span>
-  <span><b>Right-drag</b> or <b>compass</b> to orbit</span><span class="sep"></span>
+  <span><b>Drag</b> to orbit</span><span class="sep"></span>
+  <span><b>Arrows</b> or <b>right-drag</b> to move</span><span class="sep"></span>
   <span><b>Scroll</b> to zoom</span><span class="sep"></span>
   <span><b>Click</b> a tenant</span>
 </div>
@@ -66,12 +66,12 @@
 </aside>
 
 <!-- right-side controls: kept after the panel so they slide clear when it opens -->
-<!-- orbit compass: rotate + tilt without a modifier key -->
-<div id="nav" role="group" aria-label="Orbit the view">
-  <button class="nav-btn nav-tu" data-act="tilt-u" aria-label="Tilt up">&#9650;</button>
-  <button class="nav-btn nav-rl" data-act="rot-l" aria-label="Rotate left">&#8634;</button>
-  <button class="nav-btn nav-rr" data-act="rot-r" aria-label="Rotate right">&#8635;</button>
-  <button class="nav-btn nav-td" data-act="tilt-d" aria-label="Tilt down">&#9660;</button>
+<!-- move pad: pan the view up / down / left / right -->
+<div id="nav" role="group" aria-label="Move the view">
+  <button class="nav-btn nav-tu" data-act="up" aria-label="Move up">&#9650;</button>
+  <button class="nav-btn nav-rl" data-act="left" aria-label="Move left">&#9664;</button>
+  <button class="nav-btn nav-rr" data-act="right" aria-label="Move right">&#9654;</button>
+  <button class="nav-btn nav-td" data-act="down" aria-label="Move down">&#9660;</button>
 </div>
 
 <div id="actions">

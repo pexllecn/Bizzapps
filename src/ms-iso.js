@@ -800,8 +800,8 @@
     if (pts.size === 1) {
       dragging = true; dragMoved = false; captured = false; pid = e.pointerId;
       dsx = e.clientX; dsy = e.clientY;
-      // left = move/slide (the natural grab); right / middle / Shift / Ctrl / Alt = orbit
-      mode = (e.button === 2 || e.button === 1 || e.shiftKey || e.ctrlKey || e.altKey) ? "orbit" : "pan";
+      // left = orbit (tilt + rotate); right / middle / Shift / Ctrl / Alt = pan
+      mode = (e.button === 2 || e.button === 1 || e.shiftKey || e.ctrlKey || e.altKey) ? "pan" : "orbit";
     } else if (pts.size === 2) {
       dragging = false;
       const a = [...pts.values()];
@@ -1077,9 +1077,9 @@
       });
     }
 
-    // orbit compass: press (or hold) to rotate / tilt around the view centre
-    const STEP = { "rot-l": [0.14, 0], "rot-r": [-0.14, 0], "tilt-u": [0, 0.05], "tilt-d": [0, -0.05] };
-    holdRepeat($("#nav"), ".nav-btn", (a) => { const s = STEP[a]; if (s) orbitBy(s[0], s[1], null); });
+    // move pad: press (or hold) to pan the view up / down / left / right
+    const MOVE = { up: [0, 34], down: [0, -34], left: [34, 0], right: [-34, 0] };
+    holdRepeat($("#nav"), ".nav-btn", (a) => { const m = MOVE[a]; if (m) panBy(m[0], m[1]); });
 
     // zoom buttons: press (or hold) to zoom the view centre in / out
     holdRepeat($("#zoom"), ".zoom-btn", (a) => zoomCenter(a === "in" ? 0.88 : 1.14));
