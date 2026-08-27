@@ -721,30 +721,52 @@
     const r = svg.getBoundingClientRect();
     VB.x -= dx * VB.w / r.width; VB.y -= dy * VB.h / r.height; applyVB();
   }
+  // Orbit (yaw + tilt) around a ground pivot, keeping that pivot fixed on
+  // screen so the view never snaps to the scene centre. pivotScene defaults
+  // to the middle of the current viewBox (used by the compass buttons).
+  function orbitBy(dyaw, dpitch, pivotScene) {
+    const sp = pivotScene || [VB.x + VB.w / 2, VB.y + VB.h / 2];
+    const piv = unproject(sp[0], sp[1]);
+    setYaw(yaw + dyaw); setPitch(pitch + dpitch);
+    const np = iso(piv.x, piv.y, 0);
+    VB.x += np[0] - sp[0]; VB.y += np[1] - sp[1];
+    applyVB(); queueRebuild();
+  }
   const pts = new Map();               // active pointers → {x,y}
   let dragging = false, dragMoved = false, captured = false, dsx = 0, dsy = 0, pid = null, mode = "orbit";
-  let pinchDist = 0;
+  let pinchDist = 0, pinchAng = 0, pinchMidY = 0;
   svg.addEventListener("contextmenu", (e) => e.preventDefault());   // right-drag pans
   svg.addEventListener("pointerdown", (e) => {
     pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pts.size === 1) {
       dragging = true; dragMoved = false; captured = false; pid = e.pointerId;
       dsx = e.clientX; dsy = e.clientY;
-      // left = orbit; right / middle / Shift / Ctrl = pan (move freely)
-      mode = (e.button === 2 || e.button === 1 || e.shiftKey || e.ctrlKey) ? "pan" : "orbit";
+      // left = move/slide (the natural grab); right / middle / Shift / Ctrl / Alt = orbit
+      mode = (e.button === 2 || e.button === 1 || e.shiftKey || e.ctrlKey || e.altKey) ? "orbit" : "pan";
     } else if (pts.size === 2) {
       dragging = false;
-      const a = [...pts.values()]; pinchDist = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
+      const a = [...pts.values()];
+      pinchDist = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
+      pinchAng = Math.atan2(a[1].y - a[0].y, a[1].x - a[0].x);
+      pinchMidY = (a[0].y + a[1].y) / 2;
       tag.classList.remove("show");
     }
   });
   svg.addEventListener("pointermove", (e) => {
     if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (pts.size >= 2) {                // pinch-zoom
+    if (pts.size >= 2) {                // two fingers: pinch-zoom + twist + tilt
       const a = [...pts.values()], d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y) || 1;
       const cx = (a[0].x + a[1].x) / 2, cy = (a[0].y + a[1].y) / 2;
-      if (pinchDist) zoomAt(cx, cy, pinchDist / d);
-      pinchDist = d; return;
+      const ang = Math.atan2(a[1].y - a[0].y, a[1].x - a[0].x);
+      if (pinchDist) {
+        zoomAt(cx, cy, pinchDist / d);          // spread/pinch → zoom
+        let da = ang - pinchAng;                 // twist → yaw
+        while (da > Math.PI) da -= 2 * Math.PI;
+        while (da < -Math.PI) da += 2 * Math.PI;
+        const dmy = cy - pinchMidY;              // both fingers slide up/down → tilt
+        if (Math.abs(da) > 0.003 || Math.abs(dmy) > 0.5) orbitBy(da, -dmy * 0.0016, scenePoint(cx, cy));
+      }
+      pinchDist = d; pinchAng = ang; pinchMidY = cy; return;
     }
     if (!dragging) return;
     const dx = e.clientX - dsx, dy = e.clientY - dsy;
@@ -754,16 +776,7 @@
       if (svg.setPointerCapture) { try { svg.setPointerCapture(pid); captured = true; } catch (_) {} }
     }
     if (mode === "pan") { panBy(dx, dy); }
-    else {
-      // orbit around the point under the cursor so the view doesn't snap
-      // back to the scene centre — pin that ground point in place as we spin.
-      const sp = scenePoint(e.clientX, e.clientY);      // scene coords under cursor
-      const piv = unproject(sp[0], sp[1]);              // tile it maps to (old yaw)
-      setYaw(yaw - dx * 0.006); setPitch(pitch - dy * 0.0016);
-      const np = iso(piv.x, piv.y, 0);                  // where that tile lands now
-      VB.x += np[0] - sp[0]; VB.y += np[1] - sp[1];     // shift so it stays put
-      applyVB(); queueRebuild();
-    }
+    else { orbitBy(-dx * 0.006, -dy * 0.0016, scenePoint(e.clientX, e.clientY)); }  // orbit around cursor
     dsx = e.clientX; dsy = e.clientY;
   });
   const liftPointer = (e) => {
@@ -861,8 +874,14 @@
     // copy from content
     const set = (sel, txt) => { const e = $(sel); if (e) e.textContent = txt; };
     set("#brand .wordmark", D.practice.wordmark);
-    set("#intro h1", D.practice.hero.headline);
-    set("#intro .lede", D.practice.hero.sub);
+    const hero = D.practice.hero;
+    set("#intro .intro-eyebrow", hero.eyebrow || "");
+    set("#intro h1", hero.headline);
+    set("#intro .lede", hero.sub);
+    const pts2 = $("#intro .intro-points");
+    if (pts2) { pts2.innerHTML = ""; (hero.points || []).forEach((p) => { const li = el2("li"); li.textContent = p; pts2.appendChild(li); }); }
+    set("#intro .intro-note", hero.note || "");
+    if (hero.cta) { const btn = $("#enter"); if (btn) btn.innerHTML = hero.cta + " &rarr;"; }
     set("#footer", D.practice.footer);
     updateCounter();
 
@@ -908,7 +927,7 @@
 
   /* ---- intro / reveal ---- */
   function reveal() {
-    ["#brand", "#ms-corner", "#clients", "#hint", "#reset", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
+    ["#brand", "#ms-corner", "#clients", "#hint", "#reset", "#nav", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
     // stagger buildings rising, back-to-front
     const arr = Object.values(nodes).sort((a, b) => a.order - b.order);
     arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 40));
@@ -949,6 +968,36 @@
     });
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });
     addEventListener("resize", () => computeFit());
+
+    // full-screen toggle
+    const fsBtn = $("#fs");
+    if (fsBtn) {
+      const root = document.documentElement;
+      fsBtn.addEventListener("click", () => {
+        const fsEl = document.fullscreenElement || document.webkitFullscreenElement;
+        if (!fsEl) { (root.requestFullscreen || root.webkitRequestFullscreen || (() => {})).call(root); }
+        else { (document.exitFullscreen || document.webkitExitFullscreen || (() => {})).call(document); }
+      });
+      const sync = () => { const on = !!(document.fullscreenElement || document.webkitFullscreenElement); fsBtn.classList.toggle("on", on); fsBtn.title = on ? "Exit full screen" : "Full screen"; setTimeout(computeFit, 60); };
+      document.addEventListener("fullscreenchange", sync);
+      document.addEventListener("webkitfullscreenchange", sync);
+    }
+
+    // orbit compass: press (or hold) to rotate / tilt around the view centre
+    const nav = $("#nav");
+    if (nav) {
+      const STEP = { "rot-l": [0.14, 0], "rot-r": [-0.14, 0], "tilt-u": [0, 0.05], "tilt-d": [0, -0.05] };
+      let timer = null;
+      const act = (a) => { const s = STEP[a]; if (s) orbitBy(s[0], s[1], null); };
+      nav.addEventListener("pointerdown", (e) => {
+        const b = e.target.closest(".nav-btn"); if (!b) return;
+        e.preventDefault();
+        const a = b.dataset.act; act(a);
+        timer = setInterval(() => act(a), 90);
+        const stop = () => { if (timer) { clearInterval(timer); timer = null; } removeEventListener("pointerup", stop); removeEventListener("pointercancel", stop); };
+        addEventListener("pointerup", stop); addEventListener("pointercancel", stop);
+      });
+    }
 
     // small API (also used by automated checks)
     window.Landscape = { select: (id) => nodes[id] && selectNode(nodes[id]), reset: clearFocus,

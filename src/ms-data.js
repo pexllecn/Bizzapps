@@ -14,8 +14,16 @@ window.CITY = {
     name: "BizzApps",
     wordmark: "Microsoft AI · Business Applications",
     hero: {
-      headline: "Every client on their own tenant. Never one shared platform.",
-      sub: "Each island is a separate Microsoft tenant with its own governed Dataverse — isolated by design. Explore each client’s environment; click any building to see what we run for them and what it’s worth.",
+      eyebrow: "EY · Microsoft AI — Business Applications (BizzApps)",
+      headline: "We bring Microsoft AI into the organisations that run public services and industry.",
+      sub: "BizzApps is EY’s Microsoft Business Applications practice — around 50 people who advise, build and run solutions on the Microsoft cloud: Power Platform, Dynamics 365, Copilot and Azure AI. We take an idea from business case to something live and supported, and we stand behind the numbers.",
+      points: [
+        "Advise · Build · Run — the full lifecycle, one accountable EY team",
+        "Power Platform · Dynamics 365 · Copilot · Azure AI · Fabric · Purview",
+        "Every client on their own governed Microsoft tenant — never one shared platform",
+      ],
+      cta: "Explore the practice",
+      note: "What follows is a live map of the work. Each island is one client’s separate environment — drag to move, use the compass to orbit, and click any building to see what we run for them and what it’s worth.",
     },
     footer: "One practice, many isolated tenants — we bring Microsoft AI into each client and run it where the stakes are highest.",
   },
