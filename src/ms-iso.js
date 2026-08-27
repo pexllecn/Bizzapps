@@ -7,7 +7,9 @@
  * ========================================================================== */
 (function () {
   "use strict";
-  const D = window.CITY;
+  const CV = window.ContentVisibility;
+  const PRESENTATION_MODE = CV ? CV.resolveMode() : "internal";
+  const D = CV ? CV.filterCity(window.CITY, PRESENTATION_MODE) : window.CITY;
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const L = window.LOGOS;
   const NS = "http://www.w3.org/2000/svg";
@@ -178,6 +180,189 @@
     return { top: [cx, cyT], ground: [cx, cyB] };
   }
 
+  /* ---- an isometric LAPTOP: a thin deck + a tilted screen leaning back,
+         with a couple of glowing "code" lines — reads as the app/run layer ---- */
+  function drawLaptop(parent, gx, gy, w, base, glow) {
+    const d = w * 0.68, hDeck = 0.10;
+    const geo = isoBox(parent, gx, gy, w, d, hDeck, base, 0);
+    const xm = gx - w / 2, xM = gx + w / 2, yBack = gy - d / 2, lean = d * 0.92, hScreen = w * 0.62;
+    const b0 = iso(xm, yBack, hDeck), b1 = iso(xM, yBack, hDeck);
+    const t0 = iso(xm, yBack - lean, hDeck + hScreen), t1 = iso(xM, yBack - lean, hDeck + hScreen);
+    poly(parent, [b0, b1, t1, t0], shade(base, -0.06), { stroke: shade(base, -0.30), "stroke-width": 1 });
+    // inset dark screen panel + code lines, echoing the server-tower screens
+    const q = 0.14;
+    const sx0 = xm + w * q, sx1 = xM - w * q, sz0 = hDeck + hScreen * q, sz1 = hDeck + hScreen * (1 - q * 0.6);
+    const sy = yBack - lean * (1 - q * 0.4);
+    poly(parent, [iso(sx0, sy, sz1), iso(sx1, sy, sz1), iso(sx1, sy, sz0), iso(sx0, sy, sz0)], "#08131C");
+    for (let r = 0; r < 3; r++) {
+      const zz = sz0 + (sz1 - sz0) * (0.25 + 0.28 * r);
+      const a = iso(sx0 + (sx1 - sx0) * 0.14, sy, zz), b = iso(sx0 + (sx1 - sx0) * (0.4 + 0.35 * hash(gx + "l" + r)), sy, zz);
+      el("line", { x1: a[0].toFixed(1), y1: a[1].toFixed(1), x2: b[0].toFixed(1), y2: b[1].toFixed(1),
+        stroke: glow.code, "stroke-width": 1.4, "stroke-linecap": "round", opacity: 0.9 }, parent);
+    }
+    // faint keyboard highlight bar on the deck top face
+    const kb0 = iso(xm + w * 0.16, gy + d * 0.06, hDeck), kb1 = iso(xM - w * 0.16, gy + d * 0.06, hDeck);
+    el("line", { x1: kb0[0].toFixed(1), y1: kb0[1].toFixed(1), x2: kb1[0].toFixed(1), y2: kb1[1].toFixed(1),
+      stroke: glow.bar, "stroke-width": 2, "stroke-linecap": "round", opacity: 0.55 }, parent);
+    bd(t0[0], t0[1]); bd(t1[0], t1[1]);
+    return geo;
+  }
+
+  /* ---- a small floating isometric CUBE — decorative data/connectivity
+         accent, drifting near a beam or tucked beside the core ---- */
+  function drawCube(parent, gx, gy, size, color, liftPx) {
+    const wrap = el("g", { transform: `translate(0,${(-liftPx).toFixed(1)})` }, parent);
+    isoBox(wrap, gx, gy, size, size, size, color, 0);
+    const a = iso(gx, gy, size);
+    return { wrap, cx: a[0], baseY: a[1] - liftPx, liftPx };
+  }
+
+  /* ---- an isometric CLOUD mark, screen-space (like the client emblem
+         plaques) — floats above an island, tethered down by a soft beam,
+         signalling "this runs on the Microsoft cloud" ---- */
+  function drawCloudMark(anchorTop, color) {
+    const cx = anchorTop[0], baseY = anchorTop[1] - 84;
+    const wrap = el("g", { class: "cloud-mark", "pointer-events": "none" }, Llabels);
+    el("line", { x1: cx, y1: anchorTop[1] - 6, x2: cx, y2: baseY + 22,
+      stroke: color, "stroke-width": 1.6, "stroke-dasharray": "1.5 5", "stroke-linecap": "round", opacity: 0.4 }, wrap);
+    const g = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
+    el("ellipse", { cx: 0, cy: 10, rx: 30, ry: 8, fill: "#1E2D46", opacity: 0.14, filter: "url(#soft)" }, g);
+    [[-13, 2, 13], [3, -4, 15], [16, 3, 11], [-2, 6, 17]].forEach(([x, y, r]) =>
+      el("circle", { cx: x, cy: y, r, fill: "#FFFFFF", stroke: shade(color, -0.15), "stroke-width": 1.2 }, g));
+    [[-9, 1], [1, -2], [10, 1]].forEach(([x, y]) => el("circle", { cx: x, cy: y, r: 1.8, fill: color, opacity: 0.9 }, g));
+    bd(cx - 32, baseY - 14); bd(cx + 32, baseY + 20);
+    return { wrap, cx, baseY };
+  }
+
+  /* =====================================================================
+   *  Solution-shape vocabulary — each returns {top, ground} like isoBox.
+   *  Every solution is one of a few architectural forms so the city reads
+   *  as varied structures, not identical racks: cloud pavilion, insight
+   *  gallery, low-code cube stack, secure vault, portal (laptop), or a
+   *  civic tower (default d365 case). All sit on a shared plinth.
+   * =================================================================== */
+
+  // soft contact-shadow ellipse under any building at ground z=0
+  function groundShadow(parent, gx, gy, rTiles) {
+    const c = iso(gx, gy, 0), rx = rTiles * TILE * COS30 * 1.05, ry = rTiles * TILE * pitch * 1.05;
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + 4).toFixed(1),
+      rx: rx.toFixed(1), ry: ry.toFixed(1), fill: "url(#contact)", opacity: 0.9 }, parent);
+    return c;
+  }
+
+  // a low plinth (podium) that every non-tower solution sits on
+  // (isoBox already shades its own faces from a raw hex — never pre-shade here)
+  function plinth(parent, gx, gy, w, d, base) {
+    isoBox(parent, gx, gy, w, d, 0.28, base, 0);
+  }
+
+  /* ---- CLOUD PAVILION: a fluffy isometric cloud floating over a plinth
+         with dashed rain-of-data lines — reads as the AI / cloud layer ---- */
+  function cloudBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const c = iso(gx, gy, 0.28 + h * 0.55);
+    const R = w * TILE * 0.42;
+    const g = el("g", {}, parent);
+    // soft shadow disc under the cloud (in scene space, at cloud height)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + R * 0.85).toFixed(1),
+      rx: (R * 1.15).toFixed(1), ry: (R * 0.28).toFixed(1),
+      fill: "url(#contact)", opacity: 0.7 }, g);
+    // three overlapping puffs (front-facing so it reads from any orbit angle)
+    const puffs = [[-R * 0.5, 0, R * 0.62], [R * 0.55, R * 0.05, R * 0.55], [0, -R * 0.28, R * 0.7]];
+    puffs.forEach(([dx, dy, r]) => {
+      el("ellipse", { cx: (c[0] + dx).toFixed(1), cy: (c[1] + dy).toFixed(1),
+        rx: r.toFixed(1), ry: (r * 0.78).toFixed(1),
+        fill: shade(base, 0.42), stroke: shade(base, 0.10), "stroke-width": 1.4 }, g);
+    });
+    // subtle inner highlight (top puff)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] - R * 0.35).toFixed(1),
+      rx: (R * 0.45).toFixed(1), ry: (R * 0.16).toFixed(1),
+      fill: "#FFFFFF", opacity: 0.55 }, g);
+    // dashed data-rain from cloud down to plinth
+    const plinthTop = iso(gx, gy, 0.28);
+    for (let i = -1; i <= 1; i++) {
+      const sx = c[0] + i * R * 0.5;
+      el("line", { x1: sx.toFixed(1), y1: (c[1] + R * 0.6).toFixed(1),
+        x2: (plinthTop[0] + i * R * 0.4).toFixed(1), y2: (plinthTop[1] - 4).toFixed(1),
+        stroke: glow.bar, "stroke-width": 1.6, "stroke-dasharray": "2 4",
+        "stroke-linecap": "round", opacity: 0.75 }, g);
+    }
+    bd(c[0] - R * 1.4, c[1] - R * 1.2); bd(c[0] + R * 1.4, c[1] + R * 1.2);
+    return { top: [c[0], c[1] - R * 0.9], ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- INSIGHT GALLERY: three growing bars (Power BI silhouette) rising
+         from a plinth, with a soft glow behind — reads as analytics ---- */
+  function chartBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const bw = w * 0.22, gap = w * 0.06, xs = [-bw - gap, 0, bw + gap];
+    const heights = [h * 0.55, h * 0.8, h * 1.05];
+    xs.forEach((dx, i) => {
+      const bx = gx + dx * 0.55;
+      isoBox(parent, bx, gy, bw, bw, heights[i], base, 0);
+      // glowing top strip
+      const t = iso(bx, gy, heights[i]);
+      el("ellipse", { cx: t[0].toFixed(1), cy: t[1].toFixed(1),
+        rx: (bw * TILE * COS30 * 0.5).toFixed(1), ry: (bw * TILE * pitch * 0.5).toFixed(1),
+        fill: glow.bar, opacity: 0.85 }, parent);
+    });
+    return { top: iso(gx, gy, heights[2]), ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- LOW-CODE CUBE STACK: three translucent cubes ascending in a
+         zig-zag on a plinth — reads as composable low-code building blocks ---- */
+  function cubesBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const s = w * 0.44;
+    const seats = [
+      { dx: -s * 0.35, dy: s * 0.20, z: 0.28,        sz: s * 0.95 },
+      { dx:  s * 0.30, dy: -s * 0.15, z: 0.28 + s * 0.85, sz: s * 0.82 },
+      { dx: -s * 0.10, dy: -s * 0.35, z: 0.28 + s * 1.60, sz: s * 0.66 },
+    ];
+    seats.forEach((c) => {
+      const cx = gx + c.dx, cy = gy + c.dy;
+      // per-cube faux plinth (bottom cap) then the cube
+      isoBox(parent, cx, cy, c.sz, c.sz, c.sz, base, 0);
+      // glow band under the cube
+      const b = iso(cx, cy, c.z + c.sz);
+      el("ellipse", { cx: b[0].toFixed(1), cy: (b[1] + 1).toFixed(1),
+        rx: (c.sz * TILE * COS30 * 0.55).toFixed(1), ry: (c.sz * TILE * pitch * 0.55).toFixed(1),
+        fill: glow.bar, opacity: 0.7 }, parent);
+    });
+    const t = iso(gx + seats[2].dx, gy + seats[2].dy, seats[2].z + seats[2].sz);
+    return { top: t, ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- SECURE VAULT: a low, wide block with a bright chevron-shield mark
+         etched on its front — reads as governance / Purview ---- */
+  function vaultBuilding(parent, gx, gy, w, h, base, glow) {
+    const vw = w * 1.05, vd = w * 0.9, vh = h * 0.62;
+    isoBox(parent, gx, gy, vw, vd, vh, base, 0);
+    // shield mark on the front face
+    const front = gy + vd / 2;
+    const cx0 = gx, z0 = vh * 0.28, z1 = vh * 0.78;
+    const s0 = iso(cx0, front, z1), s1 = iso(cx0 - vw * 0.22, front, z1 * 0.75),
+          s2 = iso(cx0, front, z0), s3 = iso(cx0 + vw * 0.22, front, z1 * 0.75);
+    poly(parent, [s0, s1, s2, s3], glow.bar, { stroke: shade(base, 0.55), "stroke-width": 1.4 });
+    // beacon on top
+    const top = iso(gx, gy, vh);
+    el("circle", { cx: top[0].toFixed(1), cy: (top[1] - 6).toFixed(1), r: 4,
+      fill: glow.led, stroke: "#FFFFFF", "stroke-width": 1 }, parent);
+    return { top, ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- shape picker: infer form from the solution's primary product ---- */
+  function formOfCap(cap) {
+    const p = (cap.microsoftProducts || [])[0] || "";
+    if (p === "copilot" || p === "copilot-studio" || p === "azure-ai" || p === "azure") return "cloud";
+    if (p === "power-pages") return "laptop";
+    if (p === "power-bi" || p === "fabric") return "chart";
+    if (p === "power-apps" || p === "power-automate" || p === "power-platform") return "cubes";
+    if (p === "purview") return "vault";
+    if (p === "dataverse") return "db";
+    return "tower"; // d365-*, dynamics365, m365 → civic tower
+  }
+
   /* =====================================================================
    *  Simplified Microsoft product marks (brand-coloured, screen-aligned)
    *  drawn in a ~28px box centred at the origin.
@@ -262,6 +447,8 @@
   const nodes = {};   // id -> node
   const beams = [];
   const emblems = []; // floating spinning client crests
+  const clouds = [];  // floating "runs on the Microsoft cloud" marks
+  const cubes = [];   // decorative floating data cubes
   let selectedId = null;   // persists across orbit rebuilds
   let focusClient = null;  // which client tenant is spotlighted
   let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
@@ -300,8 +487,8 @@
       // soft shadow so each tenant island reads as floating apart
       const scx = (top[0][0] + top[2][0]) / 2;
       const sbot = Math.max(top[0][1], top[1][1], top[2][1], top[3][1]);
-      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 6).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
-        ry: 16, fill: "#1E2D46", opacity: 0.10, filter: "url(#soft)" }, Lground);
+      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 10).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
+        ry: 20, fill: "url(#contact)", opacity: 0.62 }, Lground);
       poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
       poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
       // faint client tint + soft inner grid
@@ -325,6 +512,42 @@
       sub.textContent = "ISOLATED TENANT · " + c.sector.toUpperCase();
       bd(lp[0] - 120, lp[1] + 30); bd(lp[0] + 120, lp[1] + 30);
     });
+    // ambient MICROSOFT CLOUD — a large, quiet cloud over the whole city,
+    // signalling the platform underneath every tenant. Behind everything.
+    drawAmbientCloud();
+  }
+
+  /* soft, screen-space cloud floating high above the city centre. Behind
+     all buildings; re-drawn each orbit rebuild so it tracks the view. */
+  function drawAmbientCloud() {
+    const c = iso(0, 0, 4.6);
+    const R = 130;
+    const g = el("g", { class: "ambient-cloud", "pointer-events": "none", opacity: 0.75 }, Lground);
+    // very soft shadow disc under it (still in scene space, above buildings)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + R * 0.85).toFixed(1),
+      rx: (R * 1.4).toFixed(1), ry: (R * 0.28).toFixed(1),
+      fill: "url(#contact)", opacity: 0.25 }, g);
+    // stacked puffs (soft, brand-neutral)
+    const puffs = [[-R * 0.7, R * 0.1, R * 0.72], [R * 0.65, R * 0.14, R * 0.66],
+                   [-R * 0.15, -R * 0.20, R * 0.85], [R * 0.35, -R * 0.05, R * 0.62]];
+    puffs.forEach(([dx, dy, r]) => {
+      el("ellipse", { cx: (c[0] + dx).toFixed(1), cy: (c[1] + dy).toFixed(1),
+        rx: r.toFixed(1), ry: (r * 0.72).toFixed(1),
+        fill: "#FFFFFF", stroke: "#C8D9F1", "stroke-width": 1.4 }, g);
+    });
+    // inner highlight (top of the cloud)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] - R * 0.35).toFixed(1),
+      rx: (R * 0.55).toFixed(1), ry: (R * 0.13).toFixed(1),
+      fill: "#F5FAFF", opacity: 0.9 }, g);
+    // small Azure mark on the cloud
+    const mg = el("g", { transform: `translate(${c[0].toFixed(1)},${(c[1] + 4).toFixed(1)}) scale(0.9)` }, g);
+    L.svg(mg, "azure", 14);
+    // quiet label under it
+    el("text", { x: c[0].toFixed(1), y: (c[1] + R * 0.68).toFixed(1),
+      "text-anchor": "middle", fill: "#2E7AD1", "font-size": 11.5, "font-weight": 700,
+      "letter-spacing": ".09em", opacity: 0.7,
+      "font-family": "Segoe UI, Inter, sans-serif" }, g).textContent = "MICROSOFT CLOUD";
+    bd(c[0] - R * 1.4, c[1] - R * 1.1); bd(c[0] + R * 1.4, c[1] + R * 1.1);
   }
 
   /* population dots under a building — density reads as scale */
@@ -371,15 +594,29 @@
     lbl.textContent = "Dataverse";
     const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
     nodes[id] = node; wireNode(node);
-    if (client.crest) drawEmblem(client, geo);
+    drawEmblem(client, geo);
     return node;
   }
 
-  /* A real client crest, floating on a glass plaque above its Dataverse core
-   * and slowly turning like a coin — readable on both faces so text never
-   * mirrors. Loaded from the supplied asset (never redrawn). */
+  const warnedMissingClientLogo = {};
+  function initials(label) {
+    const words = (label || "?").trim().split(/\s+/);
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+
+  /* Every approved client gets a rotating identity beacon above its Dataverse
+   * core: the real logo asset when one is supplied and approved for display,
+   * otherwise a neutral architectural monogram plate — never a drawn
+   * approximation of a missing mark. Loaded from window.ICONS (never redrawn
+   * or traced). Readable on both faces so text never mirrors mid-turn. */
   function drawEmblem(client, geo) {
-    const src = (window.ICONS || {})[client.crest]; if (!src) return;
+    const label = client.displayLabel || client.name;
+    const src = client.logoKey ? (window.ICONS || {})[client.logoKey] : null;
+    if (client.logoKey && !src && !warnedMissingClientLogo[client.logoKey]) {
+      warnedMissingClientLogo[client.logoKey] = 1;
+      console.warn("[city] missing client logo asset for key: " + client.logoKey + " — using monogram fallback for " + label);
+    }
     const a = geo.top;
     const cx = a[0], baseY = a[1] - 66;          // hover above the core
     const ratio = client.crestRatio || 2.4;
@@ -400,16 +637,27 @@
     const spin = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
 
     // one plaque face, drawn centred on (0,0); `back` pre-mirrors it so that
-    // when the wrapper's negative X-scale flips it, the logo reads correctly.
+    // when the wrapper's negative X-scale flips it, the content reads correctly.
     function face(back) {
       const f = el("g", { transform: back ? "scale(-1,1)" : "" }, spin);
       el("rect", { x: -W / 2, y: -H / 2, width: W, height: H, rx: 13, ry: 13,
         fill: "#ffffff", stroke: shade(col, 0.35), "stroke-width": 1.4, filter: "url(#soft)" }, f);
       el("rect", { x: -W / 2 + 3, y: -H / 2 + 3, width: W - 6, height: H - 6, rx: 10, ry: 10,
         fill: "none", stroke: shade(col, 0.72), "stroke-width": 1 }, f);
-      const img = el("image", { x: -iw / 2, y: -ih / 2, width: iw, height: ih,
-        preserveAspectRatio: "xMidYMid meet" }, f);
-      href(img, src);
+      if (src) {
+        const img = el("image", { x: -iw / 2, y: -ih / 2, width: iw, height: ih,
+          preserveAspectRatio: "xMidYMid meet" }, f);
+        href(img, src);
+      } else {
+        // neutral architectural monogram plate — a placeholder, not a logo
+        const mono = initials(label), side = Math.min(ih, W * 0.42);
+        el("rect", { x: -side / 2, y: -side / 2, width: side, height: side, rx: side * 0.22,
+          fill: "#5A6577" }, f);
+        const t = el("text", { x: 0, y: side * 0.06, "text-anchor": "middle", "dominant-baseline": "central",
+          fill: "#fff", "font-weight": 700, "font-size": side * 0.42,
+          "font-family": "Segoe UI, Inter, sans-serif" }, f);
+        t.textContent = mono;
+      }
       return f;
     }
     const front = face(false), back = face(true);
@@ -428,7 +676,17 @@
     const g = nodeShell(id, cap.name + " — deployed for " + client.name);
     const color = client.color, glow = glowFor(color);
     const units = Math.max(3, Math.round(item.h / 0.42));
-    const geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
+    // soft ground contact-shadow so no shape looks like it's floating
+    groundShadow(g, item.pos[0], item.pos[1], item.size * 0.72);
+    const form = formOfCap(cap);
+    let geo;
+    if (form === "cloud")       geo = cloudBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "laptop") geo = drawLaptop(g, item.pos[0], item.pos[1], item.size * 1.15, color, glow);
+    else if (form === "chart")  geo = chartBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "cubes")  geo = cubesBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "vault")  geo = vaultBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "db")     geo = dbTower(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else                        geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
     const key = (cap.microsoftProducts || [])[0];
     if (key) {
       const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 28).toFixed(1)})` }, g);
@@ -486,6 +744,29 @@
     });
   }
 
+  /* ---- extra scenery per island: a laptop (the "run" access point), a
+         cloud mark tethered above the core, and a couple of drifting data
+         cubes — so the landscape isn't just repeated towers. ---- */
+  function buildDecor() {
+    D.clients.forEach((c) => {
+      const L2 = CL[c.id]; const [gxm, gym, gxM, gyM] = L2.box;
+      const glow = glowFor(c.color);
+      // laptop: front-left corner of the island, facing the viewer
+      const lx = gxm + 0.62, ly = gyM - 0.5;
+      drawLaptop(Lparts, lx, ly, 0.62, c.color, glow);
+      // cloud: tethered above the Dataverse core
+      const coreTop = nodes["core:" + c.id] ? nodes["core:" + c.id].top : iso(L2.corePos[0], L2.corePos[1], L2.coreH);
+      clouds.push(drawCloudMark(coreTop, c.color));
+      // a couple of small drifting cubes near the island's open corner
+      const spots = [[gxM - 0.5, gym + 0.55], [gxM - 1.15, gym + 1.25]];
+      spots.forEach((p, i) => {
+        const cu = drawCube(Lparts, p[0], p[1], 0.16 + i * 0.03, c.color, 26 + i * 16);
+        bd(cu.cx - 14, cu.baseY - 14); bd(cu.cx + 14, cu.baseY + 14 + 8);   // + bob headroom
+        cubes.push(cu);
+      });
+    });
+  }
+
   /* =====================================================================
    *  Interaction: hover, select, focus
    * =================================================================== */
@@ -494,16 +775,30 @@
     const r = svg.getBoundingClientRect();
     return { x: r.left + (pt[0] - VB.x) / VB.w * r.width, y: r.top + (pt[1] - VB.y) / VB.h * r.height };
   }
+  function lifecycleUnion(capIds) {
+    const set = new Set();
+    (capIds || []).forEach((id) => { const cap = capById[id]; if (cap && cap.lifecycle) cap.lifecycle.forEach((s) => set.add(s)); });
+    return set;
+  }
+  function lifecycleSummary(set) {
+    return ["advise", "build", "run"].filter((s) => set.has(s)).map((s) => s[0].toUpperCase() + s.slice(1)).join(" · ");
+  }
   function onHover(node, on) {
     if (dragging) return;
     node.g.classList.toggle("hi", on);
     if (on && node.id !== selectedId) {
       const s = screenOf(node.top);
       tag.style.left = s.x + "px"; tag.style.top = (s.y - 24) + "px";
-      let title, sub;
-      if (node.kind === "core") { title = node.client.name + " — Dataverse"; sub = "isolated tenant"; }
-      else { title = node.cap.name; sub = node.client.name; }
-      tag.innerHTML = title + (sub ? '<span class="c">' + sub + "</span>" : "");
+      if (node.kind === "core") {
+        const c = node.client, name = c.displayLabel || c.name, n = (c.runs || []).length;
+        const life = lifecycleSummary(lifecycleUnion(c.runs));
+        let html = name;
+        if (c.engagementTheme) html += '<span class="c">' + c.engagementTheme + "</span>";
+        html += '<span class="c">' + n + (n === 1 ? " solution" : " solutions") + (life ? " · " + life : "") + " · Click to explore</span>";
+        tag.innerHTML = html;
+      } else {
+        tag.innerHTML = node.cap.name + '<span class="c">' + (node.client.displayLabel || node.client.name) + " · Click to explore</span>";
+      }
       tag.classList.add("show");
     } else if (!on) tag.classList.remove("show");
   }
@@ -604,12 +899,15 @@
     tweenVBCenter(n.top[0], n.top[1] - 40, 650, () => selectNode(n));
   }
 
-  /* ---- solution (building) panel ---- */
+  const VALUE_LABEL = { outcome: "Business outcome", "speed-commercial": "Speed & commercial shape", "why-ey": "Why EY" };
+
+  /* ---- solution panel: the individual BizApps solution behind a client ---- */
   function fillPanel(node) {
     const p = $("#panel"), cap = node.cap, client = node.client, q = (s) => p.querySelector(s);
+    const clientName = client.displayLabel || client.name;
 
     const eye = q(".p-eyebrow");
-    eye.textContent = client.name + " · tenant";
+    eye.textContent = clientName + " · solution";
     eye.style.color = client.color;
     q("h2").textContent = cap.name;
 
@@ -628,22 +926,34 @@
     } else life.style.display = "none";
 
     q(".p-does").textContent = cap.whatItDoes;
+    q(".p-challenge-sec").style.display = "none";
+    q(".p-outcome-sec").style.display = "none";
 
     const vSec = q(".p-value-sec"), vWrap = q(".p-value"); vWrap.innerHTML = "";
     if (cap.value) {
       vSec.style.display = "";
+      vSec.querySelector(".p-cap").textContent = "The value";
       cap.value.forEach((line) => {
         const row = el2("div", "p-vline");
         const ar = el2("span", "p-arrow"); ar.textContent = "→";
-        const tx = document.createElement("span"); tx.textContent = cleanCopy(line);
+        const tx = document.createElement("span");
+        const label = VALUE_LABEL[line.type];
+        if (label) { const b = document.createElement("b"); b.textContent = label + ". "; tx.appendChild(b); }
+        tx.appendChild(document.createTextNode(cleanCopy(line.text)));
         row.appendChild(ar); row.appendChild(tx); vWrap.appendChild(row);
       });
     } else vSec.style.display = "none";
+
+    const relevSec = q(".p-relevant-sec");
+    if (cap.reusableProposition) { relevSec.style.display = ""; q(".p-relevant").textContent = cap.reusableProposition; }
+    else relevSec.style.display = "none";
 
     const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
     bSec.querySelector(".p-cap").textContent = "Built with";
     if (cap.microsoftProducts) { bSec.style.display = ""; cap.microsoftProducts.forEach((k) => bWrap.appendChild(L.chip(k))); }
     else bSec.style.display = "none";
+    q(".p-platform-sec").style.display = "none";
+    q(".p-ey-sec").style.display = "none";
 
     const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
     rSec.querySelector(".p-cap").textContent = "Who runs it";
@@ -656,50 +966,107 @@
       rWrap.appendChild(dots); rWrap.appendChild(txt);
     } else rSec.style.display = "none";
 
-    // deployed in — link back to this client's isolated tenant
+    // "See this capability at another client" — deliberate navigation only,
+    // the one thing here allowed to move the camera when clicked.
+    const relSec = q(".p-related-sec"), relWrap = q(".p-related"); relWrap.innerHTML = "";
+    const others = D.clients.filter((c) => c.id !== client.id && (c.runs || []).indexOf(cap.id) >= 0);
+    if (others.length) {
+      relSec.style.display = ""; relSec.querySelector(".p-cap").textContent = "See this capability elsewhere";
+      others.forEach((oc) => {
+        const a = proofLink("View at " + (oc.displayLabel || oc.name));
+        a.addEventListener("click", () => flyToAndSelect(oc.id + ":" + cap.id));
+        relWrap.appendChild(a);
+      });
+    } else relSec.style.display = "none";
+
+    // back to the client overview — never closes the panel, never resets the camera
     const pSec = q(".p-proof-sec"), pWrap = q(".p-proof"); pWrap.innerHTML = "";
     pSec.style.display = ""; pSec.querySelector(".p-cap").textContent = "Deployed in";
-    const a = proofLink(client.name + " · isolated tenant");
+    const a = proofLink("← Back to " + clientName + " overview");
     a.addEventListener("click", () => selectNode(nodes["core:" + client.id]));
     pWrap.appendChild(a);
   }
 
-  /* ---- client (tenant) panel ---- */
+  /* ---- client panel: the relationship, challenge and overall value ---- */
   function fillClientPanel(client) {
     const p = $("#panel"), q = (s) => p.querySelector(s);
+    const name = client.displayLabel || client.name;
+
     const eye = q(".p-eyebrow");
-    eye.textContent = client.real ? "Client engagement" : "Illustrative client";
+    eye.textContent = client.visibility === "anonymised" ? "Anonymised client story"
+      : (client.real ? "Client engagement" : "Illustrative client");
     eye.style.color = client.color;
-    q("h2").textContent = client.name;
+    q("h2").textContent = name;
 
-    const logos = q(".p-logos"); logos.innerHTML = ""; logos.appendChild(L.html("dataverse", 28));
+    const logos = q(".p-logos"); logos.innerHTML = "";
+    logos.appendChild(L.html(client.logoKey || "dataverse", 28));
 
+    // Advise · Build · Run — union across every solution deployed here
     const life = q(".p-life"); life.innerHTML = ""; life.style.display = "";
-    const seg = el2("span", "p-life-seg on"); seg.innerHTML = '<span class="d"></span>Isolated tenant · own Dataverse';
-    life.appendChild(seg);
+    const union = lifecycleUnion(client.runs);
+    ["advise", "build", "run"].forEach((stage) => {
+      const seg = el2("span", "p-life-seg" + (union.has(stage) ? " on" : ""));
+      seg.innerHTML = '<span class="d"></span>' + stage.charAt(0).toUpperCase() + stage.slice(1);
+      life.appendChild(seg);
+    });
 
-    q(".p-does").textContent = client.story;
+    q(".p-does").textContent = client.engagementTheme || client.story;
+
+    const chSec = q(".p-challenge-sec");
+    if (client.challenge) { chSec.style.display = ""; q(".p-challenge").textContent = client.challenge; }
+    else chSec.style.display = "none";
+
+    const outSec = q(".p-outcome-sec");
+    if (client.outcome) {
+      outSec.style.display = ""; q(".p-outcome").textContent = client.outcome;
+      const mWrap = q(".p-metrics"); mWrap.innerHTML = "";
+      (client.outcomeMetrics || []).forEach((m) => {
+        const chip = el2("span", "p-metric");
+        const b = document.createElement("b"); b.textContent = m.value;
+        const s = document.createElement("span"); s.textContent = m.label;
+        chip.appendChild(b); chip.appendChild(s); mWrap.appendChild(chip);
+      });
+    } else outSec.style.display = "none";
 
     q(".p-value-sec").style.display = "none";
+    q(".p-relevant-sec").style.display = "none";
 
     const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
-    bSec.style.display = ""; bSec.querySelector(".p-cap").textContent = "Solutions deployed here";
-    client.runs.forEach((capId) => {
+    bSec.style.display = ""; bSec.querySelector(".p-cap").textContent = "Solutions";
+    (client.runs || []).forEach((capId) => {
       const cap = capById[capId]; if (!cap) return;
       const chip = el2("button", "p-chip2"); chip.style.cursor = "pointer";
+      chip.setAttribute("aria-label", "Open " + cap.name);
       const k = (cap.microsoftProducts || [])[0]; if (k) chip.appendChild(L.html(k, 16));
       const s = document.createElement("span"); s.textContent = cap.name; chip.appendChild(s);
       chip.addEventListener("click", () => selectNode(nodes[client.id + ":" + capId]));
       bWrap.appendChild(chip);
     });
 
-    const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
-    rSec.style.display = ""; rSec.querySelector(".p-cap").textContent = "Tenant";
-    const txt = el2("span", "p-run-txt");
-    const mono = document.createElement("span"); mono.className = "mono"; mono.textContent = client.tenant;
-    txt.appendChild(mono);
-    txt.appendChild(document.createTextNode(" — its own governed Dataverse, isolated from every other client."));
-    rWrap.appendChild(txt);
+    // Microsoft platform — union of products across this client's solutions
+    const platSec = q(".p-platform-sec"), platWrap = q(".p-platform"); platWrap.innerHTML = "";
+    const products = new Set();
+    (client.runs || []).forEach((id) => { const cap = capById[id]; (cap && cap.microsoftProducts || []).forEach((k) => products.add(k)); });
+    if (products.size) { platSec.style.display = ""; products.forEach((k) => platWrap.appendChild(L.chip(k))); }
+    else platSec.style.display = "none";
+
+    const eySec = q(".p-ey-sec");
+    if (client.eyDifference) { eySec.style.display = ""; q(".p-ey").textContent = client.eyDifference; }
+    else eySec.style.display = "none";
+
+    q(".p-run-sec").style.display = "none";
+
+    // related clients — deliberate navigation only
+    const relSec = q(".p-related-sec"), relWrap = q(".p-related"); relWrap.innerHTML = "";
+    const relatedClients = (client.relatedClientIds || []).map((id) => D.clients.find((c) => c.id === id)).filter(Boolean);
+    if (relatedClients.length) {
+      relSec.style.display = ""; relSec.querySelector(".p-cap").textContent = "Related";
+      relatedClients.forEach((rc) => {
+        const a = proofLink("View " + (rc.displayLabel || rc.name));
+        a.addEventListener("click", () => flyToAndSelect("core:" + rc.id));
+        relWrap.appendChild(a);
+      });
+    } else relSec.style.display = "none";
 
     q(".p-proof-sec").style.display = "none";
   }
@@ -742,10 +1109,13 @@
     for (const k in nodes) delete nodes[k];
     beams.length = 0;
     emblems.length = 0;
+    clouds.length = 0;
+    cubes.length = 0;
     computeLayout();
     buildGround();
     buildNodes();
     buildBeams();
+    buildDecor();
     applyFocusStates();
   }
   let rebuildQueued = false;
@@ -899,7 +1269,7 @@
   function tick(now) {
     requestAnimationFrame(tick);
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (REDUCED) return;
+    if (REDUCED || document.hidden) return;   // pause ambient motion off-screen / reduced motion
     for (const bm of beams) {
       if (!bm.len) { try { bm.len = bm.path.getTotalLength(); } catch (_) { continue; } }
       for (const dp of bm.dots) {
@@ -932,6 +1302,16 @@
       em.front.setAttribute("opacity", facingFront ? "1" : "0");
       em.back.setAttribute("opacity", facingFront ? "0" : "1");
     }
+    // clouds: a slow, gentle bob
+    clouds.forEach((cl, i) => {
+      const bob = Math.sin(ts * 0.5 + i) * 5;
+      cl.wrap.setAttribute("transform", `translate(0,${bob.toFixed(1)})`);
+    });
+    // cubes: drift up/down at slightly different phases, on top of their base lift
+    cubes.forEach((cu, i) => {
+      const bob = Math.sin(ts * 0.9 + i * 1.7) * 6;
+      cu.wrap.setAttribute("transform", `translate(0,${(-cu.liftPx + bob).toFixed(1)})`);
+    });
   }
 
   /* =====================================================================
@@ -947,10 +1327,31 @@
     set("#brand .wordmark", D.practice.wordmark);
     const hero = D.practice.hero;
     set("#intro .intro-eyebrow", hero.eyebrow || "");
-    set("#intro h1", hero.headline);
+    set("#intro h1 .h1-a", hero.headline);
+    set("#intro h1 .h1-b", hero.headlineAccent || "");
     set("#intro .lede", hero.sub);
-    const pts2 = $("#intro .intro-points");
-    if (pts2) { pts2.innerHTML = ""; (hero.points || []).forEach((p) => { const li = el2("li"); li.textContent = p; pts2.appendChild(li); }); }
+    const stats = $("#intro .intro-stats");
+    if (stats) {
+      stats.innerHTML = "";
+      (hero.stats || []).forEach((s) => {
+        const cell = el2("div", "stat");
+        const num = el2("div", "stat-n"); num.textContent = s.n; cell.appendChild(num);
+        if (s.unit) { const u = el2("span", "stat-u"); u.textContent = s.unit; num.appendChild(u); }
+        const lbl = el2("div", "stat-l"); lbl.textContent = s.label; cell.appendChild(lbl);
+        stats.appendChild(cell);
+      });
+    }
+    const logoRow = $("#intro .intro-built-row");
+    if (logoRow) {
+      logoRow.innerHTML = "";
+      const ic = window.ICONS || {};
+      (hero.logos || []).forEach((id) => {
+        if (!ic[id]) return;
+        const im = el2("img", "built-logo");
+        im.src = ic[id]; im.alt = ""; im.loading = "lazy";
+        logoRow.appendChild(im);
+      });
+    }
     set("#intro .intro-note", hero.note || "");
     if (hero.cta) { const btn = $("#enter"); if (btn) btn.innerHTML = hero.cta + " &rarr;"; }
     set("#footer", D.practice.footer);

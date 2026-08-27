@@ -56,6 +56,37 @@ whole landscape rebuilds itself.
 
 ---
 
+## Content governance — internal vs client-facing
+
+`src/ms-data.js` is authored for an **internal** audience: staff names, real
+tenant strings, and unverified commercial figures live there. `src/content-visibility.js`
+derives a safe client-facing view at runtime — it never trusts anyone to
+remember to delete things by hand before a client meeting.
+
+- **Mode**: append `?mode=client` to the URL (or set `window.CITY_MODE = "client"`
+  before the scripts load) to preview what a client audience sees. Default is
+  `internal`.
+- **`visibility`** on a client or solution: `'internal'` never appears in
+  client mode; `'anonymised'` shows a category label (e.g. "Regional
+  local-government organisation") instead of a name; `'client-approved'` shows
+  the real name.
+- **`approvalStatus`**: `'not-approved'` is a hard veto in client mode
+  regardless of `visibility`. No client in this dataset has a recorded
+  approval yet — `approvalOwner`/`approvalReference` are `"VERIFY"`
+  placeholders throughout. Tighten the gate in `content-visibility.js`
+  (`visibleTo`) to require `approvalStatus === 'approved'` once real sign-off
+  exists.
+- **Unverified figures**: a solution's `value` line with `verified: false`
+  (or an `outcomeMetrics` entry without `verified: true`) is swapped for an
+  approved non-numeric statement in client mode, never silently hidden
+  mid-sentence.
+- **Logos**: a client only gets its real logo in client mode if
+  `clientFacingApproved: true`. Otherwise (or if the asset file is simply
+  missing) it gets a neutral architectural monogram plate — never a redrawn
+  approximation of the real mark.
+
+---
+
 ## Run it
 
 `index.html` is fully self-contained (no libraries) — **open it by

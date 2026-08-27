@@ -55,10 +55,11 @@ MAP
 }
 
 emit_scripts () {
-  echo "<script>"; cat src/ms-data.js;  echo ""; echo "</script>"
+  echo "<script>"; cat src/ms-data.js;             echo ""; echo "</script>"
   emit_icons
-  echo "<script>"; cat src/logos.js;    echo ""; echo "</script>"
-  echo "<script>"; cat src/ms-iso.js;   echo ""; echo "</script>"
+  echo "<script>"; cat src/logos.js;                echo ""; echo "</script>"
+  echo "<script>"; cat src/content-visibility.js;   echo ""; echo "</script>"
+  echo "<script>"; cat src/ms-iso.js;               echo ""; echo "</script>"
 }
 
 # ---- artifact.html (no doctype/html/head/body — the platform wraps it) ----

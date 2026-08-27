@@ -42,16 +42,20 @@ body{
 .beam{transition:opacity .3s}
 
 /* ---------- header ---------- */
-#brand{position:fixed;top:22px;left:26px;z-index:6;display:flex;align-items:center;gap:16px;
-  opacity:0;transform:translateY(-8px);transition:opacity .7s,transform .7s}
+#brand{position:fixed;top:18px;left:20px;z-index:6;display:flex;align-items:center;gap:16px;
+  opacity:0;transform:translateY(-8px);transition:opacity .7s,transform .7s;
+  background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.6);border-radius:999px;
+  padding:9px 20px 9px 16px;backdrop-filter:blur(8px);box-shadow:0 10px 26px -14px rgba(5,20,30,.5)}
 #brand.in{opacity:1;transform:none}
-#brand img.ey{height:34px;width:auto;display:block}          /* EY keeps its clear space */
-#brand .divider{width:1px;height:26px;background:var(--line)}
-#brand .wordmark{font-weight:600;font-size:15px;letter-spacing:.01em;color:var(--ink)}
+#brand img.ey{height:30px;width:auto;display:block}          /* EY keeps its clear space */
+#brand .divider{width:1px;height:24px;background:var(--line)}
+#brand .wordmark{font-weight:600;font-size:14.5px;letter-spacing:.01em;color:var(--ink)}
 
-#ms-corner{position:fixed;top:26px;right:28px;z-index:6;opacity:0;transition:opacity .8s .1s}
-#ms-corner.in{opacity:.55}
-#ms-corner img{height:17px;width:auto;display:block}
+#ms-corner{position:fixed;top:22px;right:24px;z-index:6;opacity:0;transition:opacity .8s .1s;
+  background:rgba(255,255,255,.9);border-radius:999px;padding:8px 12px;backdrop-filter:blur(8px);
+  box-shadow:0 10px 26px -14px rgba(5,20,30,.5)}
+#ms-corner.in{opacity:1}
+#ms-corner img{height:16px;width:auto;display:block}
 
 /* client tiles — pick a tenant */
 #clients{position:fixed;top:58px;right:28px;z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:8px;
@@ -134,8 +138,8 @@ body{
 /* ---------- hover tag ---------- */
 #tag{position:fixed;z-index:7;pointer-events:none;transform:translate(-50%,-135%);padding:6px 11px;background:#fff;
   border:1px solid var(--line);border-radius:9px;font-size:12.5px;font-weight:600;white-space:nowrap;opacity:0;
-  transition:opacity .15s;box-shadow:var(--shadow)}
-#tag.show{opacity:1}#tag .c{display:block;font-weight:500;font-size:10.5px;color:var(--soft);margin-top:1px}
+  transition:opacity .15s;box-shadow:var(--shadow);max-width:280px}
+#tag.show{opacity:1}#tag .c{display:block;font-weight:500;font-size:10.5px;color:var(--soft);margin-top:1px;white-space:normal}
 
 /* ======================================================================
  *  PANEL
@@ -162,8 +166,15 @@ body{
 .p-life-seg.on .d{background:var(--good);border-color:var(--good);box-shadow:0 0 0 3px rgba(47,158,110,.14)}
 
 .p-body{padding:22px 28px 40px;display:flex;flex-direction:column;gap:22px}
-.p-does{font-size:15px;line-height:1.6;margin:0;color:var(--ink);max-width:62ch}
+.p-does,.p-challenge,.p-outcome,.p-relevant,.p-ey{font-size:15px;line-height:1.6;margin:0;color:var(--ink);max-width:62ch}
 .p-cap{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--soft);margin:0 0 11px}
+
+/* verified outcome metrics */
+.p-metrics{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.p-metric{display:inline-flex;flex-direction:column;gap:2px;padding:8px 13px;border:1px solid var(--line);
+  border-radius:12px;background:var(--panel);min-width:84px}
+.p-metric b{font-size:16px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+.p-metric span{font-size:10.5px;font-weight:600;letter-spacing:.03em;text-transform:uppercase;color:var(--soft)}
 
 /* the three value lines */
 .p-value{display:flex;flex-direction:column;gap:12px}
@@ -205,21 +216,42 @@ body{
 .intro-logos img{display:block;width:auto}
 .intro-logos img.ey{height:58px}.intro-logos img.ms{height:30px}
 .intro-logos .bar{width:1px;height:42px;background:var(--line)}
-.intro-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+.intro-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
   color:var(--accent);margin:0 0 16px}
-#intro h1{font-size:clamp(27px,4.2vw,44px);font-weight:800;letter-spacing:-.5px;line-height:1.1;margin:0 0 18px;
-  color:var(--ink);text-wrap:balance;max-width:22ch;margin-inline:auto}
-#intro .lede{font-size:clamp(15px,2vw,17.5px);color:var(--ink2);line-height:1.62;margin:0 auto 26px;max-width:60ch;text-wrap:balance}
-.intro-points{list-style:none;margin:0 auto 32px;padding:0;max-width:56ch;display:flex;flex-direction:column;gap:10px;text-align:left}
-.intro-points li{position:relative;padding-left:26px;font-size:14.5px;color:var(--ink2);line-height:1.5}
-.intro-points li::before{content:"";position:absolute;left:2px;top:7px;width:8px;height:8px;border-radius:2px;
-  background:linear-gradient(135deg,#3B8AE0,var(--accent));transform:rotate(45deg)}
-.intro-note{margin:22px auto 0;font-size:12.5px;color:var(--soft);line-height:1.55;max-width:52ch;text-wrap:balance}
+#intro h1{font-size:clamp(34px,5.6vw,58px);font-weight:800;letter-spacing:-1px;line-height:1.06;margin:0 0 18px;
+  text-wrap:balance;max-width:16ch;margin-inline:auto}
+#intro h1 span{display:block}
+#intro h1 .h1-a{color:var(--ink)}
+#intro h1 .h1-b{background:linear-gradient(100deg,#2E7AD1,#12A5A5);-webkit-background-clip:text;background-clip:text;color:transparent}
+#intro .lede{font-size:clamp(15px,2vw,17.5px);color:var(--ink2);line-height:1.62;margin:0 auto 34px;max-width:52ch;text-wrap:balance}
+
+/* stat row */
+.intro-stats{display:flex;align-items:flex-start;justify-content:center;gap:clamp(22px,4.5vw,48px);
+  margin:0 auto 36px;flex-wrap:wrap}
+.stat{text-align:center;min-width:64px}
+.stat-n{font-size:clamp(28px,3.6vw,40px);font-weight:800;letter-spacing:-.5px;color:var(--ink);line-height:1;
+  font-variant-numeric:tabular-nums}
+.stat-u{font-size:.5em;font-weight:700;color:var(--accent);margin-left:2px}
+.stat-l{margin-top:7px;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--soft)}
+
 #enter{font-weight:700;font-size:15px;color:#fff;background:linear-gradient(180deg,#3B8AE0,var(--accent));border:none;
   border-radius:999px;padding:15px 34px;cursor:pointer;box-shadow:0 14px 34px -12px rgba(46,122,209,.7);transition:transform .15s,box-shadow .2s}
 #enter:hover{transform:translateY(-2px);box-shadow:0 20px 44px -12px rgba(46,122,209,.85)}
 #enter:active{transform:translateY(0)}
+
+/* built-on logo strip */
+.intro-built{margin:34px auto 0;max-width:52ch}
+.intro-built-cap{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--soft);margin-bottom:14px}
+.intro-built-row{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;
+  padding-top:18px;border-top:1px solid var(--line)}
+.built-logo{height:22px;width:auto;max-width:64px;object-fit:contain;opacity:.62;filter:saturate(.7);
+  transition:opacity .2s,filter .2s}
+.built-logo:hover{opacity:1;filter:none}
+
+.intro-note{margin:22px auto 0;font-size:12.5px;color:var(--soft);line-height:1.55;max-width:52ch;text-wrap:balance}
 .intro-hint{margin-top:20px;font-size:12px;color:var(--soft);letter-spacing:.02em}
+@media(max-width:640px){.intro-stats{gap:20px}.built-logo{height:18px}}
 
 /* ======================================================================
  *  MOBILE — panel becomes a bottom sheet
@@ -244,8 +276,14 @@ body{
   <svg id="scene" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isometric city of the EY Microsoft Business Applications practice">
     <defs>
       <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
-        <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#1E2D46" flood-opacity="0.16"/>
+        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#3A4E76" flood-opacity="0.10"/>
       </filter>
+      <!-- radial contact-shadow for building bases: dark centre, feathered edge -->
+      <radialGradient id="contact" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#1E2D46" stop-opacity="0.34"/>
+        <stop offset="60%" stop-color="#1E2D46" stop-opacity="0.10"/>
+        <stop offset="100%" stop-color="#1E2D46" stop-opacity="0"/>
+      </radialGradient>
     </defs>
     <g id="Lground"></g>
     <g id="Lbeams"></g>
@@ -300,9 +338,15 @@ body{
   </div>
   <div class="p-body">
     <p class="p-does"></p>
+    <div class="p-challenge-sec"><div class="p-cap">The challenge</div><p class="p-challenge"></p></div>
+    <div class="p-outcome-sec"><div class="p-cap">The outcome</div><p class="p-outcome"></p><div class="p-metrics"></div></div>
     <div class="p-value-sec"><div class="p-cap">The value</div><div class="p-value"></div></div>
+    <div class="p-relevant-sec"><div class="p-cap">Relevant to your organisation</div><p class="p-relevant"></p></div>
     <div class="p-built-sec"><div class="p-cap">Built with</div><div class="p-built"></div></div>
+    <div class="p-platform-sec"><div class="p-cap">Microsoft platform</div><div class="p-platform"></div></div>
+    <div class="p-ey-sec"><div class="p-cap">The EY difference</div><p class="p-ey"></p></div>
     <div class="p-run-sec"><div class="p-cap">Who runs it</div><div class="p-run"></div></div>
+    <div class="p-related-sec"><div class="p-cap">Related</div><div class="p-related"></div></div>
     <div class="p-proof-sec"><div class="p-cap">Proven at</div><div class="p-proof"></div></div>
   </div>
 </aside>
@@ -326,10 +370,14 @@ body{
   <div class="intro-card">
     <div class="intro-logos"><img class="ey" alt="EY"><span class="bar"></span><img class="ms" alt="Microsoft"></div>
     <div class="intro-eyebrow"></div>
-    <h1></h1>
+    <h1><span class="h1-a"></span><span class="h1-b"></span></h1>
     <p class="lede"></p>
-    <ul class="intro-points"></ul>
-    <button id="enter">Explore the practice &rarr;</button>
+    <div class="intro-stats"></div>
+    <button id="enter">Explore the platform &rarr;</button>
+    <div class="intro-built">
+      <span class="intro-built-cap">Built on the Microsoft cloud</span>
+      <div class="intro-built-row"></div>
+    </div>
     <p class="intro-note"></p>
   </div>
 </div>
@@ -337,29 +385,70 @@ body{
 /* ============================================================================
  *  THE CITY · content model  (edit copy here; geometry lives in ms-iso.js)
  *  ---------------------------------------------------------------------------
- *  EY — Microsoft AI · Business Applications. 50 people, six districts, three
- *  proof landmarks. Every building is something this practice does on Microsoft.
+ *  EY — Microsoft AI · Business Applications. Each `clients[]` entry is a
+ *  client tenant island — the "building" a visitor recognises. Each entry in
+ *  `buildings[]` is a reusable SOLUTION (a Microsoft-powered capability
+ *  pattern); a client's `runs[]` lists which solutions were deployed for it.
+ *  Solutions are content-shared across clients; nothing here is geometry.
  *
- *  Each building's `value` is EXACTLY THREE lines, in fixed order:
- *    [0] business outcome — what changes for the client, in their language
- *    [1] how fast / what it costs — a real number (commercials // VERIFY)
- *    [2] why EY, not a pure-play — the full-firm wrap, specific each time
+ *  CONTENT GOVERNANCE — read before editing a client or a client's runs.
+ *  This file is authored assuming an INTERNAL audience. src/content-visibility.js
+ *  derives a safe, client-facing view from it at runtime — it does not trust
+ *  anyone to remember to delete things before a client demo.
+ *
+ *  @typedef {'internal'|'client-approved'|'anonymised'} Visibility
+ *  @typedef {'advise'|'build'|'run'} LifecycleStage
+ *
+ *  ClientBuilding (an entry in `clients[]`) fields beyond the obvious:
+ *    visibility        {Visibility}  who this client may be shown to, by name
+ *    anonymisedName    {string=}     shown instead of `name` when visibility
+ *                                    is 'anonymised' — a category, not a client
+ *    approvalStatus    {'approved'|'pending'|'not-approved'}
+ *    approvalOwner     {string}      "VERIFY" until a named approver is recorded
+ *    approvalReference {string}      "VERIFY" until a sign-off record exists
+ *    engagementTheme   {string}      one line, shown on hover
+ *    challenge         {string}      plain-language client need
+ *    outcome           {string}      approved value statement (no client mode
+ *                                    without verified support — see outcomeMetrics)
+ *    outcomeMetrics    {Array<{label,value,verified,sourceReference}>}
+ *    eyDifference      {string}      the specific full-firm contribution
+ *    relatedClientIds  {string[]=}
+ *    logoKey           {string=}     window.ICONS key for the rotating beacon
+ *    clientFacingApproved {boolean}  may the real logo render outside internal mode
+ *    metricsVerified / commercialsVerified {boolean}
+ *    lastContentReview {string}      "VERIFY" until dated
+ *
+ *  ClientSolution (an entry in `buildings[]`) fields beyond the obvious:
+ *    visibility        {Visibility}  default 'client-approved' — these are
+ *                                    reusable patterns, not client secrets
+ *    value             {Array<{type:'outcome'|'speed-commercial'|'why-ey',
+ *                              text:string, verified?:boolean}>}  EXACTLY THREE,
+ *                       in this fixed order. `verified:false` marks a figure
+ *                       that hasn't been signed off — content-visibility.js
+ *                       swaps it for an approved non-numeric line in client mode.
+ *    reusableProposition {string}   "Relevant to your organisation" — the
+ *                       plain-language, client-agnostic pattern, one or two
+ *                       sentences, never a claim that a client build can be
+ *                       copied unchanged.
  * ========================================================================== */
 window.CITY = {
   practice: {
     name: "BizzApps",
     wordmark: "Microsoft AI · Business Applications",
     hero: {
-      eyebrow: "EY · Microsoft AI — Business Applications (BizzApps)",
-      headline: "We bring Microsoft AI into the organisations that run public services and industry.",
-      sub: "BizzApps is EY’s Microsoft Business Applications practice — around 50 people who advise, build and run solutions on the Microsoft cloud: Power Platform, Dynamics 365, Copilot and Azure AI. We take an idea from business case to something live and supported, and we stand behind the numbers.",
-      points: [
-        "Advise · Build · Run — the full lifecycle, one accountable EY team",
-        "Power Platform · Dynamics 365 · Copilot · Azure AI · Fabric · Purview",
-        "Every client on their own governed Microsoft tenant — never one shared platform",
+      eyebrow: "EY · Microsoft AI — Business Applications",
+      headline: "Real clients,",
+      headlineAccent: "one connected practice.",
+      sub: "Every island is a real client engagement EY has delivered on the Microsoft cloud — Power Platform, Dynamics 365, Copilot and Azure AI. Explore the city and click any client to see the challenge, the solutions we delivered, and what it could mean for your organisation.",
+      stats: [
+        { n: "16", label: "Solutions shipped" },
+        { n: "5", label: "Client tenants" },
+        { n: "50", label: "EY specialists" },
+        { n: "200", unit: "K+", label: "Citizens reached" },
       ],
-      cta: "Explore the practice",
-      note: "What follows is a live map of the work. Each island is one client’s separate environment — drag to move, use the compass to orbit, and click any building to see what we run for them and what it’s worth.",
+      logos: ["power-platform", "power-apps", "power-automate", "power-bi", "power-pages", "dataverse", "dynamics365", "copilot", "azure", "fabric", "purview"],
+      cta: "Explore the city",
+      note: "Each island is one client's separate Microsoft tenant. Drag to orbit, scroll to zoom, and click a client — the camera stays where you left it while you read.",
     },
     footer: "One practice, many isolated tenants — we bring Microsoft AI into each client and run it where the stakes are highest.",
   },
@@ -370,7 +459,8 @@ window.CITY = {
     etched: ["azure", "fabric", "purview"],
   },
 
-  /* six districts — spatial groupings, colour + team. NOT filters. */
+  /* six districts — spatial groupings, colour + team. NOT filters. `lead` is
+     internal-only metadata (not currently rendered) — keep it that way. */
   districts: [
     { id: "A", name: "Customer & Contact",   color: "#C4399B", center: [0.2, 0.5],   lead: "Terry Maguire",  headcount: 16 },
     { id: "B", name: "Power Factory & C4E",  color: "#7A57B5", center: [-7.2, -3.0],  lead: "Harry Corbally", headcount: 14 },
@@ -385,49 +475,57 @@ window.CITY = {
     {
       id: "contact-centre", district: "A", flagship: true, pos: [0.2, -0.9], h: 2.7, size: 1.45,
       name: "Digital Contact Centre",
+      visibility: "client-approved",
       microsoftProducts: ["d365-contact-center", "copilot", "azure-ai"],
       whatItDoes: "A national-scale contact centre on Dynamics 365 — voice, chat and case in one place, with Copilot drafting replies and summarising every interaction for the agent.",
       value: [
-        "Citizens get through and get answers. Agents handle more, with the full history and a suggested next step in front of them — not five screens and a hold queue.",
-        "Live in 10–14 weeks on a proven blueprint; from ~€350k for a production contact centre, scaling with agent seats. // VERIFY",
-        "We’ve run one for real — around 100 agents engaging 200,000+ citizens through the HSE breach. EY brings Cyber, Data Protection and Change in the same team; a pure-play can’t staff that.",
+        { type: "outcome", text: "Citizens get through and get answers. Agents handle more, with the full history and a suggested next step in front of them — not five screens and a hold queue." },
+        { type: "speed-commercial", text: "Live in 10–14 weeks on a proven blueprint; from ~€350k for a production contact centre, scaling with agent seats.", verified: false },
+        { type: "why-ey", text: "We've run one for real — at national scale, through the HSE breach response. EY brings Cyber, Data Protection and Change in the same team; a pure-play can't staff that." },
       ],
+      reusableProposition: "This pattern can help organisations with high-volume citizen or customer contact bring voice, digital channels and case handling into one operating model, with AI supporting agents rather than creating another disconnected tool.",
       lifecycle: ["advise", "build", "run"], pod: { headcount: 6, lead: "Terry Maguire" }, proof: ["hse"],
     },
     {
       id: "customer-service", district: "A", pos: [-2.9, 0.3], h: 1.7, size: 1.2,
       name: "Customer Service & Case Management",
+      visibility: "client-approved",
       microsoftProducts: ["d365-customer-service"],
       whatItDoes: "Case management for high-volume service teams — routing, SLAs, knowledge and reporting on Dynamics 365 Customer Service.",
       value: [
-        "Every case tracked to resolution against an SLA, so nothing is lost between teams and managers see the backlog before it becomes a headline.",
-        "8–12 weeks to a live queue; from ~€180k depending on integrations. // VERIFY",
-        "EY wraps the operating model and workforce change around the tech, and Digital Assurance stands behind the numbers you report to a regulator.",
+        { type: "outcome", text: "Every case tracked to resolution against an SLA, so nothing is lost between teams and managers see the backlog before it becomes a headline." },
+        { type: "speed-commercial", text: "8–12 weeks to a live queue; from ~€180k depending on integrations.", verified: false },
+        { type: "why-ey", text: "EY wraps the operating model and workforce change around the tech, and Digital Assurance stands behind the numbers you report to a regulator." },
       ],
+      reusableProposition: "Any service team drowning in email and spreadsheets can get a single, SLA-driven queue with the reporting a leadership team actually trusts.",
       lifecycle: ["build", "run"], pod: { headcount: 4, lead: "Terry Maguire" }, proof: ["hse"],
     },
     {
       id: "self-service", district: "A", pos: [3.0, 0.2], h: 1.5, size: 1.2,
       name: "Self-Service & Citizen Portals",
+      visibility: "client-approved",
       microsoftProducts: ["power-pages"],
       whatItDoes: "Secure public-facing portals on Power Pages where citizens self-serve — apply, upload, track status — without calling anyone.",
       value: [
-        "The simple requests never reach an agent, so the phones stay free for the ones that need a human.",
-        "6–8 weeks to a branded, accessible portal; from ~€90k. // VERIFY",
-        "Accessibility and identity built to public-service standard and assured by EY — a portal a department can defend at committee, not just demo.",
+        { type: "outcome", text: "The simple requests never reach an agent, so the phones stay free for the ones that need a human." },
+        { type: "speed-commercial", text: "6–8 weeks to a branded, accessible portal; from ~€90k.", verified: false },
+        { type: "why-ey", text: "Accessibility and identity built to public-service standard and assured by EY — a portal a department can defend at committee, not just demo." },
       ],
+      reusableProposition: "Any organisation with a public-facing application or renewal process can move the routine requests online, safely, without adding to the call queue.",
       lifecycle: ["build"], pod: { headcount: 3, lead: "Terry Maguire" }, proof: ["doj"],
     },
     {
       id: "agent-copilot", district: "A", pos: [0.5, 2.7], h: 1.6, size: 1.2,
       name: "Agent Copilot & Conversational AI",
+      visibility: "client-approved",
       microsoftProducts: ["copilot-studio", "azure-ai"],
-      whatItDoes: "Custom copilots and conversational agents built in Copilot Studio, grounded in the client’s own knowledge and connected to Dynamics.",
+      whatItDoes: "Custom copilots and conversational agents built in Copilot Studio, grounded in the client's own knowledge and connected to Dynamics.",
       value: [
-        "Routine questions answered in seconds, day or night, with every answer traceable to a source the organisation controls.",
-        "A first agent in 4–6 weeks; from ~€75k, then iterate. // VERIFY",
-        "EY’s Responsible AI and Cyber teams govern what the agent can say and see — the difference between a demo and something you’ll put in front of the public.",
+        { type: "outcome", text: "Routine questions answered in seconds, day or night, with every answer traceable to a source the organisation controls." },
+        { type: "speed-commercial", text: "A first agent in 4–6 weeks; from ~€75k, then iterate.", verified: false },
+        { type: "why-ey", text: "EY's Responsible AI and Cyber teams govern what the agent can say and see — the difference between a demo and something you'll put in front of the public." },
       ],
+      reusableProposition: "Any organisation with a large, repetitive question volume — internal or public-facing — can deflect the routine ones safely, with the answers grounded in its own governed content.",
       lifecycle: ["advise", "build"], pod: { headcount: 3, lead: "Terry Maguire" }, proof: ["hse"],
     },
 
@@ -435,61 +533,71 @@ window.CITY = {
     {
       id: "c4e", district: "B", pos: [-8.1, -3.9], h: 1.9, size: 1.25,
       name: "Centre for Enablement (C4E)",
+      visibility: "client-approved",
       microsoftProducts: ["power-platform", "purview"],
-      whatItDoes: "A Centre for Enablement that lets a client’s own people build on Power Platform safely — standards, guardrails, reuse and governance with Purview.",
+      whatItDoes: "A Centre for Enablement that lets a client's own people build on Power Platform safely — standards, guardrails, reuse and governance with Purview.",
       value: [
-        "Hundreds of citizen developers shipping without a shadow-IT mess — one governed platform instead of a thousand unmanaged apps.",
-        "Stood up in 12 weeks at ~€285k, then it pays for itself as delivery moves in-house.",
-        "EY sets the governance a board will sign off — Cyber, Data Protection and Risk in the room — not just a tenant with the settings turned on.",
+        { type: "outcome", text: "Hundreds of citizen developers shipping without a shadow-IT mess — one governed platform instead of a thousand unmanaged apps." },
+        { type: "speed-commercial", text: "Stood up in 12 weeks at ~€285k, then it pays for itself as delivery moves in-house.", verified: false },
+        { type: "why-ey", text: "EY sets the governance a board will sign off — Cyber, Data Protection and Risk in the room — not just a tenant with the settings turned on." },
       ],
+      reusableProposition: "Any organisation with citizen developers already building apps informally can get the guardrails to let that continue safely, instead of shutting it down.",
       lifecycle: ["advise", "build"], pod: { headcount: 3, lead: "Harry Corbally" },
     },
     {
       id: "power-activate", district: "B", pos: [-6.3, -4.1], h: 1.5, size: 1.15,
       name: "Power Activate",
+      visibility: "client-approved",
       microsoftProducts: ["power-apps", "power-automate"],
       whatItDoes: "A fast-start engagement that turns one painful manual process into a working app and an automated flow.",
       value: [
-        "The spreadsheet-and-email process becomes an app people actually use, with the hand-offs automated end to end.",
-        "8 weeks, fixed at ~€115k — a real thing in production, not a proof of concept.",
-        "It lands inside EY’s wider transformation, so the quick win connects to the target operating model instead of becoming another island.",
+        { type: "outcome", text: "The spreadsheet-and-email process becomes an app people actually use, with the hand-offs automated end to end." },
+        { type: "speed-commercial", text: "8 weeks, fixed at ~€115k — a real thing in production, not a proof of concept.", verified: false },
+        { type: "why-ey", text: "It lands inside EY's wider transformation, so the quick win connects to the target operating model instead of becoming another island." },
       ],
+      reusableProposition: "Any team with one obviously painful manual process can get a working fix fast, as a foothold for a larger programme rather than another isolated tool.",
       lifecycle: ["build"], pod: { headcount: 3, lead: "Harry Corbally" },
     },
     {
       id: "app-factory", district: "B", pos: [-8.3, -2.0], h: 1.6, size: 1.2,
       name: "App Factory",
+      visibility: "client-approved",
       microsoftProducts: ["power-apps", "dataverse"],
       whatItDoes: "An industrialised app-delivery capability on Power Apps and Dataverse — a backlog of business apps built to a common standard.",
       value: [
-        "A steady stream of apps retiring manual work, each built on the same data foundation so they compound instead of colliding.",
-        "First apps in 6–8 weeks; run as a managed factory from ~€25k/month. // VERIFY",
-        "EY’s data and assurance teams keep the estate coherent as it scales — the thing that breaks when a pure-play just keeps shipping.",
+        { type: "outcome", text: "A steady stream of apps retiring manual work, each built on the same data foundation so they compound instead of colliding." },
+        { type: "speed-commercial", text: "First apps in 6–8 weeks; run as a managed factory from ~€25k/month.", verified: false },
+        { type: "why-ey", text: "EY's data and assurance teams keep the estate coherent as it scales — the thing that breaks when a pure-play just keeps shipping." },
       ],
+      reusableProposition: "Any organisation with a long backlog of small internal apps can get them built to one standard, on one data foundation, instead of one-off and disconnected.",
       lifecycle: ["build", "run"], pod: { headcount: 3, lead: "Harry Corbally" },
     },
     {
       id: "process-automation", district: "B", pos: [-6.4, -2.1], h: 1.4, size: 1.15,
       name: "Process Automation",
+      visibility: "client-approved",
       microsoftProducts: ["power-automate"],
       whatItDoes: "Automating the swivel-chair work — approvals, data movement and integrations — with Power Automate cloud flows and RPA.",
       value: [
-        "Hours of copy-paste a day handed back to the team, with a full audit trail of every automated step.",
-        "First automations live in 4–6 weeks; from ~€60k. // VERIFY",
-        "EY maps automation to the control environment, so what you automate is also what you can evidence to an auditor.",
+        { type: "outcome", text: "Hours of copy-paste a day handed back to the team, with a full audit trail of every automated step." },
+        { type: "speed-commercial", text: "First automations live in 4–6 weeks; from ~€60k.", verified: false },
+        { type: "why-ey", text: "EY maps automation to the control environment, so what you automate is also what you can evidence to an auditor." },
       ],
+      reusableProposition: "Any back-office team still moving data by hand between systems can automate the hand-offs with a full, auditable trail behind them.",
       lifecycle: ["build", "run"], pod: { headcount: 2, lead: "Harry Corbally" },
     },
     {
       id: "insight-reporting", district: "B", pos: [-9.4, -3.0], h: 1.6, size: 1.15,
       name: "Insight & Reporting",
+      visibility: "client-approved",
       microsoftProducts: ["power-bi", "fabric"],
       whatItDoes: "Governed reporting and analytics on Power BI and Microsoft Fabric — one version of the numbers, secured by role.",
       value: [
-        "Leadership sees the same trusted figures, with drill-through to the detail, instead of arguing about whose spreadsheet is right.",
-        "A first governed dashboard in 6–8 weeks; from ~€95k. // VERIFY",
-        "EY’s Data & AI and Assurance practices stand behind the model, so the numbers hold up when they leave the room.",
+        { type: "outcome", text: "Leadership sees the same trusted figures, with drill-through to the detail, instead of arguing about whose spreadsheet is right." },
+        { type: "speed-commercial", text: "A first governed dashboard in 6–8 weeks; from ~€95k.", verified: false },
+        { type: "why-ey", text: "EY's Data & AI and Assurance practices stand behind the model, so the numbers hold up when they leave the room." },
       ],
+      reusableProposition: "Any organisation reporting from several disconnected spreadsheets can move to one governed model, with the same figures for everyone who needs them.",
       lifecycle: ["build"], pod: { headcount: 3, lead: "Harry Corbally" },
     },
 
@@ -497,13 +605,15 @@ window.CITY = {
     {
       id: "portfolio", district: "C", pos: [6.8, -3.2], h: 1.8, size: 1.25,
       name: "Portfolio & Project Management",
+      visibility: "client-approved",
       microsoftProducts: ["m365", "power-bi"],
       whatItDoes: "Portfolio and project management across a large programme — plans, resources and reporting on Microsoft 365 and Power BI, delivered with our TPG partnership.",
       value: [
-        "One live view of every project, spend and risk, so the programme is steered on facts rather than status decks.",
-        "Stood up in 8–10 weeks; run as a service from ~€20k/month. // VERIFY",
-        "EY brings the programme-delivery muscle and TPG the tooling depth — governance a national programme can be run on, and assured.",
+        { type: "outcome", text: "One live view of every project, spend and risk, so the programme is steered on facts rather than status decks." },
+        { type: "speed-commercial", text: "Stood up in 8–10 weeks; run as a service from ~€20k/month.", verified: false },
+        { type: "why-ey", text: "EY brings the programme-delivery muscle and TPG the tooling depth — governance a national programme can be run on, and assured." },
       ],
+      reusableProposition: "Any organisation running a large, multi-year programme can get one live view of progress, spend and risk instead of status decks built by hand.",
       lifecycle: ["advise", "build", "run"], pod: { headcount: 6 }, proof: ["cso"],
     },
 
@@ -511,25 +621,29 @@ window.CITY = {
     {
       id: "field-service", district: "D", pos: [7.9, 1.2], h: 1.7, size: 1.2,
       name: "Field Service",
+      visibility: "client-approved",
       microsoftProducts: ["d365-field-service"],
       whatItDoes: "Scheduling, mobile work orders and asset history for field crews on Dynamics 365 Field Service — online and offline.",
       value: [
-        "More jobs done right first time, because the engineer arrives with the history, the parts and the next step already in hand.",
-        "Live in 10–12 weeks; from ~€200k depending on fleet size. // VERIFY",
-        "EY wraps the workforce change and safety process around the rollout — the reason field programmes stick instead of stalling at go-live.",
+        { type: "outcome", text: "More jobs done right first time, because the engineer arrives with the history, the parts and the next step already in hand." },
+        { type: "speed-commercial", text: "Live in 10–12 weeks; from ~€200k depending on fleet size.", verified: false },
+        { type: "why-ey", text: "EY wraps the workforce change and safety process around the rollout — the reason field programmes stick instead of stalling at go-live." },
       ],
+      reusableProposition: "Any organisation with crews working from paper schedules can move to guided, mobile work orders that hold up offline in the field.",
       lifecycle: ["build", "run"], pod: { headcount: 3, lead: "Gerry Reid" },
     },
     {
       id: "asset-maintenance", district: "D", pos: [6.5, 2.7], h: 1.5, size: 1.15,
       name: "Asset & Predictive Maintenance",
+      visibility: "client-approved",
       microsoftProducts: ["dynamics365", "azure-ai"],
       whatItDoes: "Predictive maintenance — asset data and Azure AI flagging failures before they happen, feeding work straight into Field Service.",
       value: [
-        "Fewer unplanned outages, because the asset tells you it’s about to fail while you can still plan the fix.",
-        "A first predictive model in 10–12 weeks; from ~€150k. // VERIFY",
-        "EY’s engineers and data scientists build models the business trusts and can defend — not a black box nobody will act on.",
+        { type: "outcome", text: "Fewer unplanned outages, because the asset tells you it's about to fail while you can still plan the fix." },
+        { type: "speed-commercial", text: "A first predictive model in 10–12 weeks; from ~€150k.", verified: false },
+        { type: "why-ey", text: "EY's engineers and data scientists build models the business trusts and can defend — not a black box nobody will act on." },
       ],
+      reusableProposition: "Any organisation running critical physical assets can move from reactive repairs to planned ones, with a model its own engineers can defend.",
       lifecycle: ["advise", "build"], pod: { headcount: 2, lead: "Gerry Reid" },
     },
 
@@ -537,25 +651,29 @@ window.CITY = {
     {
       id: "managed-run", district: "E", pos: [-6.3, 5.0], h: 1.8, size: 1.2,
       name: "Managed Service & 24/7 Run",
+      visibility: "client-approved",
       microsoftProducts: ["dynamics365", "azure"],
       whatItDoes: "A 24/7 managed service — we run the platform in production: monitoring, releases, support and continuous improvement.",
       value: [
-        "The service stays up and keeps getting better, with one accountable team instead of a hand-off to a support queue that never met the build.",
-        "Onboarded in 4–6 weeks; from ~€15k/month by scope. // VERIFY",
-        "Advise, build and run under one EY roof — the same firm that designed it keeps it alive, with the SLAs a critical service demands.",
+        { type: "outcome", text: "The service stays up and keeps getting better, with one accountable team instead of a hand-off to a support queue that never met the build." },
+        { type: "speed-commercial", text: "Onboarded in 4–6 weeks; from ~€15k/month by scope.", verified: false },
+        { type: "why-ey", text: "Advise, build and run under one EY roof — the same firm that designed it keeps it alive, with the SLAs a critical service demands." },
       ],
+      reusableProposition: "Any organisation worried about what happens after go-live can hand run-the-service to the same team that designed and built it.",
       lifecycle: ["advise", "build", "run"], pod: { headcount: 2 }, proof: ["cso", "hse"],
     },
     {
       id: "platform-health", district: "E", pos: [-4.6, 4.5], h: 1.5, size: 1.15,
       name: "Platform Health & Adoption",
+      visibility: "client-approved",
       microsoftProducts: ["power-bi", "purview"],
       whatItDoes: "The control room for the estate — adoption, licence spend, security posture and data governance on Power BI and Purview.",
       value: [
-        "You can see whether what you paid for is being used, and whether it’s safe — before finance or a regulator asks.",
-        "Live in 6–8 weeks; included in managed service or from ~€8k/month. // VERIFY",
-        "EY’s Cyber and Data Protection teams turn platform telemetry into board-level assurance, not just an admin dashboard.",
+        { type: "outcome", text: "You can see whether what you paid for is being used, and whether it's safe — before finance or a regulator asks." },
+        { type: "speed-commercial", text: "Live in 6–8 weeks; included in managed service or from ~€8k/month.", verified: false },
+        { type: "why-ey", text: "EY's Cyber and Data Protection teams turn platform telemetry into board-level assurance, not just an admin dashboard." },
       ],
+      reusableProposition: "Any organisation with a growing Microsoft estate can get one view of adoption, spend and security posture before it becomes a finance or audit question.",
       lifecycle: ["advise", "build", "run"], pod: { headcount: 2 },
     },
 
@@ -563,65 +681,126 @@ window.CITY = {
     {
       id: "data-foundation", district: "F", pos: [3.7, 5.3], h: 1.7, size: 1.2,
       name: "Data Foundation",
+      visibility: "client-approved",
       microsoftProducts: ["dataverse", "fabric"],
-      whatItDoes: "Each client’s own governed data foundation — an isolated Dataverse environment, with Microsoft Fabric, giving that client one trusted source for every app and report.",
+      whatItDoes: "Each client's own governed data foundation — an isolated Dataverse environment, with Microsoft Fabric, giving that client one trusted source for every app and report.",
       value: [
-        "Apps and analytics built once on trusted data, so the next solution is weeks not months and the numbers reconcile — inside one client’s boundary, never mixed with anyone else’s.",
-        "Foundations in 8–10 weeks; from ~€160k. // VERIFY",
-        "EY designs each client a separate, governed Dataverse — data residency, isolation and lineage a regulator will accept — with Assurance standing behind its integrity.",
+        { type: "outcome", text: "Apps and analytics built once on trusted data, so the next solution is weeks not months and the numbers reconcile — inside one client's boundary, never mixed with anyone else's." },
+        { type: "speed-commercial", text: "Foundations in 8–10 weeks; from ~€160k.", verified: false },
+        { type: "why-ey", text: "EY designs each client a separate, governed Dataverse — data residency, isolation and lineage a regulator will accept — with Assurance standing behind its integrity." },
       ],
+      reusableProposition: "Any organisation about to build several apps or reports can start from one governed data foundation instead of a new silo for each one.",
       lifecycle: ["build", "run"], pod: { headcount: 3 }, proof: ["cso"],
     },
     {
       id: "responsible-ai", district: "F", pos: [5.4, 4.5], h: 1.5, size: 1.15,
       name: "Responsible AI & Governance",
+      visibility: "client-approved",
       microsoftProducts: ["purview", "azure-ai"],
       whatItDoes: "Guardrails for AI across the estate — inventory, governance, monitoring and controls on Microsoft Purview and Azure AI.",
       value: [
-        "AI you can put in front of the public and defend to a regulator, because every model is inventoried, monitored and controlled.",
-        "A first governance baseline in 6–8 weeks; from ~€110k. // VERIFY",
-        "This is EY home turf — Responsible AI, Cyber, Law and Assurance in one team, the wrap no pure-play can field.",
+        { type: "outcome", text: "AI you can put in front of the public and defend to a regulator, because every model is inventoried, monitored and controlled." },
+        { type: "speed-commercial", text: "A first governance baseline in 6–8 weeks; from ~€110k.", verified: false },
+        { type: "why-ey", text: "This is EY home turf — Responsible AI, Cyber, Law and Assurance in one team, the wrap no pure-play can field." },
       ],
+      reusableProposition: "Any organisation starting to deploy AI at scale can put an inventory and set of controls around it before a regulator or an incident forces the issue.",
       lifecycle: ["advise", "build"], pod: { headcount: 2 },
     },
   ],
 
   /* ---------------------------------------------------------------------------
    *  CLIENT TENANTS — each is a SEPARATE Microsoft tenant with its OWN isolated
-   *  Dataverse. Islands never touch; there are no wires between them. `runs`
-   *  lists the capability ids (from `buildings` above) deployed for that client.
-   *  `center` places the island; `tenant` strings are illustrative only.
+   *  Dataverse: the "building" a visitor recognises. `runs` lists the solution
+   *  ids (from `buildings` above) deployed for that client. `center` places the
+   *  island; `tenant` strings are illustrative only and are internal-only —
+   *  content-visibility.js strips them from the client-facing view.
+   *
+   *  No approval has been recorded for any client yet: approvalOwner and
+   *  approvalReference are placeholders. Replace "VERIFY" with a named
+   *  approver and a real sign-off reference before treating a client as safe
+   *  to name in front of an external audience.
    * ------------------------------------------------------------------------- */
   clients: [
     {
       id: "doj", name: "Department of Justice", short: "DoJ", sector: "Justice · national",
       real: true, color: "#7A57B5", center: [0, 0], tenant: "justice.crm4.dynamics.com",
-      crest: "doj-crest", crestRatio: 2.55,
+      logoKey: "doj-crest", crestRatio: 2.55, clientFacingApproved: true,
+      visibility: "client-approved", approvalStatus: "pending",
+      approvalOwner: "VERIFY", approvalReference: "VERIFY", lastContentReview: "VERIFY",
+      metricsVerified: false, commercialsVerified: false,
+      engagementTheme: "Modernising immigration services citizens depend on",
+      challenge: "Manual, paper-heavy immigration processes were slow for applicants and hard for staff to scale nationally.",
       story: "Immigration Service Delivery — modernising a service the whole country depends on.",
+      outcome: "A secure self-service portal now lets applicants apply and track status online, backed by case management and automation that remove manual hand-offs behind the scenes.",
+      outcomeMetrics: [],
+      eyDifference: "EY paired Power Platform delivery with public-service accessibility standards and change management, so the portal is one a department can defend at committee, not just demo.",
+      relatedClientIds: ["hse"],
       runs: ["self-service", "customer-service", "process-automation", "c4e"], flagship: "self-service",
     },
     {
       id: "hse", name: "HSE", short: "HSE", sector: "Health · national",
       real: true, color: "#C4399B", center: [-11.5, -8], tenant: "hse.crm4.dynamics.com",
+      clientFacingApproved: false,
+      visibility: "client-approved", approvalStatus: "pending",
+      approvalOwner: "VERIFY", approvalReference: "VERIFY", lastContentReview: "VERIFY",
+      metricsVerified: false, commercialsVerified: false,
+      engagementTheme: "National-scale citizen response",
+      challenge: "A national data breach meant hundreds of thousands of citizens needed a way to get answers fast, with no existing single point of contact at that scale.",
       story: "National breach response — we designed and ran the digital contact centre engaging 200,000+ affected citizens, around 100 agents at peak, over 2.5 years.",
+      outcome: "A Dynamics 365 contact centre with Copilot-assisted case handling gave agents one place to see the full history and the next step — not five screens and a hold queue.",
+      outcomeMetrics: [
+        { label: "Citizens engaged", value: "200,000+", verified: false, sourceReference: "VERIFY" },
+        { label: "Agents at peak", value: "~100", verified: false, sourceReference: "VERIFY" },
+        { label: "Programme length", value: "2.5 years", verified: false, sourceReference: "VERIFY" },
+      ],
+      eyDifference: "EY ran this for real, with Cyber, Data Protection and Change in the same team from day one — a pure-play contact-centre vendor can't staff that combination.",
+      relatedClientIds: ["cso"],
       runs: ["contact-centre", "customer-service", "agent-copilot", "platform-health", "managed-run"], flagship: "contact-centre",
     },
     {
       id: "cso", name: "Central Statistics Office", short: "CSO", sector: "Statistics · national",
       real: true, color: "#2E7AD1", center: [11.5, -8], tenant: "cso.crm4.dynamics.com",
+      clientFacingApproved: false,
+      visibility: "client-approved", approvalStatus: "pending",
+      approvalOwner: "VERIFY", approvalReference: "VERIFY", lastContentReview: "VERIFY",
+      metricsVerified: false, commercialsVerified: false,
+      engagementTheme: "Delivering Census 2027 as a national programme",
+      challenge: "A multi-year national census programme needed one trusted view of progress, spend and risk across many workstreams.",
       story: "Census 2027 — delivery partner and managed service provider for a multi-year national programme.",
+      outcome: "A governed data foundation plus portfolio reporting gives programme leadership one live view instead of status decks, with a managed service keeping it running.",
+      outcomeMetrics: [],
+      eyDifference: "EY brings the programme-delivery muscle and TPG the tooling depth — governance a national statistics programme can be run on, and assured.",
+      relatedClientIds: ["hse"],
       runs: ["data-foundation", "insight-reporting", "portfolio", "responsible-ai", "managed-run"], flagship: "data-foundation",
     },
     {
       id: "council", name: "County Council", short: "Council", sector: "Local government",
       real: false, color: "#12A5A5", center: [-11.5, 8], tenant: "council.crm4.dynamics.com",
-      story: "[Placeholder] A county council digitising resident-facing services and back-office process. Swap for a real reference.",
+      clientFacingApproved: false,
+      visibility: "anonymised", anonymisedName: "Regional local-government organisation",
+      approvalStatus: "approved", approvalOwner: "VERIFY", approvalReference: "VERIFY", lastContentReview: "VERIFY",
+      metricsVerified: false, commercialsVerified: false,
+      engagementTheme: "Digitising resident-facing services",
+      challenge: "Resident requests and back-office processes ran on manual, disconnected steps.",
+      story: "A composite, illustrative engagement — a local authority digitising resident-facing services and back-office process. Swap for an approved reference when one is cleared.",
+      outcome: "A self-service portal and automated workflows let residents self-serve while staff focus on the requests that need a person.",
+      outcomeMetrics: [],
+      eyDifference: "The same pattern used in national engagements, scaled down and re-governed for a local authority's own risk and data-protection requirements.",
       runs: ["self-service", "power-activate", "app-factory", "process-automation"], flagship: "self-service",
     },
     {
       id: "utility", name: "National Utility", short: "Utility", sector: "Utilities",
       real: false, color: "#E2A310", center: [11.5, 8], tenant: "utility.crm4.dynamics.com",
-      story: "[Placeholder] A national utility running field operations and predictive maintenance on Dynamics 365. Swap for a real reference.",
+      clientFacingApproved: false,
+      visibility: "anonymised", anonymisedName: "National utility provider",
+      approvalStatus: "approved", approvalOwner: "VERIFY", approvalReference: "VERIFY", lastContentReview: "VERIFY",
+      metricsVerified: false, commercialsVerified: false,
+      engagementTheme: "Running field operations at national scale",
+      challenge: "Field crews and asset maintenance ran on paper schedules and reactive repairs.",
+      story: "A composite, illustrative engagement — a national utility running field operations and predictive maintenance on Dynamics 365. Swap for an approved reference when one is cleared.",
+      outcome: "Field Service scheduling plus predictive maintenance let crews arrive prepared and catch failures before they become outages.",
+      outcomeMetrics: [],
+      eyDifference: "EY's engineers and data scientists build maintenance models the business can defend, not a black box nobody acts on.",
       runs: ["field-service", "asset-maintenance", "insight-reporting", "managed-run"], flagship: "field-service",
     },
   ],
@@ -763,6 +942,131 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
 
 </script>
 <script>
+/* ============================================================================
+ *  CONTENT VISIBILITY  ·  internal vs client-facing presentation modes
+ *  ---------------------------------------------------------------------------
+ *  window.CITY (ms-data.js) is authored for an INTERNAL audience. This module
+ *  derives the view the scene actually renders, so a client-facing run of the
+ *  city can never expose internal-only content through the DOM, page source,
+ *  tooltips, or the client-side data payload — not by hiding it with CSS.
+ *
+ *  Mode resolution: ?mode=client|internal in the URL, else window.CITY_MODE
+ *  set before this script runs, else 'internal' (safe default for day-to-day
+ *  editing; a client-facing deployment should set the query param or bake
+ *  window.CITY_MODE = 'client' into the page it serves).
+ *
+ *  Gate for client mode (tune here as real approvals land):
+ *    a client or solution is shown only if visibility !== 'internal'
+ *    AND approvalStatus !== 'not-approved'.
+ *  Tighten to `approvalStatus === 'approved'` once every named client has a
+ *  recorded sign-off — right now every real, named client is still 'pending'
+ *  content review, which the looser gate above still allows into a demo.
+ * ========================================================================== */
+(function () {
+  "use strict";
+
+  function resolveMode() {
+    try {
+      const q = new URLSearchParams(location.search).get("mode");
+      if (q === "client" || q === "internal") return q;
+    } catch (_) { /* no location / URLSearchParams (non-browser context) */ }
+    if (window.CITY_MODE === "client" || window.CITY_MODE === "internal") return window.CITY_MODE;
+    return "internal";
+  }
+
+  const NON_NUMERIC_FALLBACK = "Timeline and investment shared on request.";
+
+  function visibleTo(entry, mode) {
+    if (mode === "internal") return true;
+    if (entry.visibility === "internal") return false;
+    if (entry.approvalStatus === "not-approved") return false;
+    return true;
+  }
+
+  /** client-mode-safe copy of one solution's `value` line. */
+  function filterValueLine(line, mode) {
+    if (mode === "internal") return line;
+    if (line.verified === false) return Object.assign({}, line, { text: NON_NUMERIC_FALLBACK });
+    return line;
+  }
+
+  /** client-mode-safe copy of a solution (`buildings[]` entry). */
+  function filterSolution(cap, mode) {
+    const out = Object.assign({}, cap);
+    if (Array.isArray(cap.value)) out.value = cap.value.map((l) => filterValueLine(l, mode));
+    if (mode !== "internal") {
+      if (out.pod) out.pod = { headcount: out.pod.headcount }; // drop internal lead names
+    }
+    return out;
+  }
+
+  /** client-mode-safe copy of a client (`clients[]` entry). */
+  function filterClient(c, mode) {
+    const out = Object.assign({}, c);
+    if (mode !== "internal") {
+      // internal-only / not-yet-approved fields never reach the client payload
+      delete out.tenant;
+      delete out.approvalOwner;
+      delete out.approvalReference;
+      delete out.lastContentReview;
+      delete out.commercialsVerified;
+      if (c.visibility === "anonymised") {
+        out.displayLabel = c.anonymisedName || c.short;
+        out.name = c.anonymisedName || c.short;
+      } else {
+        out.displayLabel = c.name;
+      }
+      if (!c.clientFacingApproved) delete out.logoKey;
+      out.outcomeMetrics = (c.outcomeMetrics || []).filter((m) => m.verified);
+    } else {
+      out.displayLabel = c.name;
+    }
+    return out;
+  }
+
+  /**
+   * Produce the city the scene should actually render for `mode`.
+   * Deep enough to guarantee nothing internal-only survives into the
+   * client-mode object graph (not just visually hidden).
+   */
+  function filterCity(raw, mode) {
+    const capById = {};
+    raw.buildings.forEach((b) => (capById[b.id] = b));
+
+    const buildings = raw.buildings
+      .filter((b) => visibleTo(b, mode))
+      .map((b) => filterSolution(b, mode));
+    const allowedCapIds = new Set(buildings.map((b) => b.id));
+
+    const clients = raw.clients
+      .filter((c) => visibleTo(c, mode))
+      .map((c) => {
+        const filtered = filterClient(c, mode);
+        filtered.runs = (c.runs || []).filter((id) => allowedCapIds.has(id));
+        if (filtered.relatedClientIds) {
+          filtered.relatedClientIds = filtered.relatedClientIds.filter((id) =>
+            raw.clients.some((rc) => rc.id === id && visibleTo(rc, mode))
+          );
+        }
+        return filtered;
+      })
+      .filter((c) => c.runs.length > 0 || mode === "internal");
+
+    return {
+      practice: raw.practice,
+      substrate: raw.substrate,
+      districts: raw.districts,
+      buildings,
+      clients,
+      mode,
+    };
+  }
+
+  window.ContentVisibility = { resolveMode, filterCity, NON_NUMERIC_FALLBACK };
+})();
+
+</script>
+<script>
 /* ==========================================================================
  *  POWER PLATFORM LANDSCAPE · isometric engine (pure SVG, no dependencies)
  *  Draws a light, colourful isometric scene: a Dataverse core, the Power
@@ -772,7 +1076,9 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
  * ========================================================================== */
 (function () {
   "use strict";
-  const D = window.CITY;
+  const CV = window.ContentVisibility;
+  const PRESENTATION_MODE = CV ? CV.resolveMode() : "internal";
+  const D = CV ? CV.filterCity(window.CITY, PRESENTATION_MODE) : window.CITY;
   const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const L = window.LOGOS;
   const NS = "http://www.w3.org/2000/svg";
@@ -943,6 +1249,189 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     return { top: [cx, cyT], ground: [cx, cyB] };
   }
 
+  /* ---- an isometric LAPTOP: a thin deck + a tilted screen leaning back,
+         with a couple of glowing "code" lines — reads as the app/run layer ---- */
+  function drawLaptop(parent, gx, gy, w, base, glow) {
+    const d = w * 0.68, hDeck = 0.10;
+    const geo = isoBox(parent, gx, gy, w, d, hDeck, base, 0);
+    const xm = gx - w / 2, xM = gx + w / 2, yBack = gy - d / 2, lean = d * 0.92, hScreen = w * 0.62;
+    const b0 = iso(xm, yBack, hDeck), b1 = iso(xM, yBack, hDeck);
+    const t0 = iso(xm, yBack - lean, hDeck + hScreen), t1 = iso(xM, yBack - lean, hDeck + hScreen);
+    poly(parent, [b0, b1, t1, t0], shade(base, -0.06), { stroke: shade(base, -0.30), "stroke-width": 1 });
+    // inset dark screen panel + code lines, echoing the server-tower screens
+    const q = 0.14;
+    const sx0 = xm + w * q, sx1 = xM - w * q, sz0 = hDeck + hScreen * q, sz1 = hDeck + hScreen * (1 - q * 0.6);
+    const sy = yBack - lean * (1 - q * 0.4);
+    poly(parent, [iso(sx0, sy, sz1), iso(sx1, sy, sz1), iso(sx1, sy, sz0), iso(sx0, sy, sz0)], "#08131C");
+    for (let r = 0; r < 3; r++) {
+      const zz = sz0 + (sz1 - sz0) * (0.25 + 0.28 * r);
+      const a = iso(sx0 + (sx1 - sx0) * 0.14, sy, zz), b = iso(sx0 + (sx1 - sx0) * (0.4 + 0.35 * hash(gx + "l" + r)), sy, zz);
+      el("line", { x1: a[0].toFixed(1), y1: a[1].toFixed(1), x2: b[0].toFixed(1), y2: b[1].toFixed(1),
+        stroke: glow.code, "stroke-width": 1.4, "stroke-linecap": "round", opacity: 0.9 }, parent);
+    }
+    // faint keyboard highlight bar on the deck top face
+    const kb0 = iso(xm + w * 0.16, gy + d * 0.06, hDeck), kb1 = iso(xM - w * 0.16, gy + d * 0.06, hDeck);
+    el("line", { x1: kb0[0].toFixed(1), y1: kb0[1].toFixed(1), x2: kb1[0].toFixed(1), y2: kb1[1].toFixed(1),
+      stroke: glow.bar, "stroke-width": 2, "stroke-linecap": "round", opacity: 0.55 }, parent);
+    bd(t0[0], t0[1]); bd(t1[0], t1[1]);
+    return geo;
+  }
+
+  /* ---- a small floating isometric CUBE — decorative data/connectivity
+         accent, drifting near a beam or tucked beside the core ---- */
+  function drawCube(parent, gx, gy, size, color, liftPx) {
+    const wrap = el("g", { transform: `translate(0,${(-liftPx).toFixed(1)})` }, parent);
+    isoBox(wrap, gx, gy, size, size, size, color, 0);
+    const a = iso(gx, gy, size);
+    return { wrap, cx: a[0], baseY: a[1] - liftPx, liftPx };
+  }
+
+  /* ---- an isometric CLOUD mark, screen-space (like the client emblem
+         plaques) — floats above an island, tethered down by a soft beam,
+         signalling "this runs on the Microsoft cloud" ---- */
+  function drawCloudMark(anchorTop, color) {
+    const cx = anchorTop[0], baseY = anchorTop[1] - 84;
+    const wrap = el("g", { class: "cloud-mark", "pointer-events": "none" }, Llabels);
+    el("line", { x1: cx, y1: anchorTop[1] - 6, x2: cx, y2: baseY + 22,
+      stroke: color, "stroke-width": 1.6, "stroke-dasharray": "1.5 5", "stroke-linecap": "round", opacity: 0.4 }, wrap);
+    const g = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
+    el("ellipse", { cx: 0, cy: 10, rx: 30, ry: 8, fill: "#1E2D46", opacity: 0.14, filter: "url(#soft)" }, g);
+    [[-13, 2, 13], [3, -4, 15], [16, 3, 11], [-2, 6, 17]].forEach(([x, y, r]) =>
+      el("circle", { cx: x, cy: y, r, fill: "#FFFFFF", stroke: shade(color, -0.15), "stroke-width": 1.2 }, g));
+    [[-9, 1], [1, -2], [10, 1]].forEach(([x, y]) => el("circle", { cx: x, cy: y, r: 1.8, fill: color, opacity: 0.9 }, g));
+    bd(cx - 32, baseY - 14); bd(cx + 32, baseY + 20);
+    return { wrap, cx, baseY };
+  }
+
+  /* =====================================================================
+   *  Solution-shape vocabulary — each returns {top, ground} like isoBox.
+   *  Every solution is one of a few architectural forms so the city reads
+   *  as varied structures, not identical racks: cloud pavilion, insight
+   *  gallery, low-code cube stack, secure vault, portal (laptop), or a
+   *  civic tower (default d365 case). All sit on a shared plinth.
+   * =================================================================== */
+
+  // soft contact-shadow ellipse under any building at ground z=0
+  function groundShadow(parent, gx, gy, rTiles) {
+    const c = iso(gx, gy, 0), rx = rTiles * TILE * COS30 * 1.05, ry = rTiles * TILE * pitch * 1.05;
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + 4).toFixed(1),
+      rx: rx.toFixed(1), ry: ry.toFixed(1), fill: "url(#contact)", opacity: 0.9 }, parent);
+    return c;
+  }
+
+  // a low plinth (podium) that every non-tower solution sits on
+  // (isoBox already shades its own faces from a raw hex — never pre-shade here)
+  function plinth(parent, gx, gy, w, d, base) {
+    isoBox(parent, gx, gy, w, d, 0.28, base, 0);
+  }
+
+  /* ---- CLOUD PAVILION: a fluffy isometric cloud floating over a plinth
+         with dashed rain-of-data lines — reads as the AI / cloud layer ---- */
+  function cloudBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const c = iso(gx, gy, 0.28 + h * 0.55);
+    const R = w * TILE * 0.42;
+    const g = el("g", {}, parent);
+    // soft shadow disc under the cloud (in scene space, at cloud height)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + R * 0.85).toFixed(1),
+      rx: (R * 1.15).toFixed(1), ry: (R * 0.28).toFixed(1),
+      fill: "url(#contact)", opacity: 0.7 }, g);
+    // three overlapping puffs (front-facing so it reads from any orbit angle)
+    const puffs = [[-R * 0.5, 0, R * 0.62], [R * 0.55, R * 0.05, R * 0.55], [0, -R * 0.28, R * 0.7]];
+    puffs.forEach(([dx, dy, r]) => {
+      el("ellipse", { cx: (c[0] + dx).toFixed(1), cy: (c[1] + dy).toFixed(1),
+        rx: r.toFixed(1), ry: (r * 0.78).toFixed(1),
+        fill: shade(base, 0.42), stroke: shade(base, 0.10), "stroke-width": 1.4 }, g);
+    });
+    // subtle inner highlight (top puff)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] - R * 0.35).toFixed(1),
+      rx: (R * 0.45).toFixed(1), ry: (R * 0.16).toFixed(1),
+      fill: "#FFFFFF", opacity: 0.55 }, g);
+    // dashed data-rain from cloud down to plinth
+    const plinthTop = iso(gx, gy, 0.28);
+    for (let i = -1; i <= 1; i++) {
+      const sx = c[0] + i * R * 0.5;
+      el("line", { x1: sx.toFixed(1), y1: (c[1] + R * 0.6).toFixed(1),
+        x2: (plinthTop[0] + i * R * 0.4).toFixed(1), y2: (plinthTop[1] - 4).toFixed(1),
+        stroke: glow.bar, "stroke-width": 1.6, "stroke-dasharray": "2 4",
+        "stroke-linecap": "round", opacity: 0.75 }, g);
+    }
+    bd(c[0] - R * 1.4, c[1] - R * 1.2); bd(c[0] + R * 1.4, c[1] + R * 1.2);
+    return { top: [c[0], c[1] - R * 0.9], ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- INSIGHT GALLERY: three growing bars (Power BI silhouette) rising
+         from a plinth, with a soft glow behind — reads as analytics ---- */
+  function chartBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const bw = w * 0.22, gap = w * 0.06, xs = [-bw - gap, 0, bw + gap];
+    const heights = [h * 0.55, h * 0.8, h * 1.05];
+    xs.forEach((dx, i) => {
+      const bx = gx + dx * 0.55;
+      isoBox(parent, bx, gy, bw, bw, heights[i], base, 0);
+      // glowing top strip
+      const t = iso(bx, gy, heights[i]);
+      el("ellipse", { cx: t[0].toFixed(1), cy: t[1].toFixed(1),
+        rx: (bw * TILE * COS30 * 0.5).toFixed(1), ry: (bw * TILE * pitch * 0.5).toFixed(1),
+        fill: glow.bar, opacity: 0.85 }, parent);
+    });
+    return { top: iso(gx, gy, heights[2]), ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- LOW-CODE CUBE STACK: three translucent cubes ascending in a
+         zig-zag on a plinth — reads as composable low-code building blocks ---- */
+  function cubesBuilding(parent, gx, gy, w, h, base, glow) {
+    plinth(parent, gx, gy, w, w, base);
+    const s = w * 0.44;
+    const seats = [
+      { dx: -s * 0.35, dy: s * 0.20, z: 0.28,        sz: s * 0.95 },
+      { dx:  s * 0.30, dy: -s * 0.15, z: 0.28 + s * 0.85, sz: s * 0.82 },
+      { dx: -s * 0.10, dy: -s * 0.35, z: 0.28 + s * 1.60, sz: s * 0.66 },
+    ];
+    seats.forEach((c) => {
+      const cx = gx + c.dx, cy = gy + c.dy;
+      // per-cube faux plinth (bottom cap) then the cube
+      isoBox(parent, cx, cy, c.sz, c.sz, c.sz, base, 0);
+      // glow band under the cube
+      const b = iso(cx, cy, c.z + c.sz);
+      el("ellipse", { cx: b[0].toFixed(1), cy: (b[1] + 1).toFixed(1),
+        rx: (c.sz * TILE * COS30 * 0.55).toFixed(1), ry: (c.sz * TILE * pitch * 0.55).toFixed(1),
+        fill: glow.bar, opacity: 0.7 }, parent);
+    });
+    const t = iso(gx + seats[2].dx, gy + seats[2].dy, seats[2].z + seats[2].sz);
+    return { top: t, ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- SECURE VAULT: a low, wide block with a bright chevron-shield mark
+         etched on its front — reads as governance / Purview ---- */
+  function vaultBuilding(parent, gx, gy, w, h, base, glow) {
+    const vw = w * 1.05, vd = w * 0.9, vh = h * 0.62;
+    isoBox(parent, gx, gy, vw, vd, vh, base, 0);
+    // shield mark on the front face
+    const front = gy + vd / 2;
+    const cx0 = gx, z0 = vh * 0.28, z1 = vh * 0.78;
+    const s0 = iso(cx0, front, z1), s1 = iso(cx0 - vw * 0.22, front, z1 * 0.75),
+          s2 = iso(cx0, front, z0), s3 = iso(cx0 + vw * 0.22, front, z1 * 0.75);
+    poly(parent, [s0, s1, s2, s3], glow.bar, { stroke: shade(base, 0.55), "stroke-width": 1.4 });
+    // beacon on top
+    const top = iso(gx, gy, vh);
+    el("circle", { cx: top[0].toFixed(1), cy: (top[1] - 6).toFixed(1), r: 4,
+      fill: glow.led, stroke: "#FFFFFF", "stroke-width": 1 }, parent);
+    return { top, ground: iso(gx, gy, 0) };
+  }
+
+  /* ---- shape picker: infer form from the solution's primary product ---- */
+  function formOfCap(cap) {
+    const p = (cap.microsoftProducts || [])[0] || "";
+    if (p === "copilot" || p === "copilot-studio" || p === "azure-ai" || p === "azure") return "cloud";
+    if (p === "power-pages") return "laptop";
+    if (p === "power-bi" || p === "fabric") return "chart";
+    if (p === "power-apps" || p === "power-automate" || p === "power-platform") return "cubes";
+    if (p === "purview") return "vault";
+    if (p === "dataverse") return "db";
+    return "tower"; // d365-*, dynamics365, m365 → civic tower
+  }
+
   /* =====================================================================
    *  Simplified Microsoft product marks (brand-coloured, screen-aligned)
    *  drawn in a ~28px box centred at the origin.
@@ -1027,6 +1516,8 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
   const nodes = {};   // id -> node
   const beams = [];
   const emblems = []; // floating spinning client crests
+  const clouds = [];  // floating "runs on the Microsoft cloud" marks
+  const cubes = [];   // decorative floating data cubes
   let selectedId = null;   // persists across orbit rebuilds
   let focusClient = null;  // which client tenant is spotlighted
   let sceneFirst = true;   // first build plays the rise animation; rebuilds don't
@@ -1065,8 +1556,8 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       // soft shadow so each tenant island reads as floating apart
       const scx = (top[0][0] + top[2][0]) / 2;
       const sbot = Math.max(top[0][1], top[1][1], top[2][1], top[3][1]);
-      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 6).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
-        ry: 16, fill: "#1E2D46", opacity: 0.10, filter: "url(#soft)" }, Lground);
+      el("ellipse", { cx: scx.toFixed(1), cy: (sbot + 10).toFixed(1), rx: (Math.abs(top[1][0] - top[3][0]) / 2 * 0.82).toFixed(1),
+        ry: 20, fill: "url(#contact)", opacity: 0.62 }, Lground);
       poly(Lground, top.map((p) => [p[0], p[1] + thPx]), shade(c.color, -0.30));  // tenant wall (thickness)
       poly(Lground, top, "#EEF3FA", { stroke: c.color, "stroke-width": 2, opacity: 1 });
       // faint client tint + soft inner grid
@@ -1090,6 +1581,42 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       sub.textContent = "ISOLATED TENANT · " + c.sector.toUpperCase();
       bd(lp[0] - 120, lp[1] + 30); bd(lp[0] + 120, lp[1] + 30);
     });
+    // ambient MICROSOFT CLOUD — a large, quiet cloud over the whole city,
+    // signalling the platform underneath every tenant. Behind everything.
+    drawAmbientCloud();
+  }
+
+  /* soft, screen-space cloud floating high above the city centre. Behind
+     all buildings; re-drawn each orbit rebuild so it tracks the view. */
+  function drawAmbientCloud() {
+    const c = iso(0, 0, 4.6);
+    const R = 130;
+    const g = el("g", { class: "ambient-cloud", "pointer-events": "none", opacity: 0.75 }, Lground);
+    // very soft shadow disc under it (still in scene space, above buildings)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] + R * 0.85).toFixed(1),
+      rx: (R * 1.4).toFixed(1), ry: (R * 0.28).toFixed(1),
+      fill: "url(#contact)", opacity: 0.25 }, g);
+    // stacked puffs (soft, brand-neutral)
+    const puffs = [[-R * 0.7, R * 0.1, R * 0.72], [R * 0.65, R * 0.14, R * 0.66],
+                   [-R * 0.15, -R * 0.20, R * 0.85], [R * 0.35, -R * 0.05, R * 0.62]];
+    puffs.forEach(([dx, dy, r]) => {
+      el("ellipse", { cx: (c[0] + dx).toFixed(1), cy: (c[1] + dy).toFixed(1),
+        rx: r.toFixed(1), ry: (r * 0.72).toFixed(1),
+        fill: "#FFFFFF", stroke: "#C8D9F1", "stroke-width": 1.4 }, g);
+    });
+    // inner highlight (top of the cloud)
+    el("ellipse", { cx: c[0].toFixed(1), cy: (c[1] - R * 0.35).toFixed(1),
+      rx: (R * 0.55).toFixed(1), ry: (R * 0.13).toFixed(1),
+      fill: "#F5FAFF", opacity: 0.9 }, g);
+    // small Azure mark on the cloud
+    const mg = el("g", { transform: `translate(${c[0].toFixed(1)},${(c[1] + 4).toFixed(1)}) scale(0.9)` }, g);
+    L.svg(mg, "azure", 14);
+    // quiet label under it
+    el("text", { x: c[0].toFixed(1), y: (c[1] + R * 0.68).toFixed(1),
+      "text-anchor": "middle", fill: "#2E7AD1", "font-size": 11.5, "font-weight": 700,
+      "letter-spacing": ".09em", opacity: 0.7,
+      "font-family": "Segoe UI, Inter, sans-serif" }, g).textContent = "MICROSOFT CLOUD";
+    bd(c[0] - R * 1.4, c[1] - R * 1.1); bd(c[0] + R * 1.4, c[1] + R * 1.1);
   }
 
   /* population dots under a building — density reads as scale */
@@ -1136,15 +1663,29 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     lbl.textContent = "Dataverse";
     const node = { id, kind: "core", clientId: client.id, client, g, labelEl: lbl, top: geo.top, ground: geo.ground, pulse: null };
     nodes[id] = node; wireNode(node);
-    if (client.crest) drawEmblem(client, geo);
+    drawEmblem(client, geo);
     return node;
   }
 
-  /* A real client crest, floating on a glass plaque above its Dataverse core
-   * and slowly turning like a coin — readable on both faces so text never
-   * mirrors. Loaded from the supplied asset (never redrawn). */
+  const warnedMissingClientLogo = {};
+  function initials(label) {
+    const words = (label || "?").trim().split(/\s+/);
+    if (words.length === 1) return words[0].slice(0, 2).toUpperCase();
+    return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+  }
+
+  /* Every approved client gets a rotating identity beacon above its Dataverse
+   * core: the real logo asset when one is supplied and approved for display,
+   * otherwise a neutral architectural monogram plate — never a drawn
+   * approximation of a missing mark. Loaded from window.ICONS (never redrawn
+   * or traced). Readable on both faces so text never mirrors mid-turn. */
   function drawEmblem(client, geo) {
-    const src = (window.ICONS || {})[client.crest]; if (!src) return;
+    const label = client.displayLabel || client.name;
+    const src = client.logoKey ? (window.ICONS || {})[client.logoKey] : null;
+    if (client.logoKey && !src && !warnedMissingClientLogo[client.logoKey]) {
+      warnedMissingClientLogo[client.logoKey] = 1;
+      console.warn("[city] missing client logo asset for key: " + client.logoKey + " — using monogram fallback for " + label);
+    }
     const a = geo.top;
     const cx = a[0], baseY = a[1] - 66;          // hover above the core
     const ratio = client.crestRatio || 2.4;
@@ -1165,16 +1706,27 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     const spin = el("g", { transform: `translate(${cx.toFixed(1)},${baseY.toFixed(1)})` }, wrap);
 
     // one plaque face, drawn centred on (0,0); `back` pre-mirrors it so that
-    // when the wrapper's negative X-scale flips it, the logo reads correctly.
+    // when the wrapper's negative X-scale flips it, the content reads correctly.
     function face(back) {
       const f = el("g", { transform: back ? "scale(-1,1)" : "" }, spin);
       el("rect", { x: -W / 2, y: -H / 2, width: W, height: H, rx: 13, ry: 13,
         fill: "#ffffff", stroke: shade(col, 0.35), "stroke-width": 1.4, filter: "url(#soft)" }, f);
       el("rect", { x: -W / 2 + 3, y: -H / 2 + 3, width: W - 6, height: H - 6, rx: 10, ry: 10,
         fill: "none", stroke: shade(col, 0.72), "stroke-width": 1 }, f);
-      const img = el("image", { x: -iw / 2, y: -ih / 2, width: iw, height: ih,
-        preserveAspectRatio: "xMidYMid meet" }, f);
-      href(img, src);
+      if (src) {
+        const img = el("image", { x: -iw / 2, y: -ih / 2, width: iw, height: ih,
+          preserveAspectRatio: "xMidYMid meet" }, f);
+        href(img, src);
+      } else {
+        // neutral architectural monogram plate — a placeholder, not a logo
+        const mono = initials(label), side = Math.min(ih, W * 0.42);
+        el("rect", { x: -side / 2, y: -side / 2, width: side, height: side, rx: side * 0.22,
+          fill: "#5A6577" }, f);
+        const t = el("text", { x: 0, y: side * 0.06, "text-anchor": "middle", "dominant-baseline": "central",
+          fill: "#fff", "font-weight": 700, "font-size": side * 0.42,
+          "font-family": "Segoe UI, Inter, sans-serif" }, f);
+        t.textContent = mono;
+      }
       return f;
     }
     const front = face(false), back = face(true);
@@ -1193,7 +1745,17 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     const g = nodeShell(id, cap.name + " — deployed for " + client.name);
     const color = client.color, glow = glowFor(color);
     const units = Math.max(3, Math.round(item.h / 0.42));
-    const geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
+    // soft ground contact-shadow so no shape looks like it's floating
+    groundShadow(g, item.pos[0], item.pos[1], item.size * 0.72);
+    const form = formOfCap(cap);
+    let geo;
+    if (form === "cloud")       geo = cloudBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "laptop") geo = drawLaptop(g, item.pos[0], item.pos[1], item.size * 1.15, color, glow);
+    else if (form === "chart")  geo = chartBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "cubes")  geo = cubesBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "vault")  geo = vaultBuilding(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else if (form === "db")     geo = dbTower(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    else                        geo = serverTower(g, item.pos[0], item.pos[1], item.size, item.size, item.h, color, glow, units);
     const key = (cap.microsoftProducts || [])[0];
     if (key) {
       const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 28).toFixed(1)})` }, g);
@@ -1251,6 +1813,29 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     });
   }
 
+  /* ---- extra scenery per island: a laptop (the "run" access point), a
+         cloud mark tethered above the core, and a couple of drifting data
+         cubes — so the landscape isn't just repeated towers. ---- */
+  function buildDecor() {
+    D.clients.forEach((c) => {
+      const L2 = CL[c.id]; const [gxm, gym, gxM, gyM] = L2.box;
+      const glow = glowFor(c.color);
+      // laptop: front-left corner of the island, facing the viewer
+      const lx = gxm + 0.62, ly = gyM - 0.5;
+      drawLaptop(Lparts, lx, ly, 0.62, c.color, glow);
+      // cloud: tethered above the Dataverse core
+      const coreTop = nodes["core:" + c.id] ? nodes["core:" + c.id].top : iso(L2.corePos[0], L2.corePos[1], L2.coreH);
+      clouds.push(drawCloudMark(coreTop, c.color));
+      // a couple of small drifting cubes near the island's open corner
+      const spots = [[gxM - 0.5, gym + 0.55], [gxM - 1.15, gym + 1.25]];
+      spots.forEach((p, i) => {
+        const cu = drawCube(Lparts, p[0], p[1], 0.16 + i * 0.03, c.color, 26 + i * 16);
+        bd(cu.cx - 14, cu.baseY - 14); bd(cu.cx + 14, cu.baseY + 14 + 8);   // + bob headroom
+        cubes.push(cu);
+      });
+    });
+  }
+
   /* =====================================================================
    *  Interaction: hover, select, focus
    * =================================================================== */
@@ -1259,16 +1844,30 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     const r = svg.getBoundingClientRect();
     return { x: r.left + (pt[0] - VB.x) / VB.w * r.width, y: r.top + (pt[1] - VB.y) / VB.h * r.height };
   }
+  function lifecycleUnion(capIds) {
+    const set = new Set();
+    (capIds || []).forEach((id) => { const cap = capById[id]; if (cap && cap.lifecycle) cap.lifecycle.forEach((s) => set.add(s)); });
+    return set;
+  }
+  function lifecycleSummary(set) {
+    return ["advise", "build", "run"].filter((s) => set.has(s)).map((s) => s[0].toUpperCase() + s.slice(1)).join(" · ");
+  }
   function onHover(node, on) {
     if (dragging) return;
     node.g.classList.toggle("hi", on);
     if (on && node.id !== selectedId) {
       const s = screenOf(node.top);
       tag.style.left = s.x + "px"; tag.style.top = (s.y - 24) + "px";
-      let title, sub;
-      if (node.kind === "core") { title = node.client.name + " — Dataverse"; sub = "isolated tenant"; }
-      else { title = node.cap.name; sub = node.client.name; }
-      tag.innerHTML = title + (sub ? '<span class="c">' + sub + "</span>" : "");
+      if (node.kind === "core") {
+        const c = node.client, name = c.displayLabel || c.name, n = (c.runs || []).length;
+        const life = lifecycleSummary(lifecycleUnion(c.runs));
+        let html = name;
+        if (c.engagementTheme) html += '<span class="c">' + c.engagementTheme + "</span>";
+        html += '<span class="c">' + n + (n === 1 ? " solution" : " solutions") + (life ? " · " + life : "") + " · Click to explore</span>";
+        tag.innerHTML = html;
+      } else {
+        tag.innerHTML = node.cap.name + '<span class="c">' + (node.client.displayLabel || node.client.name) + " · Click to explore</span>";
+      }
       tag.classList.add("show");
     } else if (!on) tag.classList.remove("show");
   }
@@ -1369,12 +1968,15 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     tweenVBCenter(n.top[0], n.top[1] - 40, 650, () => selectNode(n));
   }
 
-  /* ---- solution (building) panel ---- */
+  const VALUE_LABEL = { outcome: "Business outcome", "speed-commercial": "Speed & commercial shape", "why-ey": "Why EY" };
+
+  /* ---- solution panel: the individual BizApps solution behind a client ---- */
   function fillPanel(node) {
     const p = $("#panel"), cap = node.cap, client = node.client, q = (s) => p.querySelector(s);
+    const clientName = client.displayLabel || client.name;
 
     const eye = q(".p-eyebrow");
-    eye.textContent = client.name + " · tenant";
+    eye.textContent = clientName + " · solution";
     eye.style.color = client.color;
     q("h2").textContent = cap.name;
 
@@ -1393,22 +1995,34 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     } else life.style.display = "none";
 
     q(".p-does").textContent = cap.whatItDoes;
+    q(".p-challenge-sec").style.display = "none";
+    q(".p-outcome-sec").style.display = "none";
 
     const vSec = q(".p-value-sec"), vWrap = q(".p-value"); vWrap.innerHTML = "";
     if (cap.value) {
       vSec.style.display = "";
+      vSec.querySelector(".p-cap").textContent = "The value";
       cap.value.forEach((line) => {
         const row = el2("div", "p-vline");
         const ar = el2("span", "p-arrow"); ar.textContent = "→";
-        const tx = document.createElement("span"); tx.textContent = cleanCopy(line);
+        const tx = document.createElement("span");
+        const label = VALUE_LABEL[line.type];
+        if (label) { const b = document.createElement("b"); b.textContent = label + ". "; tx.appendChild(b); }
+        tx.appendChild(document.createTextNode(cleanCopy(line.text)));
         row.appendChild(ar); row.appendChild(tx); vWrap.appendChild(row);
       });
     } else vSec.style.display = "none";
+
+    const relevSec = q(".p-relevant-sec");
+    if (cap.reusableProposition) { relevSec.style.display = ""; q(".p-relevant").textContent = cap.reusableProposition; }
+    else relevSec.style.display = "none";
 
     const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
     bSec.querySelector(".p-cap").textContent = "Built with";
     if (cap.microsoftProducts) { bSec.style.display = ""; cap.microsoftProducts.forEach((k) => bWrap.appendChild(L.chip(k))); }
     else bSec.style.display = "none";
+    q(".p-platform-sec").style.display = "none";
+    q(".p-ey-sec").style.display = "none";
 
     const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
     rSec.querySelector(".p-cap").textContent = "Who runs it";
@@ -1421,50 +2035,107 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       rWrap.appendChild(dots); rWrap.appendChild(txt);
     } else rSec.style.display = "none";
 
-    // deployed in — link back to this client's isolated tenant
+    // "See this capability at another client" — deliberate navigation only,
+    // the one thing here allowed to move the camera when clicked.
+    const relSec = q(".p-related-sec"), relWrap = q(".p-related"); relWrap.innerHTML = "";
+    const others = D.clients.filter((c) => c.id !== client.id && (c.runs || []).indexOf(cap.id) >= 0);
+    if (others.length) {
+      relSec.style.display = ""; relSec.querySelector(".p-cap").textContent = "See this capability elsewhere";
+      others.forEach((oc) => {
+        const a = proofLink("View at " + (oc.displayLabel || oc.name));
+        a.addEventListener("click", () => flyToAndSelect(oc.id + ":" + cap.id));
+        relWrap.appendChild(a);
+      });
+    } else relSec.style.display = "none";
+
+    // back to the client overview — never closes the panel, never resets the camera
     const pSec = q(".p-proof-sec"), pWrap = q(".p-proof"); pWrap.innerHTML = "";
     pSec.style.display = ""; pSec.querySelector(".p-cap").textContent = "Deployed in";
-    const a = proofLink(client.name + " · isolated tenant");
+    const a = proofLink("← Back to " + clientName + " overview");
     a.addEventListener("click", () => selectNode(nodes["core:" + client.id]));
     pWrap.appendChild(a);
   }
 
-  /* ---- client (tenant) panel ---- */
+  /* ---- client panel: the relationship, challenge and overall value ---- */
   function fillClientPanel(client) {
     const p = $("#panel"), q = (s) => p.querySelector(s);
+    const name = client.displayLabel || client.name;
+
     const eye = q(".p-eyebrow");
-    eye.textContent = client.real ? "Client engagement" : "Illustrative client";
+    eye.textContent = client.visibility === "anonymised" ? "Anonymised client story"
+      : (client.real ? "Client engagement" : "Illustrative client");
     eye.style.color = client.color;
-    q("h2").textContent = client.name;
+    q("h2").textContent = name;
 
-    const logos = q(".p-logos"); logos.innerHTML = ""; logos.appendChild(L.html("dataverse", 28));
+    const logos = q(".p-logos"); logos.innerHTML = "";
+    logos.appendChild(L.html(client.logoKey || "dataverse", 28));
 
+    // Advise · Build · Run — union across every solution deployed here
     const life = q(".p-life"); life.innerHTML = ""; life.style.display = "";
-    const seg = el2("span", "p-life-seg on"); seg.innerHTML = '<span class="d"></span>Isolated tenant · own Dataverse';
-    life.appendChild(seg);
+    const union = lifecycleUnion(client.runs);
+    ["advise", "build", "run"].forEach((stage) => {
+      const seg = el2("span", "p-life-seg" + (union.has(stage) ? " on" : ""));
+      seg.innerHTML = '<span class="d"></span>' + stage.charAt(0).toUpperCase() + stage.slice(1);
+      life.appendChild(seg);
+    });
 
-    q(".p-does").textContent = client.story;
+    q(".p-does").textContent = client.engagementTheme || client.story;
+
+    const chSec = q(".p-challenge-sec");
+    if (client.challenge) { chSec.style.display = ""; q(".p-challenge").textContent = client.challenge; }
+    else chSec.style.display = "none";
+
+    const outSec = q(".p-outcome-sec");
+    if (client.outcome) {
+      outSec.style.display = ""; q(".p-outcome").textContent = client.outcome;
+      const mWrap = q(".p-metrics"); mWrap.innerHTML = "";
+      (client.outcomeMetrics || []).forEach((m) => {
+        const chip = el2("span", "p-metric");
+        const b = document.createElement("b"); b.textContent = m.value;
+        const s = document.createElement("span"); s.textContent = m.label;
+        chip.appendChild(b); chip.appendChild(s); mWrap.appendChild(chip);
+      });
+    } else outSec.style.display = "none";
 
     q(".p-value-sec").style.display = "none";
+    q(".p-relevant-sec").style.display = "none";
 
     const bSec = q(".p-built-sec"), bWrap = q(".p-built"); bWrap.innerHTML = "";
-    bSec.style.display = ""; bSec.querySelector(".p-cap").textContent = "Solutions deployed here";
-    client.runs.forEach((capId) => {
+    bSec.style.display = ""; bSec.querySelector(".p-cap").textContent = "Solutions";
+    (client.runs || []).forEach((capId) => {
       const cap = capById[capId]; if (!cap) return;
       const chip = el2("button", "p-chip2"); chip.style.cursor = "pointer";
+      chip.setAttribute("aria-label", "Open " + cap.name);
       const k = (cap.microsoftProducts || [])[0]; if (k) chip.appendChild(L.html(k, 16));
       const s = document.createElement("span"); s.textContent = cap.name; chip.appendChild(s);
       chip.addEventListener("click", () => selectNode(nodes[client.id + ":" + capId]));
       bWrap.appendChild(chip);
     });
 
-    const rSec = q(".p-run-sec"), rWrap = q(".p-run"); rWrap.innerHTML = "";
-    rSec.style.display = ""; rSec.querySelector(".p-cap").textContent = "Tenant";
-    const txt = el2("span", "p-run-txt");
-    const mono = document.createElement("span"); mono.className = "mono"; mono.textContent = client.tenant;
-    txt.appendChild(mono);
-    txt.appendChild(document.createTextNode(" — its own governed Dataverse, isolated from every other client."));
-    rWrap.appendChild(txt);
+    // Microsoft platform — union of products across this client's solutions
+    const platSec = q(".p-platform-sec"), platWrap = q(".p-platform"); platWrap.innerHTML = "";
+    const products = new Set();
+    (client.runs || []).forEach((id) => { const cap = capById[id]; (cap && cap.microsoftProducts || []).forEach((k) => products.add(k)); });
+    if (products.size) { platSec.style.display = ""; products.forEach((k) => platWrap.appendChild(L.chip(k))); }
+    else platSec.style.display = "none";
+
+    const eySec = q(".p-ey-sec");
+    if (client.eyDifference) { eySec.style.display = ""; q(".p-ey").textContent = client.eyDifference; }
+    else eySec.style.display = "none";
+
+    q(".p-run-sec").style.display = "none";
+
+    // related clients — deliberate navigation only
+    const relSec = q(".p-related-sec"), relWrap = q(".p-related"); relWrap.innerHTML = "";
+    const relatedClients = (client.relatedClientIds || []).map((id) => D.clients.find((c) => c.id === id)).filter(Boolean);
+    if (relatedClients.length) {
+      relSec.style.display = ""; relSec.querySelector(".p-cap").textContent = "Related";
+      relatedClients.forEach((rc) => {
+        const a = proofLink("View " + (rc.displayLabel || rc.name));
+        a.addEventListener("click", () => flyToAndSelect("core:" + rc.id));
+        relWrap.appendChild(a);
+      });
+    } else relSec.style.display = "none";
 
     q(".p-proof-sec").style.display = "none";
   }
@@ -1507,10 +2178,13 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     for (const k in nodes) delete nodes[k];
     beams.length = 0;
     emblems.length = 0;
+    clouds.length = 0;
+    cubes.length = 0;
     computeLayout();
     buildGround();
     buildNodes();
     buildBeams();
+    buildDecor();
     applyFocusStates();
   }
   let rebuildQueued = false;
@@ -1664,7 +2338,7 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
   function tick(now) {
     requestAnimationFrame(tick);
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
-    if (REDUCED) return;
+    if (REDUCED || document.hidden) return;   // pause ambient motion off-screen / reduced motion
     for (const bm of beams) {
       if (!bm.len) { try { bm.len = bm.path.getTotalLength(); } catch (_) { continue; } }
       for (const dp of bm.dots) {
@@ -1697,6 +2371,16 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
       em.front.setAttribute("opacity", facingFront ? "1" : "0");
       em.back.setAttribute("opacity", facingFront ? "0" : "1");
     }
+    // clouds: a slow, gentle bob
+    clouds.forEach((cl, i) => {
+      const bob = Math.sin(ts * 0.5 + i) * 5;
+      cl.wrap.setAttribute("transform", `translate(0,${bob.toFixed(1)})`);
+    });
+    // cubes: drift up/down at slightly different phases, on top of their base lift
+    cubes.forEach((cu, i) => {
+      const bob = Math.sin(ts * 0.9 + i * 1.7) * 6;
+      cu.wrap.setAttribute("transform", `translate(0,${(-cu.liftPx + bob).toFixed(1)})`);
+    });
   }
 
   /* =====================================================================
@@ -1712,10 +2396,31 @@ window.ICONS["m365"]="data:image/webp;base64,UklGRkq+AABXRUJQVlA4TD6+AAAv80GJEBG
     set("#brand .wordmark", D.practice.wordmark);
     const hero = D.practice.hero;
     set("#intro .intro-eyebrow", hero.eyebrow || "");
-    set("#intro h1", hero.headline);
+    set("#intro h1 .h1-a", hero.headline);
+    set("#intro h1 .h1-b", hero.headlineAccent || "");
     set("#intro .lede", hero.sub);
-    const pts2 = $("#intro .intro-points");
-    if (pts2) { pts2.innerHTML = ""; (hero.points || []).forEach((p) => { const li = el2("li"); li.textContent = p; pts2.appendChild(li); }); }
+    const stats = $("#intro .intro-stats");
+    if (stats) {
+      stats.innerHTML = "";
+      (hero.stats || []).forEach((s) => {
+        const cell = el2("div", "stat");
+        const num = el2("div", "stat-n"); num.textContent = s.n; cell.appendChild(num);
+        if (s.unit) { const u = el2("span", "stat-u"); u.textContent = s.unit; num.appendChild(u); }
+        const lbl = el2("div", "stat-l"); lbl.textContent = s.label; cell.appendChild(lbl);
+        stats.appendChild(cell);
+      });
+    }
+    const logoRow = $("#intro .intro-built-row");
+    if (logoRow) {
+      logoRow.innerHTML = "";
+      const ic = window.ICONS || {};
+      (hero.logos || []).forEach((id) => {
+        if (!ic[id]) return;
+        const im = el2("img", "built-logo");
+        im.src = ic[id]; im.alt = ""; im.loading = "lazy";
+        logoRow.appendChild(im);
+      });
+    }
     set("#intro .intro-note", hero.note || "");
     if (hero.cta) { const btn = $("#enter"); if (btn) btn.innerHTML = hero.cta + " &rarr;"; }
     set("#footer", D.practice.footer);

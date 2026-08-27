@@ -2,8 +2,14 @@
   <svg id="scene" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Isometric city of the EY Microsoft Business Applications practice">
     <defs>
       <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
-        <feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#1E2D46" flood-opacity="0.16"/>
+        <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#3A4E76" flood-opacity="0.10"/>
       </filter>
+      <!-- radial contact-shadow for building bases: dark centre, feathered edge -->
+      <radialGradient id="contact" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#1E2D46" stop-opacity="0.34"/>
+        <stop offset="60%" stop-color="#1E2D46" stop-opacity="0.10"/>
+        <stop offset="100%" stop-color="#1E2D46" stop-opacity="0"/>
+      </radialGradient>
     </defs>
     <g id="Lground"></g>
     <g id="Lbeams"></g>
@@ -58,9 +64,15 @@
   </div>
   <div class="p-body">
     <p class="p-does"></p>
+    <div class="p-challenge-sec"><div class="p-cap">The challenge</div><p class="p-challenge"></p></div>
+    <div class="p-outcome-sec"><div class="p-cap">The outcome</div><p class="p-outcome"></p><div class="p-metrics"></div></div>
     <div class="p-value-sec"><div class="p-cap">The value</div><div class="p-value"></div></div>
+    <div class="p-relevant-sec"><div class="p-cap">Relevant to your organisation</div><p class="p-relevant"></p></div>
     <div class="p-built-sec"><div class="p-cap">Built with</div><div class="p-built"></div></div>
+    <div class="p-platform-sec"><div class="p-cap">Microsoft platform</div><div class="p-platform"></div></div>
+    <div class="p-ey-sec"><div class="p-cap">The EY difference</div><p class="p-ey"></p></div>
     <div class="p-run-sec"><div class="p-cap">Who runs it</div><div class="p-run"></div></div>
+    <div class="p-related-sec"><div class="p-cap">Related</div><div class="p-related"></div></div>
     <div class="p-proof-sec"><div class="p-cap">Proven at</div><div class="p-proof"></div></div>
   </div>
 </aside>
@@ -84,10 +96,14 @@
   <div class="intro-card">
     <div class="intro-logos"><img class="ey" alt="EY"><span class="bar"></span><img class="ms" alt="Microsoft"></div>
     <div class="intro-eyebrow"></div>
-    <h1></h1>
+    <h1><span class="h1-a"></span><span class="h1-b"></span></h1>
     <p class="lede"></p>
-    <ul class="intro-points"></ul>
-    <button id="enter">Explore the practice &rarr;</button>
+    <div class="intro-stats"></div>
+    <button id="enter">Explore the platform &rarr;</button>
+    <div class="intro-built">
+      <span class="intro-built-cap">Built on the Microsoft cloud</span>
+      <div class="intro-built-row"></div>
+    </div>
     <p class="intro-note"></p>
   </div>
 </div>
