@@ -1220,7 +1220,7 @@
       dragMoved = true; tag.classList.remove("show");
       if (svg.setPointerCapture) { try { svg.setPointerCapture(pid); captured = true; } catch (_) {} }
     }
-    if (mode === "pan") { panBy(dx, dy); }
+    if (mode === "pan") { panBy(-dx, -dy); }   // camera-drag feel: drag up reveals what's above (matches the arrow pad)
     else { orbitBy(-dx * 0.006, -dy * 0.0016, scenePoint(e.clientX, e.clientY)); }  // orbit around cursor
     dsx = e.clientX; dsy = e.clientY;
   });
