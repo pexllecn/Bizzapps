@@ -51,14 +51,13 @@ teams|teams-svgrepo-com.svg
 sharepoint|ms-sharepoint-svgrepo-com.svg
 m365|500px-Microsoft_365_(2022).svg.webp
 iso-civic|iso-civic.png
+iso-cloud|iso-cloud.png
+iso-app|iso-app.png
+iso-chart|iso-chart.png
 iso-portal|iso-portal.png
-iso-foundry|iso-foundry.png
-iso-spire|iso-spire.png
 iso-vault|iso-vault.png
 iso-depot|iso-depot.png
 iso-control|iso-control.png
-iso-datahouse|iso-datahouse.png
-iso-dataverse-core|iso-dataverse-core.png
 MAP
   echo "</script>"
 }

@@ -128,238 +128,13 @@
 
 
   /* =====================================================================
-   *  Solution-shape vocabulary — each returns {top, ground} like isoBox.
-   *  Every solution is one of a few architectural forms so the city reads
-   *  as varied structures, not identical racks: cloud pavilion, insight
-   *  gallery, low-code cube stack, secure vault, portal (laptop), or a
-   *  civic tower (default d365 case). All sit on a shared plinth.
+   *  Solution markers — a real, meaningful 3D icon (never hand-drawn —
+   *  see icons/THIRD_PARTY_LICENSES.md) standing on a small grounded
+   *  plaza, tethered by a thin light column. The icon is a screen-space
+   *  billboard — the same technique the client logo beacon and product
+   *  badges already use — so it always faces the viewer correctly,
+   *  whatever the current camera orbit.
    * =================================================================== */
-
-  // pick the two viewer-facing vertical faces of a box footprint for the
-  // current orbit angle — shared by every archetype below so lighting and
-  // window placement stay consistent as the camera orbits.
-  function visibleFaces(gx, gy, w, d) {
-    const xm = gx - w / 2, xM = gx + w / 2, ym = gy - d / 2, yM = gy + d / 2;
-    const faces = [
-      { axis: "x", k: xM, a0: ym, a1: yM, c: [xM, gy] },
-      { axis: "x", k: xm, a0: ym, a1: yM, c: [xm, gy] },
-      { axis: "y", k: yM, a0: xm, a1: xM, c: [gx, yM] },
-      { axis: "y", k: ym, a0: xm, a1: xM, c: [gx, ym] },
-    ];
-    faces.forEach((f) => (f.depth = depthOf(f.c)));
-    faces.sort((p, q) => q.depth - p.depth);
-    const vis = faces.slice(0, 2);
-    vis.forEach((f) => { f.P = (a, z) => (f.axis === "x" ? iso(f.k, a, z) : iso(a, f.k, z)); });
-    vis.sort((p, q) => iso(p.c[0], p.c[1], 0)[0] - iso(q.c[0], q.c[1], 0)[0]);   // left face first
-    vis.forEach((f, i) => { f.shade = i === 0 ? -0.05 : -0.22; f.side = i === 0 ? "left" : "right"; });
-    return vis;
-  }
-
-  // draw one wall face as a flat panel, then overlay a grid of warm, lit
-  // windows (most lit, a few dark) — this single move is what makes a
-  // building read as occupied and real rather than a glowing tech prop.
-  function litWall(parent, face, z0, z1, base, cols, rows, seed, opts) {
-    opts = opts || {};
-    poly(parent, [face.P(face.a0, z0), face.P(face.a1, z0), face.P(face.a1, z1), face.P(face.a0, z1)], shade(base, face.shade));
-    const aw = (face.a1 - face.a0) / cols, zh = (z1 - z0) / rows;
-    const padA = aw * (opts.padA != null ? opts.padA : 0.22), padZ = zh * (opts.padZ != null ? opts.padZ : 0.24);
-    const litChance = opts.litChance != null ? opts.litChance : 0.6;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const a0 = face.a0 + c * aw + padA, a1 = face.a0 + (c + 1) * aw - padA;
-        const zz0 = z0 + r * zh + padZ, zz1 = z0 + (r + 1) * zh - padZ;
-        if (a1 <= a0 || zz1 <= zz0) continue;
-        const lit = hash(seed + ":" + face.side + ":" + r + "_" + c) < litChance;
-        poly(parent, [face.P(a0, zz0), face.P(a1, zz0), face.P(a1, zz1), face.P(a0, zz1)],
-          lit ? (opts.lit || "#FFE3A6") : shade(base, -0.34), { opacity: lit ? 0.92 : 0.5 });
-      }
-    }
-  }
-
-  // a flat roof with a thin raised parapet lip — reads as a real roofline,
-  // not a bare box top.
-  function flatRoof(parent, gx, gy, w, d, h, base, parapet) {
-    const xm = gx - w / 2, xM = gx + w / 2, ym = gy - d / 2, yM = gy + d / 2;
-    const A = iso(xm, ym, h), B = iso(xM, ym, h), C = iso(xM, yM, h), D = iso(xm, yM, h);
-    poly(parent, [A, B, C, D], shade(base, 0.30), { stroke: shade(base, 0.44), "stroke-width": 1 });
-    if (parapet) {
-      const xm2 = xm + parapet, xM2 = xM - parapet, ym2 = ym + parapet, yM2 = yM - parapet;
-      if (xM2 > xm2 && yM2 > ym2) {
-        poly(parent, [iso(xm2, ym2, h), iso(xM2, ym2, h), iso(xM2, yM2, h), iso(xm2, yM2, h)], shade(base, 0.14));
-      }
-    }
-    return iso(gx, gy, h);
-  }
-
-  // a repeated-ridge factory roof, its skylights catching the light —
-  // instantly reads as production / assembly rather than an office.
-  function sawtoothRoof(parent, gx, gy, w, d, h, teeth, base) {
-    const xm = gx - w / 2, ym = gy - d / 2, yM = gy + d / 2, seg = w / teeth, rise = h * 0.24;
-    for (let i = 0; i < teeth; i++) {
-      const x0 = xm + i * seg, x1 = x0 + seg;
-      poly(parent, [iso(x0, yM, h), iso(x1, yM, h), iso(x1, ym, h - rise), iso(x0, ym, h - rise)],
-        shade(base, i % 2 ? 0.36 : 0.20), { stroke: shade(base, 0.5), "stroke-width": 0.8 });
-      poly(parent, [iso(x0, ym, h - rise), iso(x1, ym, h - rise), iso(x1, ym, h - rise * 0.4), iso(x0, ym, h - rise * 0.4)],
-        "#9FD8E8", { opacity: 0.55 });   // skylight glass strip at the back of each tooth
-    }
-    return iso(gx, gy, h);
-  }
-
-  // a faceted glass crown that rises clear ABOVE the tower body, tipped
-  // with a thin mast and a single steady beacon — unmistakable as the
-  // vantage point of an insight / oversight landmark, even from across
-  // the city.
-  function facetedCrown(parent, gx, gy, w, h, base, glow) {
-    const r = w * 0.6, baseZ = h * 0.8, tipZ = h * 1.16, sides = 5;
-    const top = iso(gx, gy, tipZ);
-    const ring = [];
-    for (let i = 0; i < sides; i++) {
-      const a = (i / sides) * Math.PI * 2 - Math.PI / 2;
-      ring.push(iso(gx + Math.cos(a) * r, gy + Math.sin(a) * r, baseZ));
-    }
-    for (let i = 0; i < sides; i++) {
-      poly(parent, [ring[i], ring[(i + 1) % sides], top], i % 2 ? "#EAF3FF" : shade(base, 0.4), { stroke: "#fff", "stroke-width": 0.8, opacity: 0.95 });
-    }
-    const mastTip = iso(gx, gy, tipZ + h * 0.16);
-    el("line", { x1: top[0].toFixed(1), y1: top[1].toFixed(1), x2: mastTip[0].toFixed(1), y2: mastTip[1].toFixed(1),
-      stroke: shade(base, 0.15), "stroke-width": 1.8 }, parent);
-    el("circle", { cx: mastTip[0].toFixed(1), cy: mastTip[1].toFixed(1), r: 4.2, fill: (glow && glow.led) || "#FFE3A6", stroke: "#fff", "stroke-width": 1.2 }, parent);
-    bd(top[0] - r, mastTip[1] - 10); bd(top[0] + r, iso(gx, gy, baseZ)[1]);
-    return mastTip;
-  }
-
-  /* =====================================================================
-   *  Building vocabulary — seven meaningful, cohesive architectural
-   *  archetypes (never a bare glowing rack). Each returns {top, ground}.
-   *  A solution's archetype is chosen by what it DOES (see SHAPE_BY_ID),
-   *  not by which Microsoft logo happens to sit first in its product list.
-   * =================================================================== */
-
-  // CIVIC HALL — a warmly-lit, occupied service building with a taller
-  // central volume and two lower wings either side, and a slim EY-yellow
-  // canopy over the entrance. Front-line, citizen/customer-facing work.
-  function civicHall(parent, gx, gy, w, h, base, glow, opts) {
-    opts = opts || {};
-    const wingW = w * 0.32, wingH = h * 0.55, wingGap = w * 0.5 + wingW * 0.46;
-    if (opts.wings !== false) {
-      [-1, 1].forEach((s) => {
-        const wf = visibleFaces(gx + s * wingGap, gy, wingW, w * 0.82);
-        wf.forEach((f) => litWall(parent, f, 0, wingH, base, 1, 2, gx + "," + gy + "w" + s, { litChance: 0.55 }));
-        flatRoof(parent, gx + s * wingGap, gy, wingW, w * 0.82, wingH, base, wingW * 0.1);
-      });
-    }
-    const coreW = w * (opts.wings === false ? 0.9 : 0.62), coreD = w * (opts.wings === false ? 0.9 : 1);
-    const cf = visibleFaces(gx, gy, coreW, coreD);
-    const rows = Math.max(2, Math.round(h / 0.55));
-    cf.forEach((f) => litWall(parent, f, 0, h, base, opts.cols || 2, rows, gx + "," + gy + "core"));
-    const top = flatRoof(parent, gx, gy, coreW, coreD, h, base, coreW * 0.07);
-    // entrance canopy: a slim EY-yellow band low across the left face
-    const front = cf[0], cz = h * 0.16;
-    el("line", { x1: front.P(front.a0, cz)[0].toFixed(1), y1: front.P(front.a0, cz)[1].toFixed(1),
-      x2: front.P(front.a1, cz)[0].toFixed(1), y2: front.P(front.a1, cz)[1].toFixed(1),
-      stroke: "#F3B700", "stroke-width": 2.4, "stroke-linecap": "round", opacity: 0.9 }, parent);
-    return { top, ground: iso(gx, gy, 0) };
-  }
-
-  // PORTAL KIOSK — a small glass pavilion with big, simple panes and a
-  // vertical yellow entrance marker. A gateway, not an office block.
-  function portalKiosk(parent, gx, gy, w, h, base, glow) {
-    const pw = w * 0.78, pd = w * 0.78, ph2 = h * 0.72;
-    const pf = visibleFaces(gx, gy, pw, pd);
-    pf.forEach((f) => litWall(parent, f, ph2 * 0.14, ph2, base, 1, 1, gx + "," + gy + "kiosk", { lit: "#DCEFFA", litChance: 1, padA: 0.14, padZ: 0.16 }));
-    const top = flatRoof(parent, gx, gy, pw, pd, ph2, base, pw * 0.1);
-    const front = pf[0];
-    el("line", { x1: front.P(front.a0 + (front.a1 - front.a0) * 0.5, 0)[0].toFixed(1), y1: front.P(front.a0 + (front.a1 - front.a0) * 0.5, 0)[1].toFixed(1),
-      x2: front.P(front.a0 + (front.a1 - front.a0) * 0.5, ph2)[0].toFixed(1), y2: front.P(front.a0 + (front.a1 - front.a0) * 0.5, ph2)[1].toFixed(1),
-      stroke: "#F3B700", "stroke-width": 2.6, "stroke-linecap": "round", opacity: 0.85 }, parent);
-    return { top, ground: iso(gx, gy, 0) };
-  }
-
-  // FOUNDRY — production / build capability: a sawtooth skylight roof over
-  // a wide low block with a dark loading-bay door on the front face.
-  function foundryBlock(parent, gx, gy, w, h, base, glow) {
-    const bh = h * 0.66, bw = w * 1.08, bd_ = w * 0.92;
-    const ff = visibleFaces(gx, gy, bw, bd_);
-    ff.forEach((f) => litWall(parent, f, bh * 0.42, bh, base, 3, 1, gx + "," + gy + "foundry", { litChance: 0.5 }));
-    const front = ff[0], bay0 = front.a0 + (front.a1 - front.a0) * 0.2, bay1 = front.a0 + (front.a1 - front.a0) * 0.8;
-    poly(parent, [front.P(bay0, 0), front.P(bay1, 0), front.P(bay1, bh * 0.5), front.P(bay0, bh * 0.5)], shade(base, -0.36));
-    for (let i = 1; i < 4; i++) {
-      const z = (bh * 0.5) * (i / 4);
-      el("line", { x1: front.P(bay0, z)[0], y1: front.P(bay0, z)[1], x2: front.P(bay1, z)[0], y2: front.P(bay1, z)[1], stroke: shade(base, -0.5), "stroke-width": 1, opacity: 0.7 }, parent);
-    }
-    const top = sawtoothRoof(parent, gx, gy, bw, bd_, bh, 3, base);
-    return { top, ground: iso(gx, gy, 0) };
-  }
-
-  // OBSERVATORY SPIRE — oversight / insight work: noticeably taller and
-  // narrower than its neighbours, topped with a faceted glass crown and a
-  // single steady beacon — a vantage point you can pick out across the city.
-  function observatorySpire(parent, gx, gy, w, h, base, glow) {
-    const sw = w * 0.42, sd = w * 0.42, sh = h * 1.55;
-    const sf = visibleFaces(gx, gy, sw, sd);
-    const rows = Math.max(4, Math.round(sh / 0.4));
-    sf.forEach((f) => litWall(parent, f, 0, sh * 0.82, base, 1, rows, gx + "," + gy + "spire", { litChance: 0.5, padA: 0.16 }));
-    const top = facetedCrown(parent, gx, gy, sw, sh, base, glow);
-    return { top, ground: iso(gx, gy, 0) };
-  }
-
-  // VAULT HOUSE — governance / responsible-AI work: a low, wide, mostly
-  // windowless block — squat proportions and a single brass nameplate read
-  // as solid and secure, not an office.
-  function vaultHouse(parent, gx, gy, w, h, base, glow) {
-    const vw = w * 1.05, vd = w * 0.92, vh = h * 0.6;
-    const vf = visibleFaces(gx, gy, vw, vd);
-    vf.forEach((f) => litWall(parent, f, 0, vh, base, 3, 1, gx + "," + gy + "vault", { litChance: 0.16, padA: 0.34, padZ: 0.3, lit: "#FFE3A6" }));
-    const top = flatRoof(parent, gx, gy, vw, vd, vh, base, vw * 0.05);
-    // brass nameplate on the entrance face
-    const front = vf[0], mid = (front.a0 + front.a1) / 2, pw = (front.a1 - front.a0) * 0.22;
-    poly(parent, [front.P(mid - pw / 2, vh * 0.3), front.P(mid + pw / 2, vh * 0.3),
-      front.P(mid + pw / 2, vh * 0.44), front.P(mid - pw / 2, vh * 0.44)], "#F3B700", { opacity: 0.9 });
-    return { top, ground: iso(gx, gy, 0) };
-  }
-
-  // DEPOT — field / operations work: a low wide shed with one big
-  // roller-door and (for asset work) a thin sensor mast on the roof.
-  function depotBlock(parent, gx, gy, w, h, base, glow, opts) {
-    opts = opts || {};
-    const dw = w * 1.12, dd = w * 0.86, dh = h * 0.52;
-    const df = visibleFaces(gx, gy, dw, dd);
-    df.forEach((f) => litWall(parent, f, dh * 0.5, dh, base, 3, 1, gx + "," + gy + "depot", { litChance: 0.45 }));
-    const front = df[0], door0 = front.a0 + (front.a1 - front.a0) * 0.12, door1 = front.a0 + (front.a1 - front.a0) * 0.62;
-    poly(parent, [front.P(door0, 0), front.P(door1, 0), front.P(door1, dh * 0.8), front.P(door0, dh * 0.8)], shade(base, -0.4));
-    for (let i = 1; i < 5; i++) {
-      const z = dh * 0.8 * (i / 5);
-      el("line", { x1: front.P(door0, z)[0], y1: front.P(door0, z)[1], x2: front.P(door1, z)[0], y2: front.P(door1, z)[1], stroke: shade(base, -0.55), "stroke-width": 1, opacity: 0.6 }, parent);
-    }
-    const top = flatRoof(parent, gx, gy, dw, dd, dh, base, dw * 0.06);
-    if (opts.mast) {
-      const mastTop = iso(gx + dw * 0.28, gy - dd * 0.2, dh + h * 0.5);
-      const mastBase = iso(gx + dw * 0.28, gy - dd * 0.2, dh);
-      el("line", { x1: mastBase[0], y1: mastBase[1], x2: mastTop[0], y2: mastTop[1], stroke: shade(base, -0.3), "stroke-width": 1.4 }, parent);
-      el("circle", { cx: mastTop[0].toFixed(1), cy: mastTop[1].toFixed(1), r: 3, fill: (glow && glow.led) || "#FFE3A6", stroke: "#fff", "stroke-width": 1 }, parent);
-      bd(mastTop[0] - 6, mastTop[1] - 6);
-    }
-    return { top, ground: iso(gx, gy, 0) };
-  }
-
-  // CONTROL HOUSE — always-on managed service: a compact block with ribbed
-  // metal panelling and one calm, steady status light (never blinking).
-  function controlHouse(parent, gx, gy, w, h, base, glow) {
-    const cw = w * 0.86, cd = w * 0.86;
-    const cf = visibleFaces(gx, gy, cw, cd);
-    cf.forEach((f) => {
-      poly(parent, [f.P(f.a0, 0), f.P(f.a1, 0), f.P(f.a1, h), f.P(f.a0, h)], shade(base, f.shade));
-      const ribs = 6;
-      for (let i = 1; i < ribs; i++) {
-        const a = f.a0 + ((f.a1 - f.a0) * i) / ribs;
-        el("line", { x1: f.P(a, 0)[0], y1: f.P(a, 0)[1], x2: f.P(a, h)[0], y2: f.P(a, h)[1], stroke: shade(base, f.shade - 0.14), "stroke-width": 1, opacity: 0.7 }, parent);
-      }
-    });
-    litWall(parent, cf[0], h * 0.62, h * 0.82, base, 3, 1, gx + "," + gy + "ctrl", { litChance: 0.7 });
-    const top = flatRoof(parent, gx, gy, cw, cd, h, base, cw * 0.08);
-    el("circle", { cx: top[0].toFixed(1), cy: (top[1] - 6).toFixed(1), r: 3.6, fill: "#2F9E6E", stroke: "#fff", "stroke-width": 1.2 }, parent);
-    return { top, ground: iso(gx, gy, 0) };
-  }
 
   // DATA HOUSE — a subordinate data foundation: the same cylinder language
   // as the client's Dataverse core (a legible, meaningful convention) but
@@ -379,18 +154,39 @@
     return { top: [cx, cyT], ground: [cx, cyB] };
   }
 
-  /* ---- shape picker: what the solution DOES, not which logo comes first ---- */
-  const SHAPE_BY_ID = {
-    "contact-centre": "civic", "customer-service": "civic", "agent-copilot": "civic",
-    "self-service": "portal",
-    "c4e": "foundry", "power-activate": "foundry", "app-factory": "foundry", "process-automation": "foundry",
-    "insight-reporting": "spire", "portfolio": "spire", "platform-health": "spire",
-    "field-service": "depot", "asset-maintenance": "depot",
-    "managed-run": "control",
-    "responsible-ai": "vault",
-    "data-foundation": "datahouse",
+  // ICON MONUMENT — a small round plaza with a real 3D icon floating just
+  // above it, describing what the solution actually is (cloud, app,
+  // chart, globe, shield…) rather than an invented building shape.
+  function iconMonument(parent, gx, gy, size, h, base, iconKey) {
+    const ground = iso(gx, gy, 0);
+    const plinthR = size * TILE * 0.34;
+    el("ellipse", { cx: ground[0].toFixed(1), cy: (ground[1] + 3).toFixed(1), rx: plinthR.toFixed(1), ry: (plinthR * 0.46).toFixed(1), fill: shade(base, -0.14) }, parent);
+    el("ellipse", { cx: ground[0].toFixed(1), cy: ground[1].toFixed(1), rx: (plinthR * 0.88).toFixed(1), ry: (plinthR * 0.4).toFixed(1), fill: shade(base, 0.24), stroke: shade(base, 0.4), "stroke-width": 1.4 }, parent);
+    const top = iso(gx, gy, h * 0.6);
+    el("line", { x1: ground[0].toFixed(1), y1: (ground[1] - 2).toFixed(1), x2: top[0].toFixed(1), y2: (top[1] + 30).toFixed(1),
+      stroke: base, "stroke-width": 2, opacity: 0.24, "stroke-linecap": "round" }, parent);
+    const half = 32 + (size - 1) * 34;
+    const grp = el("g", { transform: `translate(${top[0].toFixed(1)},${top[1].toFixed(1)})` }, parent);
+    el("circle", { cx: 0, cy: 0, r: half * 1.18, fill: base, opacity: 0.14 }, grp);
+    el("ellipse", { cx: 0, cy: half * 0.86, rx: half * 0.62, ry: half * 0.16, fill: "#1E2D46", opacity: 0.12 }, grp);
+    L.svg(grp, iconKey, half);
+    bd(top[0] - half * 1.2, top[1] - half * 1.2); bd(top[0] + half * 1.2, top[1] + half * 1.2);
+    bd(ground[0] - plinthR, ground[1] + plinthR * 0.5);
+    return { top, ground, half };
+  }
+
+  /* ---- icon picker: what the solution IS, not an invented building type ---- */
+  const SOLUTION_ICON = {
+    "contact-centre": "iso-civic", "customer-service": "iso-civic",
+    "agent-copilot": "iso-cloud",
+    "self-service": "iso-portal",
+    "c4e": "iso-app", "power-activate": "iso-app", "app-factory": "iso-app", "process-automation": "iso-app",
+    "insight-reporting": "iso-chart", "portfolio": "iso-chart", "platform-health": "iso-chart",
+    "field-service": "iso-depot", "asset-maintenance": "iso-depot",
+    "managed-run": "iso-control",
+    "responsible-ai": "iso-vault",
+    // "data-foundation" has no entry — it keeps the Dataverse cylinder.
   };
-  function formOfCap(cap) { return SHAPE_BY_ID[cap.id] || "civic"; }
 
   /* =====================================================================
    *  Build the scene
@@ -570,9 +366,9 @@
       console.warn("[city] missing client logo asset for key: " + client.logoKey + " — using monogram fallback for " + label);
     }
     const a = geo.top;
-    const cx = a[0], baseY = a[1] - 66;          // hover above the core
+    const cx = a[0], baseY = a[1] - 84;          // hover above the core
     const ratio = client.crestRatio || 2.4;
-    const W = 128, H = Math.round(W / ratio);    // plaque size (scene units)
+    const W = 172, H = Math.round(W / ratio);    // plaque size (scene units)
     const pad = 11, iw = W - pad * 2, ih = iw / ratio;
     const col = client.color;
 
@@ -627,25 +423,24 @@
     const id = client.id + ":" + item.capId;
     const g = nodeShell(id, cap.name + " — deployed for " + client.name);
     const color = client.color, glow = glowFor(color);
-    const form = formOfCap(cap);
-    let geo;
-    if (form === "portal")        geo = portalKiosk(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
-    else if (form === "foundry")  geo = foundryBlock(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
-    else if (form === "spire")    geo = observatorySpire(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
-    else if (form === "vault")    geo = vaultHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
-    else if (form === "depot")    geo = depotBlock(g, item.pos[0], item.pos[1], item.size, item.h, color, glow, { mast: cap.id === "asset-maintenance" });
-    else if (form === "control")  geo = controlHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
-    else if (form === "datahouse") geo = dataHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
-    else                           geo = civicHall(g, item.pos[0], item.pos[1], item.size, item.h, color, glow, { wings: !!item.flagship });
+    const iconKey = SOLUTION_ICON[cap.id];
+    const geo = iconKey
+      ? iconMonument(g, item.pos[0], item.pos[1], item.size, item.h, color, iconKey)
+      : dataHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
+    const badgeOffset = geo.half ? geo.half * 1.35 + 14 : 32;
     const key = (cap.microsoftProducts || [])[0];
     if (key) {
-      const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 32).toFixed(1)})` }, g);
+      const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - badgeOffset).toFixed(1)})` }, g);
       el("circle", { cx: 0, cy: 0, r: 24, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
       L.svg(mg, key, 18);
-      bd(a[0] - 28, a[1] - 60);
+      bd(a[0] - 28, a[1] - badgeOffset - 28);
     }
     let pulse = null;
-    if (item.flagship) { const a = geo.top; pulse = el("circle", { cx: a[0], cy: a[1] - 2, r: 20, fill: "none", stroke: color, "stroke-width": 2, opacity: 0.5 }, g); }
+    if (item.flagship) {
+      const a = geo.top, pr = geo.half ? geo.half * 1.4 : 20;
+      pulse = el("circle", { cx: a[0], cy: a[1] - 2, r: pr, fill: "none", stroke: color, "stroke-width": 2, opacity: 0.5 }, g);
+      pulse.pr = pr;
+    }
     let drop = 24;
     if (cap.pod && cap.pod.headcount) drop = drawPopulation(g, geo.ground, cap.pod.headcount, color) + 8;
     const lp = geo.ground;
@@ -1220,8 +1015,8 @@
     for (const id in nodes) {
       const n = nodes[id];
       if (n.pulse) {
-        const s = Math.sin(ts * 1.5);
-        n.pulse.setAttribute("r", (21 + s * 6).toFixed(1));
+        const s = Math.sin(ts * 1.5), pr = n.pulse.pr || 20;
+        n.pulse.setAttribute("r", (pr + s * (pr * 0.3)).toFixed(1));
         n.pulse.setAttribute("opacity", (0.28 + 0.22 * (0.5 + 0.5 * s)).toFixed(2));
       }
       if (n.beacon) n.beacon.setAttribute("opacity", (0.4 + 0.32 * (0.5 + 0.5 * Math.sin(ts * 2.1))).toFixed(2));

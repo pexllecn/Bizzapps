@@ -1,23 +1,26 @@
 # Third-party icon assets
 
-## Building-type badges (`iso-*.png`)
+## Solution-marker icons (`iso-*.png`)
 
 Source: [microsoft/fluentui-emoji](https://github.com/microsoft/fluentui-emoji), "3D" style assets.
+Each solution's marker is a real 3D icon describing what it IS, floating as
+a screen-facing billboard above a small plaza — never an invented building
+shape. The Dataverse-related solution (Data Foundation) has no marker; it
+keeps the same cylinder as the client's own Dataverse core instead.
 
 Copyright (c) Microsoft Corporation. Licensed under the MIT License
 (https://github.com/microsoft/fluentui-emoji/blob/main/LICENSE).
 
 | File | Fluent Emoji | Used for |
 |---|---|---|
-| `iso-civic.png` | Headphone | Civic Hall — front-line/citizen-facing services |
-| `iso-portal.png` | Convenience Store | Portal Kiosk — self-service portals |
-| `iso-foundry.png` | Factory | Foundry — build/automation capability |
-| `iso-spire.png` | Satellite Antenna | Observatory Spire — insight/oversight |
-| `iso-vault.png` | Shield | Vault House — governance/responsible AI |
-| `iso-depot.png` | Package | Depot — field/operations |
-| `iso-control.png` | Control Knobs | Control House — managed/run |
-| `iso-datahouse.png` | Card File Box | Data House — data foundation |
-| `iso-dataverse-core.png` | Bank | Client Dataverse core |
+| `iso-civic.png` | Headphone | Contact Centre, Customer Service |
+| `iso-cloud.png` | Cloud | Agent Copilot & Conversational AI |
+| `iso-app.png` | Mobile Phone | C4E, Power Activate, App Factory, Process Automation |
+| `iso-chart.png` | Bar Chart | Insight & Reporting, Portfolio & Project, Platform Health |
+| `iso-portal.png` | Globe with Meridians | Self-Service & Citizen Portals |
+| `iso-vault.png` | Shield | Responsible AI & Governance |
+| `iso-depot.png` | Package | Field Service, Asset & Predictive Maintenance |
+| `iso-control.png` | Control Knobs | Managed Service & 24/7 Run |
 
 MIT License (Microsoft Fluent Emoji):
 
