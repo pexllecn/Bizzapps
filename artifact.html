@@ -153,6 +153,7 @@ body{
 .p-logos{position:absolute;top:26px;right:26px;display:flex;gap:8px;align-items:center}
 .p-logos img,.p-logos span[role=img]{width:28px;height:28px}
 #panel.wide-logo .p-head h2{margin-right:150px}
+#panel.wide-logo .p-close{top:80px}
 .p-close{position:absolute;top:64px;right:24px;width:32px;height:32px;border-radius:9px;border:1px solid var(--line);
   background:#fff;color:var(--ink2);cursor:pointer;font-size:19px;line-height:1;display:grid;place-items:center;transition:.2s}
 .p-close:hover{color:var(--ink);border-color:#C3D3E6}
@@ -1835,7 +1836,7 @@ window.ICONS["iso-control"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAA
 
     p.classList.toggle("wide-logo", !!client.logoKey);
     const logos = q(".p-logos"); logos.innerHTML = "";
-    logos.appendChild(client.logoKey ? L.html(client.logoKey, { h: 34, maxW: 140 }) : L.html("dataverse", 28));
+    logos.appendChild(client.logoKey ? L.html(client.logoKey, { h: 44, maxW: 170 }) : L.html("dataverse", 28));
 
     // Advise · Build · Run — union across every solution deployed here
     const life = q(".p-life"); life.innerHTML = ""; life.style.display = "";

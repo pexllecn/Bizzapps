@@ -734,7 +734,7 @@
 
     p.classList.toggle("wide-logo", !!client.logoKey);
     const logos = q(".p-logos"); logos.innerHTML = "";
-    logos.appendChild(client.logoKey ? L.html(client.logoKey, { h: 34, maxW: 140 }) : L.html("dataverse", 28));
+    logos.appendChild(client.logoKey ? L.html(client.logoKey, { h: 44, maxW: 170 }) : L.html("dataverse", 28));
 
     // Advise · Build · Run — union across every solution deployed here
     const life = q(".p-life"); life.innerHTML = ""; life.style.display = "";
