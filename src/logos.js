@@ -32,6 +32,17 @@
     "teams":                ["Microsoft Teams",                   "#5B5FC7", "Te"],
     "sharepoint":           ["SharePoint",                        "#036C70", "SP"],
     "m365":                 ["Microsoft 365",                     "#D83B01", "365"],
+    // building-type badges (Microsoft Fluent Emoji, 3D style — MIT licensed,
+    // see icons/THIRD_PARTY_LICENSES.md)
+    "iso-civic":            ["Customer contact",                  "#5B5FC7", "CC"],
+    "iso-portal":           ["Self-service portal",               "#0E7C8B", "SP"],
+    "iso-foundry":          ["Build & automation",                "#7A57B5", "BA"],
+    "iso-spire":            ["Insight & oversight",                "#2E7AD1", "IO"],
+    "iso-vault":            ["Governance",                        "#3B7A3D", "Gv"],
+    "iso-depot":            ["Field & operations",                "#E2A310", "FO"],
+    "iso-control":          ["Managed run",                       "#2F9E6E", "MR"],
+    "iso-datahouse":        ["Data foundation",                   "#916AC8", "DF"],
+    "iso-dataverse-core":   ["Dataverse",                         "#916AC8", "DV"],
   };
 
   const manifest = {};
