@@ -219,8 +219,8 @@ body{
 .intro-logos .bar{width:1px;height:42px;background:var(--line)}
 .intro-eyebrow{font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
   color:var(--accent);margin:0 0 16px}
-#intro h1{font-size:clamp(34px,5.6vw,58px);font-weight:800;letter-spacing:-1px;line-height:1.06;margin:0 0 18px;
-  text-wrap:balance;max-width:16ch;margin-inline:auto}
+#intro h1{font-size:clamp(34px,5.6vw,58px);font-weight:800;letter-spacing:-1px;line-height:1.22;margin:0 0 18px;
+  text-wrap:balance;max-width:16ch;margin-inline:auto;padding-block:.05em}
 #intro h1 span{display:block}
 #intro h1 .h1-a{color:var(--ink)}
 #intro h1 .h1-b{background:linear-gradient(100deg,#2E7AD1,#12A5A5);-webkit-background-clip:text;background-clip:text;color:transparent}
@@ -244,15 +244,17 @@ body{
 .intro-built{margin:34px auto 0;max-width:52ch}
 .intro-built-cap{display:block;font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
   color:var(--soft);margin-bottom:14px}
-.intro-built-row{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;
-  padding-top:18px;border-top:1px solid var(--line)}
-.built-logo{height:22px;width:auto;max-width:64px;object-fit:contain;opacity:.62;filter:saturate(.7);
-  transition:opacity .2s,filter .2s}
-.built-logo:hover{opacity:1;filter:none}
+.intro-built-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;
+  padding-top:20px;border-top:1px solid var(--line)}
+.built-chip{display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;flex:none;
+  border-radius:12px;background:#fff;border:1px solid var(--line);box-shadow:0 6px 16px -10px rgba(23,45,85,.22);
+  transition:transform .15s,box-shadow .2s}
+.built-chip:hover{transform:translateY(-2px);box-shadow:0 10px 22px -10px rgba(23,45,85,.32)}
+.built-logo{height:24px;width:auto;max-width:26px;object-fit:contain;display:block}
 
 .intro-note{margin:22px auto 0;font-size:12.5px;color:var(--soft);line-height:1.55;max-width:52ch;text-wrap:balance}
 .intro-hint{margin-top:20px;font-size:12px;color:var(--soft);letter-spacing:.02em}
-@media(max-width:640px){.intro-stats{gap:20px}.built-logo{height:18px}}
+@media(max-width:640px){.intro-stats{gap:20px}.built-chip{width:38px;height:38px;border-radius:10px}.built-logo{height:20px;max-width:22px}}
 
 /* ======================================================================
  *  MOBILE — panel becomes a bottom sheet
@@ -2158,9 +2160,11 @@ window.ICONS["iso-control"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAA
       const ic = window.ICONS || {};
       (hero.logos || []).forEach((id) => {
         if (!ic[id]) return;
+        const chip = el2("span", "built-chip");
         const im = el2("img", "built-logo");
         im.src = ic[id]; im.alt = ""; im.loading = "lazy";
-        logoRow.appendChild(im);
+        chip.appendChild(im);
+        logoRow.appendChild(chip);
       });
     }
     set("#intro .intro-note", hero.note || "");

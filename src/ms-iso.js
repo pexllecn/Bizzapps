@@ -1068,9 +1068,11 @@
       const ic = window.ICONS || {};
       (hero.logos || []).forEach((id) => {
         if (!ic[id]) return;
+        const chip = el2("span", "built-chip");
         const im = el2("img", "built-logo");
         im.src = ic[id]; im.alt = ""; im.loading = "lazy";
-        logoRow.appendChild(im);
+        chip.appendChild(im);
+        logoRow.appendChild(chip);
       });
     }
     set("#intro .intro-note", hero.note || "");
