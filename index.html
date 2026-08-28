@@ -51,18 +51,11 @@ body{
   background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.6);border-radius:999px;
   padding:9px 20px 9px 16px;backdrop-filter:blur(8px);box-shadow:0 10px 26px -14px rgba(5,20,30,.5)}
 #brand.in{opacity:1;transform:none}
-#brand img.ey{height:30px;width:auto;display:block}          /* EY keeps its clear space */
+#brand img.ey{height:30px;width:auto;display:block;cursor:pointer;border-radius:6px;transition:transform .15s}
+#brand img.ey:hover{transform:scale(1.05)}
+#brand img.ey:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 #brand .divider{width:1px;height:24px;background:var(--line)}
 #brand .wordmark{font-weight:600;font-size:14.5px;letter-spacing:.01em;color:var(--ink)}
-
-#citytitle{position:fixed;top:20px;left:50%;transform:translate(-50%,-8px);z-index:6;
-  opacity:0;transition:opacity .7s,transform .7s;pointer-events:none;text-align:center}
-#citytitle.in{opacity:1;transform:translate(-50%,0)}
-#citytitle .t{display:block;font-weight:800;font-size:26px;letter-spacing:-.01em;color:var(--ink);
-  text-shadow:0 2px 18px rgba(255,255,255,.9),0 1px 0 rgba(255,255,255,.6)}
-#citytitle .t b{color:var(--ey-ink);background:linear-gradient(100deg,var(--ey),#FFD84D);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
-@media(max-width:900px){#citytitle{top:14px}#citytitle .t{font-size:19px}}
 
 #ms-corner{position:fixed;top:22px;right:24px;z-index:6;opacity:0;transition:opacity .8s .1s;
   background:rgba(255,255,255,.9);border-radius:999px;padding:8px 12px;backdrop-filter:blur(8px);
@@ -135,11 +128,10 @@ body{
 #actions{position:fixed;right:26px;bottom:22px;z-index:6;display:flex;gap:10px;align-items:center;
   opacity:0;transition:opacity .9s .3s,right .3s}
 #actions.in{opacity:1}
-#home,#reset{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;
+#reset{display:inline-flex;align-items:center;gap:6px;padding:9px 15px;
   background:rgba(255,255,255,.82);border:1px solid var(--line);border-radius:999px;backdrop-filter:blur(8px);
   color:var(--ink2);font-size:12.5px;cursor:pointer;transition:color .2s,border-color .2s,background .2s}
-#home:hover,#reset:hover{color:var(--ink);border-color:#C3D3E6}
-#home{font-weight:600;color:var(--ink2)}
+#reset:hover{color:var(--ink);border-color:#C3D3E6}
 #panel.open~#actions{right:calc(min(438px,94vw) + 18px)}
 @media(max-width:900px){#panel.open~#actions{right:16px}#actions{right:16px}}
 
@@ -309,13 +301,11 @@ body{
 
 <!-- header: EY · divider · practice wordmark -->
 <header id="brand">
-  <img class="ey" alt="EY">
+  <img class="ey" alt="EY — go home" role="button" tabindex="0" title="Home">
   <span class="divider"></span>
   <span class="wordmark">Microsoft AI · Business Applications</span>
 </header>
 
-<!-- big top-centre title -->
-<div id="citytitle"><span class="t"><b>BizApps</b> City</span></div>
 
 <!-- top-right: Microsoft corporate mark, small, an alliance signal -->
 <div id="ms-corner"><img class="ms" alt="Microsoft"></div>
@@ -378,7 +368,6 @@ body{
 </div>
 
 <div id="actions">
-  <button id="home">&#8962;&nbsp; Home</button>
   <div id="reset">&#8635;&nbsp; Reset view</div>
 </div>
 
@@ -454,8 +443,8 @@ window.CITY = {
     wordmark: "Microsoft AI · Business Applications",
     hero: {
       eyebrow: "EY · Microsoft AI — Business Applications",
-      headline: "Real clients,",
-      headlineAccent: "one connected practice.",
+      headline: "BizApps",
+      headlineAccent: "City",
       sub: "Every island is a real client engagement EY has delivered on the Microsoft cloud — Power Platform, Dynamics 365, Copilot and Azure AI. Explore the city and click any client to see the challenge, the solutions we delivered, and what it could mean for your organisation.",
       stats: [
         { n: "16", label: "Solutions shipped" },
@@ -1559,15 +1548,6 @@ window.ICONS["iso-dataverse-core"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUg
   };
   function formOfCap(cap) { return SHAPE_BY_ID[cap.id] || "civic"; }
 
-  // real building-type badge for each archetype (Microsoft Fluent Emoji, 3D
-  // style — see icons/THIRD_PARTY_LICENSES.md). Microsoft product branding
-  // lives in the click panel's "Built with" chips instead of this badge.
-  const SHAPE_TO_ICON = {
-    civic: "iso-civic", portal: "iso-portal", foundry: "iso-foundry", spire: "iso-spire",
-    vault: "iso-vault", depot: "iso-depot", control: "iso-control", datahouse: "iso-datahouse",
-  };
-
-
   /* =====================================================================
    *  Build the scene
    * =================================================================== */
@@ -1713,10 +1693,10 @@ window.ICONS["iso-dataverse-core"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUg
     const color = client.color, glow = glowFor(color);
     const geo = dbTower(g, pos[0], pos[1], 1.15, 1.6, color, glow);
     // Dataverse mark on a disc above the core
-    const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 26).toFixed(1)})` }, g);
-    el("circle", { cx: 0, cy: 0, r: 17, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
-    L.svg(mg, "iso-dataverse-core", 14);
-    bd(a[0] - 20, a[1] - 46);
+    const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 32).toFixed(1)})` }, g);
+    el("circle", { cx: 0, cy: 0, r: 23, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
+    L.svg(mg, "dataverse", 17);
+    bd(a[0] - 26, a[1] - 58);
     const lp = geo.ground;
     const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
       "font-size": 11.5, "font-weight": 700, stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke",
@@ -1817,12 +1797,12 @@ window.ICONS["iso-dataverse-core"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUg
     else if (form === "control")  geo = controlHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
     else if (form === "datahouse") geo = dataHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
     else                           geo = civicHall(g, item.pos[0], item.pos[1], item.size, item.h, color, glow, { wings: !!item.flagship });
-    {
-      const iconKey = SHAPE_TO_ICON[form] || SHAPE_TO_ICON.civic;
-      const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 28).toFixed(1)})` }, g);
-      el("circle", { cx: 0, cy: 0, r: 18, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
-      L.svg(mg, iconKey, 15);
-      bd(a[0] - 22, a[1] - 50);
+    const key = (cap.microsoftProducts || [])[0];
+    if (key) {
+      const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 32).toFixed(1)})` }, g);
+      el("circle", { cx: 0, cy: 0, r: 24, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
+      L.svg(mg, key, 18);
+      bd(a[0] - 28, a[1] - 60);
     }
     let pulse = null;
     if (item.flagship) { const a = geo.top; pulse = el("circle", { cx: a[0], cy: a[1] - 2, r: 20, fill: "none", stroke: color, "stroke-width": 2, opacity: 0.5 }, g); }
@@ -2529,7 +2509,7 @@ window.ICONS["iso-dataverse-core"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUg
 
   /* ---- intro / reveal ---- */
   function reveal() {
-    ["#brand", "#citytitle", "#ms-corner", "#clients", "#hint", "#actions", "#nav", "#zoom", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
+    ["#brand", "#ms-corner", "#clients", "#hint", "#actions", "#nav", "#zoom", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
     // stagger buildings rising, back-to-front
     const arr = Object.values(nodes).sort((a, b) => a.order - b.order);
     arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 40));
@@ -2568,16 +2548,21 @@ window.ICONS["iso-dataverse-core"]="data:image/png;base64,iVBORw0KGgoAAAANSUhEUg
       setYaw(0); setPitch(0.5); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
     });
-    // Home: return to the intro overlay (and reset the scene behind it)
-    const homeBtn = $("#home");
-    if (homeBtn) homeBtn.addEventListener("click", () => {
+    // Home: click (or Enter/Space on) the EY logo returns to the intro overlay
+    // and resets the scene behind it.
+    function goHome() {
       focusClient = null; selectedId = null; setActiveTile(null);
       $("#panel").classList.remove("open");
       setYaw(0); setPitch(0.5); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
       const intro = $("#intro");
       if (intro) { intro.style.display = ""; requestAnimationFrame(() => intro.classList.remove("gone")); }
-    });
+    }
+    const homeLogo = document.querySelector("#brand img.ey");
+    if (homeLogo) {
+      homeLogo.addEventListener("click", goHome);
+      homeLogo.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goHome(); } });
+    }
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });
     addEventListener("resize", () => computeFit());
 
