@@ -53,8 +53,8 @@ window.CITY = {
     wordmark: "Microsoft AI · Business Applications",
     hero: {
       eyebrow: "EY · Microsoft AI — Business Applications",
-      headline: "Real clients,",
-      headlineAccent: "one connected practice.",
+      headline: "BizApps",
+      headlineAccent: "City",
       sub: "Every island is a real client engagement EY has delivered on the Microsoft cloud — Power Platform, Dynamics 365, Copilot and Azure AI. Explore the city and click any client to see the challenge, the solutions we delivered, and what it could mean for your organisation.",
       stats: [
         { n: "16", label: "Solutions shipped" },

@@ -453,15 +453,6 @@
   };
   function formOfCap(cap) { return SHAPE_BY_ID[cap.id] || "civic"; }
 
-  // real building-type badge for each archetype (Microsoft Fluent Emoji, 3D
-  // style — see icons/THIRD_PARTY_LICENSES.md). Microsoft product branding
-  // lives in the click panel's "Built with" chips instead of this badge.
-  const SHAPE_TO_ICON = {
-    civic: "iso-civic", portal: "iso-portal", foundry: "iso-foundry", spire: "iso-spire",
-    vault: "iso-vault", depot: "iso-depot", control: "iso-control", datahouse: "iso-datahouse",
-  };
-
-
   /* =====================================================================
    *  Build the scene
    * =================================================================== */
@@ -607,10 +598,10 @@
     const color = client.color, glow = glowFor(color);
     const geo = dbTower(g, pos[0], pos[1], 1.15, 1.6, color, glow);
     // Dataverse mark on a disc above the core
-    const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 26).toFixed(1)})` }, g);
-    el("circle", { cx: 0, cy: 0, r: 17, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
-    L.svg(mg, "iso-dataverse-core", 14);
-    bd(a[0] - 20, a[1] - 46);
+    const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 32).toFixed(1)})` }, g);
+    el("circle", { cx: 0, cy: 0, r: 23, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
+    L.svg(mg, "dataverse", 17);
+    bd(a[0] - 26, a[1] - 58);
     const lp = geo.ground;
     const lbl = el("text", { x: lp[0].toFixed(1), y: (lp[1] + 22).toFixed(1), "text-anchor": "middle", fill: "#3A4A66",
       "font-size": 11.5, "font-weight": 700, stroke: "#EEF3FA", "stroke-width": 3, "paint-order": "stroke",
@@ -711,12 +702,12 @@
     else if (form === "control")  geo = controlHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
     else if (form === "datahouse") geo = dataHouse(g, item.pos[0], item.pos[1], item.size, item.h, color, glow);
     else                           geo = civicHall(g, item.pos[0], item.pos[1], item.size, item.h, color, glow, { wings: !!item.flagship });
-    {
-      const iconKey = SHAPE_TO_ICON[form] || SHAPE_TO_ICON.civic;
-      const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 28).toFixed(1)})` }, g);
-      el("circle", { cx: 0, cy: 0, r: 18, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
-      L.svg(mg, iconKey, 15);
-      bd(a[0] - 22, a[1] - 50);
+    const key = (cap.microsoftProducts || [])[0];
+    if (key) {
+      const a = geo.top, mg = el("g", { transform: `translate(${a[0].toFixed(1)},${(a[1] - 32).toFixed(1)})` }, g);
+      el("circle", { cx: 0, cy: 0, r: 24, fill: "#fff", stroke: "#E4ECF6", "stroke-width": 1.5, filter: "url(#soft)" }, mg);
+      L.svg(mg, key, 18);
+      bd(a[0] - 28, a[1] - 60);
     }
     let pulse = null;
     if (item.flagship) { const a = geo.top; pulse = el("circle", { cx: a[0], cy: a[1] - 2, r: 20, fill: "none", stroke: color, "stroke-width": 2, opacity: 0.5 }, g); }
@@ -1423,7 +1414,7 @@
 
   /* ---- intro / reveal ---- */
   function reveal() {
-    ["#brand", "#citytitle", "#ms-corner", "#clients", "#hint", "#actions", "#nav", "#zoom", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
+    ["#brand", "#ms-corner", "#clients", "#hint", "#actions", "#nav", "#zoom", "#fs", "#counter", "#footer"].forEach((s) => { const e = $(s); if (e) e.classList.add("in"); });
     // stagger buildings rising, back-to-front
     const arr = Object.values(nodes).sort((a, b) => a.order - b.order);
     arr.forEach((n, i) => setTimeout(() => n.g.classList.add("in"), REDUCED ? 0 : 120 + i * 40));
@@ -1462,16 +1453,21 @@
       setYaw(0); setPitch(0.5); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
     });
-    // Home: return to the intro overlay (and reset the scene behind it)
-    const homeBtn = $("#home");
-    if (homeBtn) homeBtn.addEventListener("click", () => {
+    // Home: click (or Enter/Space on) the EY logo returns to the intro overlay
+    // and resets the scene behind it.
+    function goHome() {
       focusClient = null; selectedId = null; setActiveTile(null);
       $("#panel").classList.remove("open");
       setYaw(0); setPitch(0.5); buildScene(false);
       VB = Object.assign({}, fit); applyVB();
       const intro = $("#intro");
       if (intro) { intro.style.display = ""; requestAnimationFrame(() => intro.classList.remove("gone")); }
-    });
+    }
+    const homeLogo = document.querySelector("#brand img.ey");
+    if (homeLogo) {
+      homeLogo.addEventListener("click", goHome);
+      homeLogo.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goHome(); } });
+    }
     addEventListener("keydown", (e) => { if (e.key === "Escape") clearFocus(); });
     addEventListener("resize", () => computeFit());
 
