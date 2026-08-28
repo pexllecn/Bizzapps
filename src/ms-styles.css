@@ -149,6 +149,7 @@ body{
 .p-head{padding:26px 28px 20px;border-bottom:1px solid var(--line);position:relative}
 .p-logos{position:absolute;top:26px;right:26px;display:flex;gap:8px;align-items:center}
 .p-logos img,.p-logos span[role=img]{width:28px;height:28px}
+#panel.wide-logo .p-head h2{margin-right:150px}
 .p-close{position:absolute;top:64px;right:24px;width:32px;height:32px;border-radius:9px;border:1px solid var(--line);
   background:#fff;color:var(--ink2);cursor:pointer;font-size:19px;line-height:1;display:grid;place-items:center;transition:.2s}
 .p-close:hover{color:var(--ink);border-color:#C3D3E6}

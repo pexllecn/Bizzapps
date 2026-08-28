@@ -56,21 +56,29 @@
   }
   const get = (key) => manifest[key] || { label: key, color: "#8A93A6", mono: (key || "?").slice(0, 2).toUpperCase(), alt: key };
 
-  /* HTML mark (panels, header) → returns an HTMLElement sized `size` px */
+  /* HTML mark (panels, header) → returns an HTMLElement sized `size` px.
+     `size` is normally a number (square box). Pass { h } instead to size by
+     height only and let width follow the asset's real aspect ratio — for a
+     wide wordmark/crest, forcing it into a square box shrinks it far below
+     `size` under object-fit:contain. */
   function html(key, size) {
     const m = get(key), url = assetFor(key);
+    const byHeight = size && typeof size === "object";
+    const boxSize = byHeight ? size.h : size;
     if (url) {
       const img = document.createElement("img");
-      img.src = url; img.alt = m.alt; img.width = size; img.height = size;
-      img.style.cssText = "display:block;width:" + size + "px;height:" + size + "px;object-fit:contain";
+      img.src = url; img.alt = m.alt;
+      img.style.cssText = "display:block;object-fit:contain;" +
+        (byHeight ? "height:" + boxSize + "px;width:auto;max-width:" + (size.maxW || 999) + "px"
+                  : "width:" + boxSize + "px;height:" + boxSize + "px");
       return img;
     }
     const d = document.createElement("span");
     d.setAttribute("role", "img"); d.setAttribute("aria-label", m.alt);
     d.textContent = m.mono;
-    d.style.cssText = "display:inline-flex;align-items:center;justify-content:center;width:" + size +
-      "px;height:" + size + "px;border-radius:" + Math.round(size * 0.24) + "px;background:" + m.color +
-      ";color:#fff;font-weight:700;font-size:" + Math.round(size * 0.42) + "px;letter-spacing:-.02em;font-family:'Segoe UI',Inter,sans-serif";
+    d.style.cssText = "display:inline-flex;align-items:center;justify-content:center;width:" + boxSize +
+      "px;height:" + boxSize + "px;border-radius:" + Math.round(boxSize * 0.24) + "px;background:" + m.color +
+      ";color:#fff;font-weight:700;font-size:" + Math.round(boxSize * 0.42) + "px;letter-spacing:-.02em;font-family:'Segoe UI',Inter,sans-serif";
     return d;
   }
 

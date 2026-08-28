@@ -644,6 +644,7 @@
     eye.style.color = client.color;
     q("h2").textContent = cap.name;
 
+    p.classList.remove("wide-logo");
     const logos = q(".p-logos"); logos.innerHTML = "";
     (cap.microsoftProducts || []).slice(0, 3).forEach((k) => logos.appendChild(L.html(k, 28)));
 
@@ -731,8 +732,9 @@
     eye.style.color = client.color;
     q("h2").textContent = name;
 
+    p.classList.toggle("wide-logo", !!client.logoKey);
     const logos = q(".p-logos"); logos.innerHTML = "";
-    logos.appendChild(L.html(client.logoKey || "dataverse", 28));
+    logos.appendChild(client.logoKey ? L.html(client.logoKey, { h: 34, maxW: 140 }) : L.html("dataverse", 28));
 
     // Advise · Build · Run — union across every solution deployed here
     const life = q(".p-life"); life.innerHTML = ""; life.style.display = "";
