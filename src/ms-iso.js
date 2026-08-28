@@ -935,7 +935,7 @@
       if (svg.setPointerCapture) { try { svg.setPointerCapture(pid); captured = true; } catch (_) {} }
     }
     if (mode === "pan") { panBy(-dx, -dy); }   // camera-drag feel: drag up reveals what's above (matches the arrow pad)
-    else { orbitBy(-dx * 0.006, -dy * 0.0016, scenePoint(e.clientX, e.clientY)); }  // orbit around cursor
+    else { orbitBy(-dx * 0.006, dy * 0.0016, scenePoint(e.clientX, e.clientY)); }  // drag up tilts the view down, matching pan's convention
     dsx = e.clientX; dsy = e.clientY;
   });
   const liftPointer = (e) => {
