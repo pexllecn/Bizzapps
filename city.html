@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BizApps City | EY Microsoft AI Business Applications</title>
+<meta name="description" content="An architectural model of the EY Ireland Microsoft Business Applications portfolio. Each landmark is a delivered client engagement.">
+<meta name="theme-color" content="#05060A">
+<link rel="stylesheet" href="assets/ey-core.css">
+<link rel="stylesheet" href="assets/ey-city.css">
+</head>
+<body>
+
+<div class="city">
+  <canvas class="city-gl" id="gl" tabindex="0" role="application"
+          aria-label="Three-dimensional model of the BizApps City. Use the view controls or the client list to navigate."></canvas>
+  <div class="city-grade" aria-hidden="true"></div>
+  <div class="city-vig" aria-hidden="true"></div>
+  <div class="c-labels" id="labels" aria-hidden="true"></div>
+
+  <!-- journey: capability nodes anchored in the scene, and the flow between them -->
+  <svg class="j-links" id="jLinks" aria-hidden="true"></svg>
+  <div class="j-nodes" id="jNodes" aria-hidden="true"></div>
+
+  <!-- WebGL unavailable -->
+  <div class="c-fallback" id="fallback">
+    <div class="in">
+      <h2>The 3D model needs hardware graphics</h2>
+      <p>This browser or machine has WebGL disabled, so the city cannot be drawn.
+         The same engagements are covered in full in the Engagement Index, which
+         is plain HTML and works anywhere.</p>
+      <a class="btn" href="engagement-index.html">Open the Engagement Index</a>
+    </div>
+  </div>
+
+  <header class="ui c-head">
+    <div class="c-title">
+      <p class="ey"><span class="dot"></span><span id="eyebrow"></span></p>
+      <h1 id="title"></h1>
+      <p id="lede"></p>
+    </div>
+    <div class="c-head-r">
+      <nav class="vswitch" aria-label="Views">
+        <a href="index.html"><span class="n">01</span><span class="t">Showcase</span></a>
+        <a href="city.html" aria-current="page"><span class="n">02</span><span class="t">City</span></a>
+        <a href="engagement-index.html"><span class="n">03</span><span class="t">Index</span></a>
+      </nav>
+      <button class="pill" id="fs" title="Full screen (F)"><span id="fsTxt">Full screen</span></button>
+    </div>
+  </header>
+
+  <div class="ui c-roster" id="roster" role="group" aria-label="Client engagements"></div>
+
+  <div class="ui c-tools">
+    <button class="pill" id="btnTour">Fly through</button>
+    <button class="pill" id="btnExit" disabled>Back to city</button>
+  </div>
+
+  <div class="ui c-view" role="group" aria-label="View controls">
+    <div class="vhead">View</div>
+    <div class="vrow"><span class="vlab">Orbit</span>
+      <div class="vpair">
+        <button class="vbtn" data-act="rotL" aria-label="Orbit left">&#8630;</button>
+        <button class="vbtn" data-act="rotR" aria-label="Orbit right">&#8631;</button>
+      </div>
+    </div>
+    <div class="vrow"><span class="vlab">Tilt</span>
+      <div class="vpair">
+        <button class="vbtn" data-act="tiltU" aria-label="Raise the eye">&#9650;</button>
+        <button class="vbtn" data-act="tiltD" aria-label="Lower the eye">&#9660;</button>
+      </div>
+    </div>
+    <div class="vrow"><span class="vlab">Pan</span>
+      <div class="vpad">
+        <button class="vbtn u" data-act="panU" aria-label="Pan up">&#9650;</button>
+        <button class="vbtn l" data-act="panL" aria-label="Pan left">&#9664;</button>
+        <button class="vbtn d" data-act="panD" aria-label="Pan down">&#9660;</button>
+        <button class="vbtn r" data-act="panR" aria-label="Pan right">&#9654;</button>
+      </div>
+    </div>
+    <div class="vrow"><span class="vlab">Zoom</span>
+      <div class="vpair">
+        <button class="vbtn" data-act="out" aria-label="Zoom out">&minus;</button>
+        <button class="vbtn" data-act="in" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+    <button class="vreset" data-act="reset"><span class="t">Reset view</span><span aria-hidden="true">&#8635;</span></button>
+    <div class="vtip">Drag to orbit. Shift-drag to pan. Scroll to zoom.</div>
+  </div>
+
+  <p class="ui c-note" id="note"></p>
+
+  <!-- journey narration -->
+  <section class="ui jrny" id="jrny" aria-label="Engagement journey">
+    <div class="jt">
+      <span class="js" id="jStep"></span>
+      <span class="jn" id="jName"></span>
+      <button class="jdet" id="jDetail">Capability detail</button>
+    </div>
+    <p id="jText"></p>
+    <!-- the outcome, not just the mechanism: what the client actually got -->
+    <p class="jout" id="jOut"></p>
+    <div class="jdots" id="jDots" aria-hidden="true"></div>
+    <div class="jctl">
+      <button id="jPrev">&#9664; Back</button>
+      <button id="jNext">Next &#9654;</button>
+      <button class="jauto" id="jAuto" aria-pressed="false"
+              title="Advance automatically">Auto</button>
+      <span class="sp"></span>
+      <button id="jStop">End</button>
+    </div>
+
+    <!-- closing frame: what the engagement delivered, in the client's numbers -->
+    <div class="jsum" id="jSum" hidden>
+      <div class="jsum-h" id="jSumH"></div>
+      <p id="jSumP"></p>
+      <div class="jsum-s" id="jSumS"></div>
+      <div class="jctl">
+        <button id="jAgain">&#8635; Replay</button>
+        <button id="jOpen">Full engagement</button>
+        <span class="sp"></span>
+        <button id="jDone">Close</button>
+      </div>
+    </div>
+  </section>
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <!-- dossier -->
+  <aside class="dossier" id="dossier" aria-hidden="true" aria-label="Engagement detail">
+    <div class="dh">
+      <div class="bar"></div>
+      <button class="x" id="dClose" aria-label="Close">&#10005;</button>
+      <div class="mark" id="dMark"></div>
+      <div class="sec" id="dSec"></div>
+      <h2 id="dName"></h2>
+      <div class="sub" id="dSub"></div>
+      <button class="d-run" id="dRun"><span class="tri"></span><span id="dRunTxt">Run the journey</span></button>
+    </div>
+    <div class="db" id="dBody" tabindex="-1"></div>
+  </aside>
+</div>
+
+<script src="assets/ey-content.js"></script>
+<script src="assets/ey-icons.js"></script>
+<script src="assets/ey-gl.js"></script>
+<script src="assets/ey-city.js"></script>
+<script>
+/* ============================================================================
+ *  BizApps City - page controller
+ * ========================================================================== */
+(function () {
+  "use strict";
+
+  var $  = function (s) { return document.querySelector(s); };
+  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  };
+
+  var BIZ = window.BIZ, C = BIZ.city, ICONS = window.ICONS || {};
+  var icon = function (k) { return ICONS[k] || ""; };
+  var client = function (id) { return C.clients.filter(function (c) { return c.id === id; })[0]; };
+  var sol = function (id) { return C.solutions[id]; };
+
+  var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ------------------------------------------------------------ renderer */
+  var canvas = $("#gl");
+  var R = new window.EYGL.Renderer(canvas);
+  if (R.failed) { $("#fallback").classList.add("on"); return; }
+
+  var SCENE = window.EYCITY.build(BIZ);
+  R.upload(SCENE.builder);
+  R.setDecals(SCENE.decals);          // the EY mark, as the original asset
+  R.onAsset = function () { dirty(); };
+  var LMS = SCENE.landmarks;
+  var HQ_ID = window.EYCITY.HQ_ID;
+  /* the shadow box has to cover the diagonal of the built area, not its half
+     width, or the corner blocks fall outside the map and stop casting */
+  var SHADOW_R = SCENE.shadowR;
+
+  /* Home view. The elevation and distance were set by rendering the scene and
+     looking at it, not by guessing: at a shallower angle the plan collapses,
+     and any closer than this and the outer two landmarks leave the frame. */
+  var HOME = { az: -0.86, el: 0.54, dist: 0, tgt: [0, 0, 5] };
+  HOME.dist = SCENE.FRAME / Math.tan(R.cam.fov / 2) * 0.86;
+
+  var state = { active: null, view: null, tour: null, hoverId: -1 };
+
+  /* ------------------------------------------------------- camera framing */
+  /* The dossier covers the right-hand side of the stage. Rather than guessing
+     a reserved margin - v1 reserved 240px while the panel was 480px wide, so
+     the landmark could sit underneath it - the look-at point is offset along
+     the camera's own screen-right vector by exactly half the panel width,
+     converted from pixels into world units at the current distance. */
+  function panelPx() {
+    var d = $("#dossier");
+    if (!document.body.classList.contains("panel-open")) return 0;
+    if (window.innerWidth <= 720) return 0;          // bottom sheet, not a side panel
+    return d.getBoundingClientRect().width;
+  }
+  function shiftWorld(dist) {
+    var px = panelPx() / 2;
+    if (!px) return [0, 0, 0];
+    var k = px * dist * Math.tan(R.cam.fov / 2) / (R.h / 2);
+    var az = R.cam.azT;
+    return [-Math.sin(az) * k, Math.cos(az) * k, 0];
+  }
+  function applyShift() {
+    if (!state.active) { retarget(HOME.tgt, R.cam.distT); return; }
+    if (state.active === "__ey") { retarget([0, 0, SCENE.hq.top * 0.40], R.cam.distT); return; }
+    var L = lmOf(state.active);
+    if (L) retarget([L.x, L.y, L.top * 0.42], R.cam.distT);
+  }
+  function retarget(base, dist) {
+    var s = shiftWorld(dist);
+    R.cam.tgtT = [base[0] + s[0], base[1] + s[1], base[2] + s[2]];
+    dirty();
+  }
+  function lmOf(id) { return LMS.filter(function (l) { return l.c.id === id; })[0]; }
+
+  function goHome(instant) {
+    state.active = null;
+    R.sel = -1;
+    R.cam.azT = HOME.az; R.cam.elT = HOME.el; R.cam.distT = HOME.dist;
+    retarget(HOME.tgt, HOME.dist);
+    if (instant) {
+      R.cam.az = R.cam.azT; R.cam.el = R.cam.elT; R.cam.dist = R.cam.distT;
+      R.cam.tgt = R.cam.tgtT.slice();
+    }
+    markRoster(null);
+    $("#btnExit").disabled = true;
+    dirty();
+  }
+
+  function focusOn(id) {
+    var L = lmOf(id); if (!L) return;
+    state.active = id;
+    R.sel = LMS.indexOf(L) + 1;
+    var d = Math.max(30, L.top * 2.6 + 14);
+    R.cam.distT = d;
+    R.cam.elT = 0.40;
+    /* approach from the side of the plan the building faces the centre from,
+       so the camera never ends up looking through the fabric */
+    R.cam.azT = Math.atan2(L.y, L.x) + 0.55;
+    retarget([L.x, L.y, L.top * 0.42], d);
+    markRoster(id);
+    $("#btnExit").disabled = false;
+    dirty();
+  }
+
+  /* ------------------------------------------------------------- controls */
+  var drag = false, panning = false, moved = 0, lastX = 0, lastY = 0, pid = null;
+
+  canvas.addEventListener("pointerdown", function (e) {
+    drag = true; moved = 0; lastX = e.clientX; lastY = e.clientY; pid = e.pointerId;
+    panning = e.shiftKey || e.button === 1;
+    canvas.classList.add("grab");
+    stopTour();
+    try { canvas.setPointerCapture(pid); } catch (x) {}
+  });
+
+  canvas.addEventListener("pointermove", function (e) {
+    var r = canvas.getBoundingClientRect();
+    var mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (!drag) { hoverAt(mx, my); return; }
+    var dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (panning) {
+      var k = R.cam.dist * Math.tan(R.cam.fov / 2) / (R.h / 2);
+      var az = R.cam.azT;
+      var rx = -Math.sin(az), ry = Math.cos(az);
+      var ux = -Math.cos(az), uy = -Math.sin(az);
+      R.cam.tgtT[0] -= (rx * dx + ux * dy) * k;
+      R.cam.tgtT[1] -= (ry * dx + uy * dy) * k;
+      R.cam.tgt[0] = R.cam.tgtT[0]; R.cam.tgt[1] = R.cam.tgtT[1];
+    } else {
+      R.cam.azT -= dx * 0.0062;
+      R.cam.elT += dy * 0.0038;
+      R.cam.clamp();
+      R.cam.az = R.cam.azT; R.cam.el = R.cam.elT;
+    }
+    dirty();
+  });
+
+  ["pointerup", "pointercancel"].forEach(function (ev) {
+    canvas.addEventListener(ev, function (e) {
+      if (drag && moved < 6) {
+        var r = canvas.getBoundingClientRect();
+        clickAt(e.clientX - r.left, e.clientY - r.top);
+      }
+      drag = false; canvas.classList.remove("grab");
+      if (pid !== null) { try { canvas.releasePointerCapture(pid); } catch (x) {} pid = null; }
+    });
+  });
+
+  canvas.addEventListener("pointerleave", function () {
+    if (state.hoverId !== -1) { state.hoverId = -1; R.hover = -1; canvas.classList.remove("hot"); dirty(); }
+  });
+
+  canvas.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    stopTour();
+    R.cam.distT *= Math.exp(e.deltaY * 0.0011);
+    R.cam.clamp();
+    dirty();
+  }, { passive: false });
+
+  /* Picking runs a dedicated id pass, so a click resolves to the exact pixel.
+     v1 selected the nearest client centre within a radius, which meant empty
+     sky could open a building and overlapping landmarks resolved wrongly. */
+  var pickPending = false;
+  function hoverAt(mx, my) {
+    if (pickPending) return;
+    pickPending = true;
+    requestAnimationFrame(function () {
+      pickPending = false;
+      var id = R.pickAt(mx, my);
+      var h = id > 0 ? id : -1;
+      if (h !== state.hoverId) {
+        state.hoverId = h; R.hover = h;
+        canvas.classList.toggle("hot", h > 0);
+        dirty();
+      }
+    });
+  }
+  function clickAt(mx, my) {
+    var id = R.pickAt(mx, my);
+    if (J) stopJourney(false);
+    if (id === HQ_ID) { focusHQ(); showCore(); return; }
+    var L = id > 0 ? LMS[id - 1] : null;
+    if (L) { focusOn(L.c.id); showClient(L.c.id); }
+    else if (state.active) { closePanel(); goHome(); }
+  }
+
+  /* ---------------------------------------------------------------- EY HQ */
+  function focusHQ() {
+    state.active = "__ey";
+    R.sel = HQ_ID;
+    var d = 58;
+    R.cam.distT = d; R.cam.elT = 0.46; R.cam.azT = -0.86;
+    retarget([0, 0, SCENE.hq.top * 0.40], d);
+    markRoster("__ey");
+    $("#btnExit").disabled = false;
+    dirty();
+  }
+  function showCore() {
+    var core = C.core;
+    state.view = { kind: "core" };
+    var d = $("#dossier");
+    d.style.setProperty("--c", "#FFE600");
+    $("#dSec").textContent = "The firm";
+    $("#dName").textContent = core.name;
+    $("#dMark").innerHTML = icon("ey") ? '<img alt="EY" src="' + icon("ey") + '">' : "";
+    $("#dSub").innerHTML = '<span class="tag-s on">' + esc(core.sub) + "</span>";
+    $("#dRunTxt").textContent = "Run the journey";
+    $("#dRun").classList.remove("stop");
+    $("#dRun").style.display = "none";          // the HQ has no journey of its own
+    $("#dBody").innerHTML =
+      '<p class="theme">' + esc(core.body) + "</p>" +
+      '<div class="blk"><h3>Practice</h3><p>' + esc(BIZ.brand.practice) + " &middot; " +
+        esc(BIZ.brand.unit) + " &middot; " + esc(BIZ.brand.firm) + "</p></div>" +
+      '<div class="blk"><h3>Engagements in the city</h3><div class="dlinks" id="coreLinks">' +
+        C.clients.map(function (x) {
+          return '<button data-id="' + x.id + '"><b>' + esc(x.name) + "</b>" + esc(x.sector) + "</button>";
+        }).join("") + "</div></div>";
+    $$("#coreLinks button").forEach(function (b) {
+      b.addEventListener("click", function () { focusOn(b.dataset.id); showClient(b.dataset.id); });
+    });
+    openPanel();
+  }
+
+  $$(".c-view [data-act]").forEach(function (b) {
+    b.addEventListener("click", function () {
+      stopTour();
+      var a = b.dataset.act, cam = R.cam;
+      var k = cam.dist * 0.11;
+      var az = cam.azT;
+      if (a === "rotL") cam.azT += 0.20;
+      if (a === "rotR") cam.azT -= 0.20;
+      if (a === "tiltU") cam.elT += 0.10;
+      if (a === "tiltD") cam.elT -= 0.10;
+      if (a === "in")   cam.distT *= 0.84;
+      if (a === "out")  cam.distT *= 1.19;
+      if (a === "panL" || a === "panR") {
+        var s = a === "panL" ? -1 : 1;
+        cam.tgtT[0] += -Math.sin(az) * k * s; cam.tgtT[1] += Math.cos(az) * k * s;
+      }
+      if (a === "panU" || a === "panD") {
+        var s2 = a === "panU" ? 1 : -1;
+        cam.tgtT[0] += Math.cos(az) * k * s2; cam.tgtT[1] += Math.sin(az) * k * s2;
+      }
+      if (a === "reset") { closePanel(); goHome(); return; }
+      cam.clamp(); dirty();
+    });
+  });
+
+  /* --------------------------------------------------------------- roster */
+  function buildRoster() {
+    $("#roster").innerHTML =
+      '<button class="pill ey" data-id="__ey" style="--c:#FFE600">' +
+      '<span class="sw"></span>EY HQ</button>' +
+      C.clients.map(function (c) {
+        return '<button class="pill" data-id="' + c.id + '" style="--c:' + c.tone + '">' +
+               '<span class="sw"></span>' + esc(c.short) + "</button>";
+      }).join("");
+    $$("#roster .pill").forEach(function (b) {
+      b.addEventListener("click", function () {
+        stopTour();
+        if (J) stopJourney(false);
+        var id = b.dataset.id;
+        if (state.active === id) { closePanel(); goHome(); return; }
+        if (id === "__ey") { focusHQ(); showCore(); }
+        else { focusOn(id); showClient(id); }
+      });
+    });
+  }
+  function markRoster(id) {
+    $$("#roster .pill").forEach(function (b) {
+      var on = b.dataset.id === id;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  /* -------------------------------------------------------------- dossier */
+  function openPanel() {
+    var d = $("#dossier");
+    d.classList.add("open"); d.setAttribute("aria-hidden", "false");
+    document.body.classList.add("panel-open");
+    $("#dBody").scrollTop = 0;
+    setTimeout(applyShift, 30);
+  }
+  function closePanel() {
+    var d = $("#dossier");
+    d.classList.remove("open"); d.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("panel-open");
+    state.view = null;
+    setTimeout(applyShift, 30);
+  }
+  $("#dClose").addEventListener("click", function () { closePanel(); goHome(); });
+
+  function tagList(c) {
+    var ids = {};
+    c.solutions.forEach(function (s) { (sol(s).lifecycle || []).forEach(function (l) { ids[l] = 1; }); });
+    return C.lifecycle.map(function (l) {
+      return '<span class="tag-s' + (ids[l.id] ? " on" : "") + '">' + esc(l.name) + "</span>";
+    }).join("");
+  }
+  function platformOf(c) {
+    var seen = {}, out = [];
+    c.solutions.forEach(function (s) {
+      (sol(s).icons || []).forEach(function (k) { if (!seen[k]) { seen[k] = 1; out.push(k); } });
+    });
+    return out;
+  }
+
+  function showClient(id) {
+    var c = client(id); if (!c) return;
+    state.view = { kind: "client", id: id };
+    var d = $("#dossier");
+    d.style.setProperty("--c", c.tone);
+    $("#dSec").textContent = "Client engagement";
+    $("#dName").textContent = c.name;
+    $("#dMark").innerHTML = icon(c.logo)
+      ? '<img alt="' + esc(c.name) + '" src="' + icon(c.logo) + '">' : "";
+    $("#dSub").innerHTML = tagList(c);
+    $("#dRunTxt").textContent = "Run the journey";
+    $("#dRun").classList.remove("stop");
+    $("#dRun").style.display = "";
+
+    $("#dBody").innerHTML =
+      (c.illustrative ? '<span class="flag">Illustrative composite</span>' : "") +
+      '<p class="theme">' + esc(c.tagline) + "</p>" +
+      '<div class="stats">' + c.stats.map(function (s) {
+        return '<div class="s"><div class="v">' + esc(s.v) + '</div><div class="l">' + esc(s.l) + "</div></div>";
+      }).join("") + "</div>" +
+      '<div class="blk"><h3>The challenge</h3><p>' + esc(c.challenge) + "</p></div>" +
+      '<div class="blk"><h3>The outcome</h3><p>' + esc(c.outcome) + "</p></div>" +
+      '<div class="blk"><h3>Solutions</h3><div class="chips" id="sChips">' +
+        c.solutions.map(function (sid) {
+          var s = sol(sid);
+          return '<button class="chip act" data-sid="' + sid + '">' +
+                 (icon(s.icons[0]) ? '<img alt="" src="' + icon(s.icons[0]) + '">' : "") +
+                 esc(s.short || s.name) + "</button>";
+        }).join("") + "</div></div>" +
+      '<div class="blk"><h3>Microsoft platform</h3><div class="chips">' +
+        platformOf(c).map(function (k) {
+          var p = BIZ.products[k];
+          return '<span class="chip">' + (icon(k) ? '<img alt="" src="' + icon(k) + '">' : "") +
+                 esc(p ? p.name : k) + "</span>";
+        }).join("") + "</div></div>" +
+      '<div class="blk hl"><h3>The EY difference</h3><p>' + esc(c.eyDiff) + "</p></div>";
+
+    $$("#sChips .chip").forEach(function (b) {
+      b.addEventListener("click", function () { showSolution(b.dataset.sid, id); });
+    });
+    openPanel();
+  }
+
+  function showSolution(sid, cid) {
+    var s = sol(sid), c = client(cid); if (!s) return;
+    state.view = { kind: "solution", id: sid, client: cid };
+    $("#dSec").textContent = "Capability" + (c ? " · " + c.short : "");
+    $("#dName").textContent = s.name;
+    $("#dMark").innerHTML = icon(s.icons[0])
+      ? '<img alt="" src="' + icon(s.icons[0]) + '">' : "";
+    $("#dSub").innerHTML = C.lifecycle.map(function (l) {
+      return '<span class="tag-s' + ((s.lifecycle || []).indexOf(l.id) > -1 ? " on" : "") + '">' +
+             esc(l.name) + "</span>";
+    }).join("");
+    $("#dRun").style.display = "none";          // a capability has no journey
+
+    var elsewhere = C.clients.filter(function (x) {
+      return x.id !== cid && x.solutions.indexOf(sid) > -1;
+    });
+
+    $("#dBody").innerHTML =
+      '<p class="theme">' + esc(s.what) + "</p>" +
+      s.value.map(function (v) {
+        return '<div class="blk"><h3>' + esc(v.t) + "</h3><p>" + esc(v.b) +
+               (v.indicative ? ' <span class="tag-s">Indicative</span>' : "") + "</p></div>";
+      }).join("") +
+      '<div class="blk hl"><h3>Why this matters to you</h3><p>' + esc(s.relevant) + "</p></div>" +
+      (s.pod ? '<div class="blk"><h3>Delivery pod</h3><p>' + esc(s.pod.n) +
+               " specialists, led by " + esc(s.pod.lead) + ".</p></div>" : "") +
+      (elsewhere.length
+        ? '<div class="blk"><h3>Also running at</h3><div class="dlinks" id="elsew">' +
+          elsewhere.map(function (x) {
+            return '<button data-id="' + x.id + '"><b>' + esc(x.name) + "</b>" +
+                   esc(x.sector) + "</button>";
+          }).join("") + "</div></div>"
+        : "") +
+      '<div class="blk"><div class="dlinks"><button id="backC"><b>&larr; Back to ' +
+        esc(c ? c.name : "the engagement") + "</b>All solutions in this engagement</button></div></div>";
+
+    var bc = $("#backC");
+    if (bc) bc.addEventListener("click", function () { showClient(cid); });
+    $$("#elsew button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        focusOn(b.dataset.id); showSolution(sid, b.dataset.id);
+      });
+    });
+    openPanel();
+  }
+
+  /* -------------------------------------------------------------- journey */
+  /* The journey is the product story: an engagement told as the sequence of
+     capabilities that carry it. v1 played it as a caption and a camera move,
+     which read as a slideshow bolted to a model. Each step now has a presence
+     in the scene - a capability node anchored in world space beside the
+     building, carrying the real product mark, wired to the next one, with the
+     flow visibly moving along the wire. */
+  var J = null, jRAF = null, STEP_MS = 7000;
+  /* Advance is MANUAL by default. On a timer the deck fought whoever was
+     presenting it: 7 seconds is either dead air after they have made the point
+     or it moves on mid-sentence. The presenter drives; Auto is there for an
+     unattended screen and is remembered for the session. */
+  var jAuto = false;
+  try { jAuto = sessionStorage.getItem("ey-journey-auto") === "1"; } catch (e) {}
+  var SVGNS = "http://www.w3.org/2000/svg";
+
+  $("#dRun").addEventListener("click", function () {
+    var cid = state.view ? (state.view.client || state.view.id) : state.active;
+    if (J) stopJourney(); else startJourney(cid);
+  });
+
+  /* Anchors climb a helix around the landmark: constant radius, rising height,
+     spread over about two-thirds of a turn. A ring at one height collapsed to
+     a line whenever the camera sat low, and a vertical stack hid behind the
+     building. This keeps every node clear of the mass and of its neighbours
+     at any orbit angle. */
+  function anchors(L, n) {
+    /* Radius and spread were solved by projecting the anchors for all five
+       engagements and measuring: this is the tightest arrangement where no
+       card is clipped by the frame or the narration panel, and the closest
+       pair still clears a card width. */
+    var out = [], base = Math.atan2(L.y, L.x) - 0.95;
+    var rad = 17.5, z0 = L.top * 0.34, z1 = L.top * 1.16 + 3.2;
+    for (var i = 0; i < n; i++) {
+      var u = n === 1 ? 0.5 : i / (n - 1);
+      var a = base + u * 4.9;
+      out.push([L.x + Math.cos(a) * rad, L.y + Math.sin(a) * rad, z0 + (z1 - z0) * u]);
+    }
+    return out;
+  }
+
+  function startJourney(cid) {
+    var c = client(cid); if (!c || !c.journey || !c.journey.length) return;
+    stopTour();
+    var L = lmOf(cid); if (!L) return;
+
+    J = { c: c, L: L, i: 0, t0: performance.now(), acc: 0,
+          pts: anchors(L, c.journey.length), els: [], scr: [], done: false };
+
+    /* the stage belongs to the model while the journey runs; the narration
+       panel carries the words the dossier was carrying */
+    closePanel();
+    focusOn(cid);
+    R.cam.distT = Math.max(66, L.top * 3.8 + 44);
+    R.cam.elT = 0.46;
+
+    document.body.classList.add("journey");
+    $("#jrny").classList.add("on");
+    $("#dRunTxt").textContent = "End the journey";
+    $("#dRun").classList.add("stop");
+    $("#jDots").innerHTML = c.journey.map(function () { return "<i></i>"; }).join("");
+
+    $("#jSum").hidden = true;
+    $("#jrny").classList.remove("summary");
+    setAuto(jAuto);
+    buildNodes();
+    renderStep();
+    jRAF = requestAnimationFrame(tick);
+  }
+
+  function buildNodes() {
+    var host = $("#jNodes"), svg = $("#jLinks");
+    host.innerHTML = ""; svg.innerHTML = "";
+    svg.style.setProperty("--c", J.c.tone);
+
+    /* one wire behind everything, plus the travelled portion drawn over it */
+    var base = document.createElementNS(SVGNS, "path");
+    base.setAttribute("class", "wire");
+    svg.appendChild(base);
+    var lit = document.createElementNS(SVGNS, "path");
+    lit.setAttribute("class", "wire lit");
+    svg.appendChild(lit);
+    J.wire = base; J.lit = lit;
+
+    /* A leader from the active capability down to the building it serves.
+       Without it the cards float over the scene and the model is a backdrop:
+       you could delete the city and lose nothing. This is what ties the story
+       to the thing it is about. */
+    J.lead = document.createElementNS(SVGNS, "path");
+    J.lead.setAttribute("class", "lead");
+    svg.appendChild(J.lead);
+
+    J.flow = [];
+    for (var f = 0; f < 3; f++) {
+      var d = document.createElementNS(SVGNS, "circle");
+      d.setAttribute("class", "flow"); d.setAttribute("r", 3.2);
+      svg.appendChild(d); J.flow.push(d);
+    }
+
+    J.els = J.c.journey.map(function (st, i) {
+      var sol0 = sol(st.sid) || {};
+      var el = document.createElement("button");
+      el.className = "j-node";
+      el.style.setProperty("--c", J.c.tone);
+      /* The sub-line names the Microsoft product doing the work. It used to
+         read Complete / Running / Ahead, which claimed live system state for
+         engagements that are all delivered and in production - and labelled
+         later steps "Ahead", implying not yet built. The pin number and the
+         visual state already say where you are in the story. */
+      var pkey = sol0.icons && sol0.icons[0];
+      var pname = pkey && BIZ.products[pkey] ? BIZ.products[pkey].name : "";
+      el.innerHTML =
+        '<span class="pin"><i></i></span>' +
+        '<span class="ic">' + (icon(pkey) ? '<img alt="" src="' + icon(pkey) + '">' : "") + "</span>" +
+        '<span class="tx"><b>' + esc(sol0.short || sol0.name || st.sid) + "</b>" +
+        '<em class="st">' + esc(pname) + "</em></span>";
+      el.addEventListener("click", function () { jGo(i); });
+      host.appendChild(el);
+      return el;
+    });
+  }
+
+  function jGo(i) {
+    if (!J) return;
+    if (J.done) hideSummary();
+    J.i = Math.max(0, Math.min(J.c.journey.length - 1, i));
+    J.t0 = performance.now(); J.acc = 0;
+    renderStep();
+  }
+
+  function stopJourney(reopen) {
+    if (!J) return;
+    var cid = J.c.id;
+    J = null;
+    if (jRAF) cancelAnimationFrame(jRAF), jRAF = null;
+    $("#jNodes").innerHTML = ""; $("#jLinks").innerHTML = "";
+    $("#jSum").hidden = true;
+    $("#jrny").classList.remove("summary");
+    document.body.classList.remove("journey");
+    $("#jrny").classList.remove("on");
+    $("#dRunTxt").textContent = "Run the journey";
+    $("#dRun").classList.remove("stop");
+    if (reopen !== false) showClient(cid);
+    dirty();
+  }
+
+  function renderStep() {
+    var st = J.c.journey[J.i], s = sol(st.sid) || {};
+    $("#jStep").textContent = String(J.i + 1).padStart(2, "0") + " / " +
+                              String(J.c.journey.length).padStart(2, "0");
+    $("#jName").textContent = s.name || st.sid;
+    $("#jText").textContent = st.t;
+
+    /* The business outcome, alongside the mechanism. The journey used to
+       narrate only what the technology does in what order - the "so what" was
+       sitting unused in the content model while the client was watching. */
+    var outcome = (s.value || []).filter(function (v) { return /outcome/i.test(v.t); })[0];
+    $("#jOut").textContent = outcome ? outcome.b : "";
+    $("#jOut").style.display = outcome ? "" : "none";
+
+    $("#live").textContent = "Step " + (J.i + 1) + " of " + J.c.journey.length + ". " +
+                             (s.name ? s.name + ". " : "") + st.t;
+
+    $$("#jDots i").forEach(function (d, k) {
+      d.classList.toggle("done", k < J.i);
+      d.classList.toggle("now", k === J.i);
+      if (k !== J.i) d.style.removeProperty("--p");
+    });
+
+    J.els.forEach(function (el, k) {
+      var stt = k < J.i ? "done" : (k === J.i ? "now" : "ahead");
+      el.classList.remove("done", "now", "ahead");
+      el.classList.add(stt);
+      el.querySelector(".pin i").textContent = String(k + 1);
+    });
+
+    /* a slow quarter turn per step keeps the model legible in three dimensions
+       without becoming a camera move for its own sake */
+    R.cam.azT += REDUCED ? 0 : 0.30;
+    dirty();
+  }
+
+  /* project the anchors and lay the nodes and the wire over the scene */
+  function layoutJourney() {
+    if (!J) return;
+    var i, p, pts = [];
+    for (i = 0; i < J.pts.length; i++) {
+      var a = J.pts[i];
+      p = R.toScreen(a[0], a[1], a[2]);
+      pts.push(p);
+      var el = J.els[i];
+      if (!p || p.x < -220 || p.x > R.w + 220 || p.y < -140 || p.y > R.h + 140) {
+        el.classList.remove("vis");
+      } else {
+        el.classList.add("vis");
+        el.style.transform = "translate(-50%,-50%) translate(" +
+                             p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px)";
+      }
+    }
+
+    var svg = $("#jLinks");
+    svg.setAttribute("viewBox", "0 0 " + R.w + " " + R.h);
+
+    /* a smooth spline through the projected anchors */
+    /* Quadratic smoothing through the midpoints: each anchor becomes the
+       control point and the curve passes through the midpoint between
+       neighbours, which is the standard way to get one continuous curve
+       through a polyline without corners. */
+    function pathFor(from, to) {
+      var v = [];
+      for (var k = from; k <= to; k++) if (pts[k]) v.push(pts[k]);
+      if (v.length < 2) return "";
+      var d = "M" + v[0].x.toFixed(1) + "," + v[0].y.toFixed(1);
+      for (var j = 1; j < v.length - 1; j++) {
+        var mx = (v[j].x + v[j + 1].x) / 2, my = (v[j].y + v[j + 1].y) / 2;
+        d += " Q" + v[j].x.toFixed(1) + "," + v[j].y.toFixed(1) +
+             " " + mx.toFixed(1) + "," + my.toFixed(1);
+      }
+      var last = v[v.length - 1];
+      d += " L" + last.x.toFixed(1) + "," + last.y.toFixed(1);
+      return d;
+    }
+    J.wire.setAttribute("d", pathFor(0, pts.length - 1));
+    J.lit.setAttribute("d", J.i > 0 ? pathFor(0, J.i) : "M0,0");
+
+    /* leader from the active card to the roof of the building */
+    var act = pts[J.i];
+    var roof = R.toScreen(J.L.x, J.L.y, J.L.top * 0.94);
+    if (act && roof && !J.done) {
+      var cx = (act.x + roof.x) / 2, cy = Math.max(act.y, roof.y) + 26;
+      J.lead.setAttribute("d",
+        "M" + act.x.toFixed(1) + "," + act.y.toFixed(1) +
+        " Q" + cx.toFixed(1) + "," + cy.toFixed(1) +
+        " " + roof.x.toFixed(1) + "," + roof.y.toFixed(1));
+      J.lead.setAttribute("opacity", "1");
+    } else {
+      J.lead.setAttribute("opacity", "0");
+    }
+
+    /* flow travelling into the active node */
+    var a0 = pts[Math.max(0, J.i - 1)], a1 = pts[J.i];
+    if (a0 && a1) {
+      var t = performance.now() / 1000;
+      for (i = 0; i < J.flow.length; i++) {
+        var u = ((t * 0.55 + i / J.flow.length) % 1);
+        var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+        J.flow[i].setAttribute("cx", (a0.x + (a1.x - a0.x) * e).toFixed(1));
+        J.flow[i].setAttribute("cy", (a0.y + (a1.y - a0.y) * e).toFixed(1));
+        J.flow[i].setAttribute("opacity", (Math.sin(u * Math.PI) * 0.9).toFixed(2));
+      }
+    }
+  }
+
+  function tick(t) {
+    if (!J) return;
+    if (jAuto && !J.done) {
+      var el = J.acc + (t - J.t0);
+      var p = Math.min(1, el / STEP_MS);
+      var now = document.querySelector("#jDots i.now");
+      if (now) now.style.setProperty("--p", (p * 100).toFixed(1) + "%");
+      if (p >= 1) { jNext(); return; }
+    } else {
+      J.t0 = t - J.acc;
+      /* manual: the active dot is simply full, not creeping toward a deadline */
+      var d = document.querySelector("#jDots i.now");
+      if (d) d.style.setProperty("--p", "100%");
+    }
+    dirty(2);                       // the flow is animating, so keep drawing
+    jRAF = requestAnimationFrame(tick);
+  }
+
+  function jNext() {
+    if (!J || J.done) return;          // already on the closing frame
+    if (J.i >= J.c.journey.length - 1) { showSummary(); return; }
+    jGo(J.i + 1);
+    if (!jRAF) jRAF = requestAnimationFrame(tick);
+  }
+  function jPrev() {
+    if (!J) return;
+    if (J.done) { hideSummary(); jGo(J.c.journey.length - 1); return; }
+    if (J.i > 0) jGo(J.i - 1);
+  }
+  function setAuto(v) {
+    jAuto = !!v;
+    try { jAuto ? sessionStorage.setItem("ey-journey-auto", "1")
+                : sessionStorage.removeItem("ey-journey-auto"); } catch (e) {}
+    var b = $("#jAuto");
+    b.setAttribute("aria-pressed", jAuto ? "true" : "false");
+    b.classList.toggle("on", jAuto);
+    if (J) { J.t0 = performance.now(); J.acc = 0; }
+  }
+
+  /* ---------------------------------------------------- the closing frame */
+  /* The journey used to stop dead on the last step. An engagement walkthrough
+     has to land on what it delivered, in the client's own numbers - which were
+     sitting in the content model, shown nowhere. */
+  function showSummary() {
+    if (!J) return;
+    J.done = true;
+    var c = J.c;
+    $("#jSumH").textContent = c.name;
+    $("#jSumP").textContent = c.outcome;
+    $("#jSumS").innerHTML = (c.stats || []).map(function (st) {
+      return '<div class="s"><div class="v">' + esc(st.v) + '</div>' +
+             '<div class="l">' + esc(st.l) + "</div></div>";
+    }).join("");
+    $("#jSum").hidden = false;
+    $("#jrny").classList.add("summary");
+    $("#live").textContent = "Journey complete. " + c.name + ". " + c.outcome;
+    $$("#jDots i").forEach(function (d) { d.classList.add("done"); d.classList.remove("now"); });
+    J.els.forEach(function (el) {
+      el.classList.remove("now", "ahead"); el.classList.add("done");
+    });
+    /* pull back to hold the whole engagement in frame */
+    R.cam.distT = Math.max(78, J.L.top * 4.4 + 52);
+    R.cam.elT = 0.52;
+    dirty();
+  }
+  function hideSummary() {
+    if (!J) return;
+    J.done = false;
+    $("#jSum").hidden = true;
+    $("#jrny").classList.remove("summary");
+    R.cam.distT = Math.max(66, J.L.top * 3.8 + 44);
+    dirty();
+  }
+
+  $("#jNext").addEventListener("click", jNext);
+  $("#jPrev").addEventListener("click", jPrev);
+  $("#jAuto").addEventListener("click", function () { setAuto(!jAuto); });
+  $("#jStop").addEventListener("click", function () { stopJourney(); });
+  $("#jAgain").addEventListener("click", function () { hideSummary(); jGo(0); });
+  $("#jDone").addEventListener("click", function () { stopJourney(); });
+  $("#jOpen").addEventListener("click", function () {
+    var cid = J ? J.c.id : null;
+    stopJourney(false);
+    if (cid) { focusOn(cid); showClient(cid); }
+  });
+
+  /* The capability behind the step: what it is, how long, what it costs, why
+     EY. During the journey this was unreachable - the dossier was closed, and
+     the node click only jumped steps - so the client could see a capability
+     named at exactly the moment of most interest and not open it. */
+  $("#jDetail").addEventListener("click", function () {
+    if (!J) return;
+    /* stop the clock: reading the commercial detail must not have the story
+       advancing underneath you */
+    if (jAuto) setAuto(false);
+    var st = J.c.journey[J.i];
+    showSolution(st.sid, J.c.id);
+  });
+
+  /* ----------------------------------------------------------- fly through */
+  function toggleTour() {
+    if (state.tour) { stopTour(); return; }
+    if (J) stopJourney(false);
+    closePanel();
+    var i = 0;
+    var advance = function () {
+      focusOn(C.clients[i % C.clients.length].id);
+      i++;
+    };
+    advance();
+    state.tour = setInterval(advance, 5600);
+    $("#btnTour").classList.add("on");
+    $("#btnTour").textContent = "Stop";
+  }
+  function stopTour() {
+    if (!state.tour) return;
+    clearInterval(state.tour); state.tour = null;
+    $("#btnTour").classList.remove("on");
+    $("#btnTour").textContent = "Fly through";
+  }
+  $("#btnTour").addEventListener("click", toggleTour);
+  $("#btnExit").addEventListener("click", function () { stopTour(); closePanel(); goHome(); });
+
+  /* -------------------------------------------------------------- labels */
+  var labelEls = LMS.map(function (L) {
+    var e = document.createElement("div");
+    e.className = "c-lbl";
+    e.style.setProperty("--c", L.c.tone);
+    e.innerHTML = '<div class="tag"><span class="sw"></span>' + esc(L.c.short) +
+                  '</div><div class="stem"></div>';
+    $("#labels").appendChild(e);
+    return e;
+  });
+  var hqLabel = (function () {
+    var e = document.createElement("div");
+    e.className = "c-lbl hq";
+    e.style.setProperty("--c", "#FFE600");
+    e.innerHTML = '<div class="tag"><span class="sw"></span>EY HQ</div><div class="stem"></div>';
+    $("#labels").appendChild(e);
+    return e;
+  })();
+
+  function layoutLabels() {
+    var hp = R.toScreen(0, 0, SCENE.hq.top + 2.6);
+    var hqSel = state.active === "__ey";
+    if (hp && hp.x > -120 && hp.x < R.w + 120 && hp.y > -60 && hp.y < R.h + 60 &&
+        (!state.active || hqSel || state.hoverId === HQ_ID)) {
+      hqLabel.classList.add("on");
+      hqLabel.classList.toggle("sel", hqSel);
+      hqLabel.style.left = hp.x.toFixed(1) + "px";
+      hqLabel.style.top  = hp.y.toFixed(1) + "px";
+    } else hqLabel.classList.remove("on");
+
+    for (var i = 0; i < LMS.length; i++) {
+      var L = LMS[i], e = labelEls[i];
+      var p = R.toScreen(L.x, L.y, L.top + 2.4);
+      var sel = state.active === L.c.id;
+      if (!p || p.x < -120 || p.x > R.w + 120 || p.y < -60 || p.y > R.h + 60) {
+        e.classList.remove("on"); continue;
+      }
+      /* while a building is selected, the other labels step back so the
+         selected one is unambiguous */
+      var show = !state.active || sel || state.hoverId === i + 1;
+      e.classList.toggle("on", show);
+      e.classList.toggle("sel", sel);
+      e.style.left = p.x.toFixed(1) + "px";
+      e.style.top  = p.y.toFixed(1) + "px";
+    }
+  }
+
+  /* ------------------------------------------------------------ full screen */
+  var fsBtn = $("#fs");
+  function fsOn() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  fsBtn.addEventListener("click", function () {
+    if (fsOn()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else {
+      var el = document.documentElement;
+      (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    }
+  });
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(function (ev) {
+    document.addEventListener(ev, function () {
+      $("#fsTxt").textContent = fsOn() ? "Exit full screen" : "Full screen";
+      fsBtn.classList.toggle("on", fsOn());
+      setTimeout(function () { R.resize(); applyShift(); dirty(); }, 60);
+    });
+  });
+
+  /* --------------------------------------------------------------- keyboard */
+  /* Every shortcut is guarded on the modifier keys. v1 bound bare a/d/w/s/r/f,
+     so Cmd+F blocked browser find, Cmd+A broke select-all and Cmd+R reset the
+     camera on its way out of the page. */
+  document.addEventListener("keydown", function (e) {
+    var t = e.target;
+    if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key, lk = k.length === 1 ? k.toLowerCase() : k;
+    var cam = R.cam, hit = true;
+
+    if (lk === "a") cam.azT += 0.18;
+    else if (lk === "d") cam.azT -= 0.18;
+    else if (lk === "w") cam.elT += 0.09;
+    else if (lk === "s") cam.elT -= 0.09;
+    else if (k === "+" || k === "=") cam.distT *= 0.86;
+    else if (k === "-" || k === "_") cam.distT *= 1.16;
+    else if (lk === "r") { closePanel(); goHome(); }
+    else if (lk === "f") { fsBtn.click(); }
+    else if (k === "ArrowLeft")  { J ? jPrev() : (cam.azT += 0.18); }
+    else if (k === "ArrowRight") { J ? jNext() : (cam.azT -= 0.18); }
+    else if (k === "ArrowUp")    cam.elT += 0.09;
+    else if (k === "ArrowDown")  cam.elT -= 0.09;
+    else if (k === " ") { J ? jNext() : (state.active && startJourney(state.active)); }
+    else if (k === "Escape") {
+      if (J) stopJourney(false);
+      else if (state.view && state.view.kind === "solution") showClient(state.view.client);
+      else if (state.active) { closePanel(); goHome(); }
+      else hit = false;
+    } else if (k >= "1" && k <= "5") {
+      var c = C.clients[+k - 1];
+      if (c) { stopTour(); if (J) stopJourney(false); focusOn(c.id); showClient(c.id); }
+      else hit = false;
+    } else hit = false;
+
+    if (hit) { e.preventDefault(); stopTour(); cam.clamp(); dirty(); }
+  });
+
+  /* ------------------------------------------------------------- the loop */
+  /* Renders only while something is changing. v1 ran requestAnimationFrame
+     flat out with no visibilitychange handler, so the city kept drawing at
+     full rate in a background tab. */
+  var needFrames = 0, running = true;
+  function dirty(n) { needFrames = Math.max(needFrames, n === undefined ? 90 : n); }
+
+  function frame() {
+    if (!running) return;
+    R.cam.step(REDUCED ? 1 : 0.11);
+    R.cam.clamp();
+    if (needFrames > 0 || !R.cam.settled()) {
+      R.resize();
+      R.draw(SHADOW_R);
+      layoutLabels();
+      layoutJourney();
+      if (R.cam.settled()) needFrames--;
+      else needFrames = Math.max(needFrames, 2);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  document.addEventListener("visibilitychange", function () {
+    running = !document.hidden;
+    if (running) { dirty(); requestAnimationFrame(frame); }
+  });
+  window.addEventListener("resize", function () { R.resize(); applyShift(); dirty(); });
+
+  /* ----------------------------------------------------------------- init */
+  $("#eyebrow").textContent = C.eyebrow;
+  $("#title").innerHTML = esc(C.title) + " <em>" + esc(C.titleAccent) + "</em>";
+  $("#lede").textContent = C.lede;
+  $("#note").textContent = "Drag to orbit · scroll to zoom · click a landmark";
+  buildRoster();
+  R.resize();
+  goHome(true);
+
+  /* arrival: open a touch higher and wider, then settle into the home view */
+  if (!REDUCED) {
+    R.cam.dist = HOME.dist * 1.55;
+    R.cam.el = Math.min(R.cam.maxEl, HOME.el + 0.34);
+    R.cam.az = HOME.az - 0.42;
+  }
+  dirty(240);
+  requestAnimationFrame(frame);
+
+  /* deep link: city.html?c=<client>&s=<solution> */
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var cid = q.get("c"), sid = q.get("s");
+    if (cid && client(cid)) {
+      setTimeout(function () {
+        focusOn(cid);
+        if (sid && sol(sid)) showSolution(sid, cid); else showClient(cid);
+      }, REDUCED ? 0 : 900);
+    }
+  })();
+})();
+</script>
+</body>
+</html>

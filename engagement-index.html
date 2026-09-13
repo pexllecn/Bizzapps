@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Engagement Index | EY Microsoft AI Business Applications</title>
+<meta name="description" content="The delivered EY Ireland Microsoft Business Applications engagements and the reusable capability patterns behind them.">
+<meta name="theme-color" content="#08080C">
+<link rel="stylesheet" href="assets/ey-core.css">
+<link rel="stylesheet" href="assets/ey-doc.css">
+</head>
+<body>
+<div class="spectrum"></div>
+
+<!-- ======================================================== navigation -->
+<nav class="nav">
+  <div class="shell nav-in">
+    <div class="nav-brand">
+      <img class="ey-mark" alt="EY" hidden>
+      <div class="t">
+        <b>Microsoft AI Business Applications</b>
+        <span>EY Ireland · Technology Consulting</span>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#engagements">Engagements</a>
+      <a href="#capabilities">Capabilities</a>
+      <a href="#platform">Platform</a>
+      <nav class="vswitch" aria-label="Views">
+        <a href="index.html"><span class="n">01</span><span class="t">Showcase</span></a>
+        <a href="city.html"><span class="n">02</span><span class="t">City</span></a>
+        <a href="engagement-index.html" aria-current="page"><span class="n">03</span><span class="t">Index</span></a>
+      </nav>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================== hero -->
+<header class="hero">
+  <div class="shell hero-in">
+    <div class="kicker y" id="heroKicker"></div>
+    <h1 id="heroTitle"></h1>
+    <p class="sub" id="heroSub"></p>
+    <div class="hero-cta">
+      <a class="btn btn-y" href="#engagements">Open the engagement index</a>
+      <a class="btn btn-o" href="#capabilities">Browse capabilities</a>
+    </div>
+    <div class="hero-stats" id="heroStats"></div>
+  </div>
+</header>
+
+<!-- ======================================================= engagements -->
+<section id="engagements">
+  <div class="shell">
+    <div class="sec-head">
+      <div class="kicker">01 · Delivered work</div>
+      <h2>Five engagements, in production.</h2>
+      <p id="heroNote"></p>
+    </div>
+
+    <div class="eng">
+      <aside class="eng-nav" id="engNav"></aside>
+
+      <div>
+        <article class="doc" id="doc"></article>
+
+        <!-- the engagement played as a narrated six-stage flow -->
+        <div class="journey" id="journey">
+          <div class="j-hd">
+            <div>
+              <div class="t">Engagement flow</div>
+              <div class="n" id="jName"></div>
+            </div>
+            <div class="j-ctl">
+              <button id="jPrev">Previous</button>
+              <button id="jPause">Pause</button>
+              <button id="jNext">Next stage</button>
+              <button id="jStop">End</button>
+            </div>
+          </div>
+
+          <div class="ribbon" id="jRibbon"></div>
+
+          <div class="j-bd">
+            <div class="j-story">
+              <div class="step" id="jStep"></div>
+              <p class="line" id="jLine"></p>
+              <div class="prog"><i id="jBar"></i></div>
+            </div>
+            <aside class="j-side" id="jSide"></aside>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================= capabilities -->
+<section class="alt" id="capabilities">
+  <div class="shell">
+    <div class="sec-head">
+      <div class="kicker">02 · Reusable patterns</div>
+      <h2><span id="capCount"></span> capabilities we deploy.</h2>
+      <p>Each engagement is assembled from the same set of proven capability patterns rather than built from nothing. Open one to see the value case, the commercial shape and where it already runs in production.</p>
+    </div>
+    <div class="capgrid" id="capGrid"></div>
+  </div>
+</section>
+
+<!-- =========================================================== platform -->
+<section id="platform">
+  <div class="shell">
+    <div class="sec-head">
+      <div class="kicker" id="stackKicker"></div>
+      <h2 id="stackTitle"></h2>
+      <p id="stackLede"></p>
+    </div>
+    <div class="stack" id="stack"></div>
+  </div>
+</section>
+
+<!-- ============================================================ footer -->
+<footer class="foot">
+  <div class="shell foot-in">
+    <div class="l">
+      <img class="ey-mark" alt="EY" hidden>
+      Microsoft AI Business Applications<br>
+      Customer &amp; Growth · Technology Consulting · EY Ireland
+    </div>
+    <div class="r">Confidential · EY Ireland · 2026</div>
+  </div>
+</footer>
+
+<!-- ============================================================ drawer -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-label="Detail">
+  <div class="dr-hd">
+    <button class="dr-x" id="drClose" aria-label="Close">&#10005;</button>
+    <div class="lb" id="drLabel"></div>
+    <h3 id="drTitle"></h3>
+    <div class="marks" id="drMarks"></div>
+  </div>
+  <div class="dr-bd" id="drBody"></div>
+</aside>
+
+<script src="assets/ey-content.js"></script>
+<script src="assets/ey-icons.js"></script>
+<script>
+/* ==========================================================================
+ *  BizApps Engagement Index - runtime
+ *  --------------------------------------------------------------------------
+ *  Renders the whole page from window.BIZ. Four views, one page:
+ *    ENGAGEMENTS  the five client engagements, one document at a time
+ *    JOURNEY      the engagement played as a six-stage flow, narrated
+ *    CAPABILITIES the reusable solution patterns
+ *    PLATFORM     the five-layer Microsoft stack behind all of it
+ *  Capability and product detail open in a side drawer from anywhere.
+ * ====================================================================== */
+(function () {
+  "use strict";
+
+  var D = window.BIZ, ICONS = window.ICONS || {};
+  var C = D.city;
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function icon(k) { return ICONS[k] || ""; }
+  function img(k, cls) {
+    var s = icon(k);
+    return s ? '<img class="' + (cls || "") + '" alt="" src="' + s + '">' : "";
+  }
+  function sol(id) { return C.solutions[id]; }
+  function client(id) { return C.clients.filter(function (x) { return x.id === id; })[0]; }
+  function deployedAt(sid) {
+    return C.clients.filter(function (c) { return c.solutions.indexOf(sid) >= 0; });
+  }
+  /* Union of the Microsoft services behind a client's solutions, in order. */
+  function platformOf(c) {
+    var seen = {}, out = [];
+    c.solutions.forEach(function (sid) {
+      (sol(sid).icons || []).forEach(function (k) { if (!seen[k]) { seen[k] = 1; out.push(k); } });
+    });
+    return out;
+  }
+  function lifecycleOf(c) {
+    var on = {};
+    c.solutions.forEach(function (sid) {
+      (sol(sid).lifecycle || []).forEach(function (l) { on[l] = 1; });
+    });
+    return on;
+  }
+  function stagePills(on) {
+    return '<div class="stage-pills">' + C.lifecycle.map(function (l) {
+      return '<span class="spill' + (on[l.id] ? " on" : "") + '"><i></i>' + esc(l.name) + "</span>";
+    }).join("") + "</div>";
+  }
+  function productChip(k, clickable) {
+    var pr = D.products[k], nm = pr ? pr.name : k;
+    return clickable
+      ? '<button class="chip" data-prod="' + esc(k) + '">' + img(k) + esc(nm) + "</button>"
+      : '<span class="chip">' + img(k) + esc(nm) + "</span>";
+  }
+
+  /* ================================================================= brand */
+  function brand() {
+    var s = icon("ey");
+    $$(".ey-mark").forEach(function (n) { if (s) { n.src = s; n.hidden = false; } });
+  }
+
+  /* ================================================================== hero */
+  /* Page copy. The content model was written for the old isometric page, so
+     the few lines that describe a city are stated here instead of rewriting
+     the model, which stays the single source of truth for everything else. */
+  var COPY = {
+    title: "BizApps",
+    accent: "Engagement Index",
+    lede: "Every entry is a real client engagement EY Ireland has delivered on the Microsoft cloud. Open one to see the challenge, what we built, the capabilities behind it and what it means for your organisation.",
+    stackLede: "Every engagement we run is assembled from the same five layers. Open any product to see what it does and where we have put it into production.",
+  };
+
+  function buildHero() {
+    var h = D.hero;
+    $("#heroKicker").textContent = C.eyebrow;
+    $("#heroTitle").innerHTML = esc(COPY.title) + " <em>" + esc(COPY.accent) + "</em>";
+    $("#heroSub").textContent = COPY.lede;
+    $("#heroStats").innerHTML = C.stats.map(function (s) {
+      return '<div class="st"><div class="v">' + esc(s.v) + '</div><div class="l">' + esc(s.l) + "</div></div>";
+    }).join("");
+    if (h && h.sub) $("#heroNote").textContent = h.sub;
+  }
+
+  /* =========================================================== engagements */
+  var active = null;
+
+  function buildEngNav() {
+    var n = $("#engNav");
+    n.innerHTML = '<div class="hd">Client engagements</div>' +
+      C.clients.map(function (c, i) {
+        return '<button data-cid="' + c.id + '">' +
+          '<span class="ix">' + ("0" + (i + 1)) + "</span>" +
+          '<span class="nm">' + esc(c.name) + '<span class="sc">' + esc(c.sector) + "</span></span>" +
+        "</button>";
+      }).join("") +
+      '<div class="ft">' + esc(C.clients.length) + " engagements delivered on the Microsoft cloud, each in the client's own governed tenant.</div>";
+
+    $$("#engNav button", n).forEach(function (b) {
+      b.addEventListener("click", function () { showClient(b.dataset.cid); });
+    });
+  }
+
+  function markNav(id) {
+    $$("#engNav button").forEach(function (b) { b.classList.toggle("on", b.dataset.cid === id); });
+  }
+
+  function showClient(id, keepJourney) {
+    var c = client(id); if (!c) return;
+    active = id;
+    markNav(id);
+    if (!keepJourney) stopJourney();
+
+    var d = $("#doc");
+    d.style.setProperty("--c", c.tone);
+
+    d.innerHTML =
+      '<div class="doc-hd">' +
+        '<div class="top">' +
+          "<div>" +
+            '<div class="sector">' + esc(c.sector) + "</div>" +
+            "<h3>" + esc(c.name) + "</h3>" +
+            '<p class="tag">' + esc(c.tagline) + "</p>" +
+            (c.illustrative ? '<span class="flagline">Illustrative composite</span>' : "") +
+          "</div>" +
+          '<div class="mark">' + (c.logo && icon(c.logo)
+            ? '<img alt="' + esc(c.name) + '" src="' + icon(c.logo) + '">'
+            : '<span class="mono">' + esc(c.short) + "</span>") + "</div>" +
+        "</div>" +
+        stagePills(lifecycleOf(c)) +
+        '<div class="acts">' +
+          '<button class="btn btn-d" id="runJourney"><span class="tri"></span>Run the engagement flow</button>' +
+        "</div>" +
+      "</div>" +
+
+      '<div class="stats">' + c.stats.map(function (s) {
+        return '<div class="s"><div class="v">' + esc(s.v) + '</div><div class="l">' + esc(s.l) + "</div></div>";
+      }).join("") + "</div>" +
+
+      '<div class="doc-bd">' +
+        '<div class="two">' +
+          '<div class="blk"><h4>The challenge</h4><p>' + esc(c.challenge) + "</p></div>" +
+          '<div class="blk"><h4>The outcome</h4><p>' + esc(c.outcome) + "</p></div>" +
+        "</div>" +
+
+        '<div class="blk"><h4>What we built</h4><div class="solgrid">' +
+          c.solutions.map(function (sid) {
+            var s = sol(sid);
+            return '<button class="solcard" data-sid="' + sid + '">' + img(s.icons[0]) +
+              '<span class="n">' + esc(s.name) +
+              '<span class="k">' + esc((s.lifecycle || []).map(function (l) {
+                  return (C.lifecycle.filter(function (x) { return x.id === l; })[0] || {}).name || l;
+                }).join(" · ")) + "</span></span></button>";
+          }).join("") + "</div></div>" +
+
+        '<div class="blk"><h4>Microsoft platform</h4><div class="chiprow">' +
+          platformOf(c).map(function (k) { return productChip(k, true); }).join("") + "</div></div>" +
+
+        '<div class="blk quote"><h4>The EY difference</h4><p>' + esc(c.eyDiff) + "</p></div>" +
+
+        ((c.related && c.related.length)
+          ? '<div class="blk"><h4>Related engagements</h4><div class="relrow">' +
+              c.related.map(function (rid) {
+                var r = client(rid);
+                return r ? '<button class="rel" data-cid="' + rid + '"><i>&rarr;</i>' + esc(r.name) + "</button>" : "";
+              }).join("") + "</div></div>"
+          : "") +
+
+        '<div class="delivered">Delivered with ' + esc(c.collab) + "</div>" +
+      "</div>";
+
+    $$(".solcard", d).forEach(function (b) {
+      b.addEventListener("click", function () { openSolution(b.dataset.sid, id); });
+    });
+    $$("[data-prod]", d).forEach(function (b) {
+      b.addEventListener("click", function () { openProduct(b.dataset.prod); });
+    });
+    $$(".rel", d).forEach(function (b) {
+      b.addEventListener("click", function () {
+        showClient(b.dataset.cid);
+        $("#engagements").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+    $("#runJourney").addEventListener("click", toggleJourney);
+  }
+
+  /* =============================================================== journey
+     The engagement played as a narrated flow. No camera, no scene: a stage
+     ribbon that shows the whole route at once, the narration for the stage
+     you are on, and the capability doing the work beside it. */
+  var jOn = false, jIx = 0, jT0 = 0, jRAF = null, jPaused = false;
+  var J_STEP = 7000;
+
+  function toggleJourney() { jOn ? stopJourney() : startJourney(); }
+
+  function startJourney() {
+    var c = client(active); if (!c || !c.journey || !c.journey.length) return;
+    jOn = true; jIx = -1; jPaused = false;
+    $("#journey").classList.add("on");
+    $("#journey").style.setProperty("--c", c.tone);
+    $("#jName").textContent = c.name;
+    $("#jRibbon").innerHTML = c.journey.map(function (st, i) {
+      var s = sol(st.sid) || {};
+      return '<button class="st" data-ix="' + i + '">' +
+        '<span class="ix">STAGE ' + ("0" + (i + 1)) + "</span>" +
+        '<span class="nm">' + esc(s.short || s.name || st.sid) + "</span></button>";
+    }).join("");
+    $$("#jRibbon .st").forEach(function (b) {
+      b.addEventListener("click", function () { jGo(+b.dataset.ix); });
+    });
+    paintRunButton();
+    jGo(0);
+    if (!jRAF) jRAF = requestAnimationFrame(jTick);
+    $("#journey").scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+
+  function jGo(i) {
+    var c = client(active); if (!c || !jOn) return;
+    if (i >= c.journey.length) { jGo(0); return; }
+    jIx = Math.max(0, i);
+    var step = c.journey[jIx], s = sol(step.sid) || {};
+    jT0 = performance.now(); jHeld = 0;
+
+    $("#jStep").textContent = "Stage " + (jIx + 1) + " of " + c.journey.length;
+    $("#jLine").textContent = step.t;
+    $("#jBar").style.width = "0%";
+
+    $("#jSide").innerHTML =
+      '<div class="lb">Capability at work</div>' +
+      "<h5>" + esc(s.name) + "</h5>" +
+      "<p>" + esc(s.what) + "</p>" +
+      '<div class="chiprow">' + (s.icons || []).map(function (k) {
+        return productChip(k, false);
+      }).join("") + "</div>" +
+      (s.pod ? '<div class="who">' + esc(s.pod.n + (s.pod.n === 1 ? " person" : " people")) +
+        " · led by " + esc(s.pod.lead) + "</div>" : "");
+
+    $$("#jRibbon .st").forEach(function (b, ix) {
+      b.classList.toggle("done", ix < jIx);
+      b.classList.toggle("on", ix === jIx);
+    });
+    paintTransport();
+  }
+
+  function jNext() { jGo(jIx + 1); }
+  function jPrev() { if (jIx > 0) jGo(jIx - 1); }
+
+  var jHeld = 0;
+  function jTick(t) {
+    if (!jOn) { jRAF = null; return; }
+    if (!jPaused) {
+      jHeld = t - jT0;
+      var p = Math.min(1, jHeld / J_STEP);
+      $("#jBar").style.width = (p * 100).toFixed(1) + "%";
+      if (p >= 1) jNext();
+    }
+    jRAF = requestAnimationFrame(jTick);
+  }
+
+  function setPaused(on) {
+    jPaused = !!on;
+    if (!jPaused) jT0 = performance.now() - jHeld;
+    paintTransport();
+  }
+
+  function paintTransport() {
+    var c = client(active), last = c ? jIx >= c.journey.length - 1 : false;
+    var p = $("#jPause"), pv = $("#jPrev"), nx = $("#jNext");
+    p.textContent = jPaused ? "Resume" : "Pause";
+    p.classList.toggle("pri", jPaused);
+    pv.disabled = jIx <= 0;
+    nx.textContent = last ? "Restart" : "Next stage";
+  }
+
+  function paintRunButton() {
+    var b = $("#runJourney"); if (!b) return;
+    b.innerHTML = jOn ? '<span class="sq"></span>Stop the flow'
+                      : '<span class="tri"></span>Run the engagement flow';
+  }
+
+  function stopJourney() {
+    jOn = false; jPaused = false; jHeld = 0;
+    if (jRAF) { cancelAnimationFrame(jRAF); jRAF = null; }
+    $("#journey").classList.remove("on");
+    $("#jBar").style.width = "0%";
+    paintRunButton();
+  }
+
+  /* ========================================================== capabilities */
+  function buildCapabilities() {
+    var ids = Object.keys(C.solutions);
+    $("#capCount").textContent = ids.length;
+    $("#capGrid").innerHTML = ids.map(function (sid) {
+      var s = C.solutions[sid], at = deployedAt(sid);
+      return '<button class="cap" data-sid="' + sid + '">' +
+        '<div class="row">' + img(s.icons[0]) + "<h4>" + esc(s.name) + "</h4></div>" +
+        "<p>" + esc(s.what) + "</p>" +
+        '<div class="ft"><span>In production at <b>' + at.length + "</b> " +
+          (at.length === 1 ? "client" : "clients") + "</span>" +
+          "<span>" + esc((s.lifecycle || []).map(function (l) {
+            return (C.lifecycle.filter(function (x) { return x.id === l; })[0] || {}).name || l;
+          }).join(" · ")) + "</span></div>" +
+      "</button>";
+    }).join("");
+    $$("#capGrid .cap").forEach(function (b) {
+      b.addEventListener("click", function () { openSolution(b.dataset.sid, null); });
+    });
+  }
+
+  /* =============================================================== platform */
+  function buildPlatform() {
+    var st = D.stack;
+    $("#stackKicker").textContent = st.kicker;
+    $("#stackTitle").textContent = st.title;
+    $("#stackLede").textContent = COPY.stackLede;
+    $("#stack").innerHTML = st.layers.map(function (l) {
+      return '<div class="layer" style="--c:' + esc(l.color) + '">' +
+        '<div class="ix">' + esc(l.index) + "</div>" +
+        '<div class="nm"><b>' + esc(l.name) + "</b><span>" + esc(l.caption) + "</span></div>" +
+        '<div class="pr">' + l.products.map(function (k) { return productChip(k, true); }).join("") + "</div>" +
+      "</div>";
+    }).join("");
+    $$("#stack [data-prod]").forEach(function (b) {
+      b.addEventListener("click", function () { openProduct(b.dataset.prod); });
+    });
+  }
+
+  /* ================================================================ drawer */
+  function openDrawer() {
+    $("#drawer").classList.add("on");
+    $("#scrim").classList.add("on");
+    document.body.style.overflow = "hidden";
+    $("#drBody").scrollTop = 0;
+  }
+  function closeDrawer() {
+    $("#drawer").classList.remove("on");
+    $("#scrim").classList.remove("on");
+    document.body.style.overflow = "";
+  }
+
+  function openSolution(sid, cid) {
+    var s = sol(sid); if (!s) return;
+    var at = deployedAt(sid);
+    var c = client(cid) || at[0] || null;
+    var d = $("#drawer");
+    d.style.setProperty("--c", c ? c.tone : "#FFE600");
+
+    $("#drLabel").textContent = "Capability";
+    $("#drTitle").textContent = s.name;
+    $("#drMarks").innerHTML = (s.icons || []).map(function (k) { return img(k); }).join("");
+
+    var on = {}; (s.lifecycle || []).forEach(function (l) { on[l] = 1; });
+
+    $("#drBody").innerHTML =
+      '<p class="lede">' + esc(s.what) + "</p>" +
+      stagePills(on) +
+      '<div class="blk" style="margin-top:26px"><h4>The value</h4><ul class="vlist">' +
+        s.value.map(function (v) {
+          return "<li><b>" + esc(v.t) + "</b>" + esc(v.b) +
+            (v.indicative ? '<em class="ind">Indicative</em>' : "") + "</li>";
+        }).join("") + "</ul></div>" +
+      '<div class="blk"><h4>Relevant to your organisation</h4><p>' + esc(s.relevant) + "</p></div>" +
+      '<div class="blk"><h4>Built with</h4><div class="chiprow">' +
+        (s.icons || []).map(function (k) { return productChip(k, true); }).join("") + "</div></div>" +
+      (s.pod ? '<div class="blk"><h4>Who runs it</h4><p>' +
+        esc(s.pod.n + (s.pod.n === 1 ? " person" : " people")) + ", led by " + esc(s.pod.lead) + "</p></div>" : "") +
+      (at.length ? '<div class="blk"><h4>In production at</h4><div class="relrow">' +
+        at.map(function (x) {
+          return '<button class="rel" data-cid="' + x.id + '"><i>&rarr;</i>' + esc(x.name) + "</button>";
+        }).join("") + "</div></div>" : "");
+
+    $$("#drBody .rel").forEach(function (b) {
+      b.addEventListener("click", function () {
+        closeDrawer();
+        showClient(b.dataset.cid);
+        $("#engagements").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+    $$("#drBody [data-prod]").forEach(function (b) {
+      b.addEventListener("click", function () { openProduct(b.dataset.prod); });
+    });
+    openDrawer();
+  }
+
+  function openProduct(key) {
+    var p = D.products[key]; if (!p) return;
+    var d = $("#drawer");
+    d.style.setProperty("--c", "#FFE600");
+
+    $("#drLabel").textContent = p.family || "Microsoft platform";
+    $("#drTitle").textContent = p.name;
+    $("#drMarks").innerHTML = img(key);
+
+    var proof = (p.proof || []).map(function (id) { return client(id); }).filter(Boolean);
+
+    $("#drBody").innerHTML =
+      '<p class="lede">' + esc(p.what) + "</p>" +
+      '<div class="blk quote"><h4>How EY uses it</h4><p>' + esc(p.ey) + "</p></div>" +
+      (proof.length ? '<div class="blk"><h4>In production at</h4><div class="relrow">' +
+        proof.map(function (x) {
+          return '<button class="rel" data-cid="' + x.id + '"><i>&rarr;</i>' + esc(x.name) + "</button>";
+        }).join("") + "</div></div>" : "");
+
+    $$("#drBody .rel").forEach(function (b) {
+      b.addEventListener("click", function () {
+        closeDrawer();
+        showClient(b.dataset.cid);
+        $("#engagements").scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+    openDrawer();
+  }
+
+  /* ================================================================== init */
+  function init() {
+    brand();
+    buildHero();
+    buildEngNav();
+    buildCapabilities();
+    buildPlatform();
+    showClient(C.clients[0].id);
+
+    $("#jPrev").addEventListener("click", function () { jPrev(); });
+    $("#jNext").addEventListener("click", function () { jNext(); });
+    $("#jPause").addEventListener("click", function () { setPaused(!jPaused); });
+    $("#jStop").addEventListener("click", stopJourney);
+
+    $("#drClose").addEventListener("click", closeDrawer);
+    $("#scrim").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { closeDrawer(); return; }
+      if (!jOn) return;
+      if (e.key === "ArrowRight") { jNext(); e.preventDefault(); }
+      if (e.key === "ArrowLeft") { jPrev(); e.preventDefault(); }
+      if (e.key === " " && !/input|textarea|button/i.test(e.target.tagName)) {
+        setPaused(!jPaused); e.preventDefault();
+      }
+    });
+
+    /* deep link: ?c=<client>&s=<solution> */
+    var q = new URLSearchParams(location.search);
+    var cid = q.get("c"), sid = q.get("s");
+    if (cid && client(cid)) showClient(cid);
+    if (sid && sol(sid)) openSolution(sid, cid);
+
+    window.BizApps = {
+      client: showClient, solution: openSolution, product: openProduct,
+      flow: toggleJourney, close: closeDrawer,
+    };
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
+</body>
+</html>
