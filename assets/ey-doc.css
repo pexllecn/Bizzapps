@@ -63,12 +63,24 @@ p{margin:0}
 .nav-brand .t span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.14em;
   text-transform:uppercase;color:var(--grey1);white-space:nowrap}
 .nav-links{display:flex;align-items:center;gap:4px}
-.nav-links a{font-size:13.5px;font-weight:400;text-decoration:none;color:var(--grey1);
+/* Scoped to DIRECT children. As a descendant selector this also matched the
+   .vswitch anchors nested inside, and because ey-doc.css loads after
+   ey-core.css at equal specificity it won: the switcher's 100px pill radius
+   was overwritten with the 3px document radius, so the current-view highlight
+   rendered as a square. */
+.nav-links>a{font-size:13.5px;font-weight:400;text-decoration:none;color:var(--grey1);
   padding:9px 14px;border-radius:3px;transition:color .2s,background .2s;white-space:nowrap}
-.nav-links a:hover{color:var(--offblack);background:var(--paper)}
-.nav-links a.cta{background:var(--offblack);color:var(--white);font-weight:700}
-.nav-links a.cta:hover{background:var(--confident);color:var(--white)}
-@media(max-width:900px){.nav-links a:not(.cta){display:none}}
+.nav-links>a:hover{color:var(--offblack);background:var(--paper)}
+.nav-links>a.cta{background:var(--offblack);color:var(--white);font-weight:700}
+.nav-links>a.cta:hover{background:var(--confident);color:var(--white)}
+@media(max-width:900px){.nav-links>a:not(.cta){display:none}}
+
+/* The switcher sits on a white nav here, not a dark stage, so it carries a
+   light skin. The geometry stays identical to the other two pages. */
+.nav-links .vswitch{background:var(--paper);border-color:var(--border)}
+.nav-links .vswitch a{color:var(--grey1)}
+.nav-links .vswitch a:hover{color:var(--offblack);background:rgba(0,0,0,.05)}
+.nav-links .vswitch a[aria-current="page"]{background:var(--yellow);color:var(--offblack)}
 
 /* =================================================================== HERO */
 .hero{position:relative;isolation:isolate;overflow:hidden;background:var(--confident);color:var(--white)}
@@ -332,3 +344,12 @@ button.chip:hover{border-color:var(--offblack);background:var(--paper)}
 :focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms!important;transition-duration:.001ms!important}}
 @media(max-width:640px){:root{--shell:calc(100% - 32px)}}
+
+/* the client's own mark in the engagement rail, in place of the index number */
+.eng-nav button .ix.lg{background:#fff;border-color:#fff;padding:3px;overflow:hidden}
+.eng-nav button .ix.lg img{width:100%;height:100%;object-fit:contain;display:block}
+.eng-nav button.on .ix.lg{box-shadow:0 0 0 2px var(--yellow)}
+
+/* client mark on a related-engagement button */
+.rel .rmk{flex:none;width:34px;height:22px;display:grid;place-items:center;overflow:hidden}
+.rel .rmk img{max-width:100%;max-height:100%;width:auto;height:auto;display:block}

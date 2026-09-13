@@ -480,6 +480,7 @@ window.BIZ = {
         sector: "Health · National",
         tone: "#F5769A",
         pos: [-14.8, 0],
+        logo: "hse",
         tagline: "National-scale citizen response",
         challenge: "Following a ransomware attack, a national health service organisation needed to notify every citizen whose data had been breached - across varied risk levels, a wide stakeholder set, strict legal and regulatory requirements, and intense public scrutiny, while protecting the service itself from social engineering.",
         outcome: "The cloud digital contact centre was provisioned, delivered and operated over a 2.5 year period, engaging with over 200,000 affected individuals. At peak it ran almost 100 full and part-time agents. The service met its three core requirements: efficiency, transparency and security.",
@@ -509,6 +510,7 @@ window.BIZ = {
         sector: "Statistics · National",
         tone: "#4FA8E8",
         pos: [22.2, -7.4],
+        logo: "cso",
         tagline: "Delivering Census 2027 as a national programme",
         challenge: "The CSO intends to digitise all future censuses. Census 2027 will primarily be digital, with most householders completing online. The enumerator role has shifted from door-to-door collection to handling non-response, and the barrier to a first digital census had to be lowered for every household in the country.",
         outcome: "A responsive portal, an offline-capable field app and an omnichannel contact centre run on one governed data foundation, with programme reporting giving leadership a live view instead of status decks. EY is delivery partner and managed service provider with 24/7 support through pilots, testing and go-live.",
@@ -537,6 +539,7 @@ window.BIZ = {
         short: "Kerry",
         sector: "Food & Beverage · Global",
         tone: "#5BC9A8",
+        logo: "kerry",
         pos: [-7.4, 22.2],
         tagline: "Scaling low-code safely across a global business",
         challenge: "Capital investment ran across SAP and manual reconciliation, while Power Platform adoption was growing faster than the governance around it. Reporting could not answer the questions leadership was already asking of the legacy estate.",
@@ -663,9 +666,22 @@ window.BIZ = {
     clients: {
       title: "Our top managed clients",
       groups: [
-        { sector: "Health services", names: ["HSE", "Tusla", "HIQA", "Children's Health Ireland"] },
-        { sector: "Public", names: ["Department of Justice", "EirGrid", "Central Statistics Office"] },
-        { sector: "Private food & beverage", names: ["Kerry Group"] },
+        /* `logo` is the key into window.ICONS. A name without one renders as a
+           text chip, so the list never waits on an asset that does not exist. */
+        { sector: "Health services", names: [
+          { n: "HSE", logo: "hse" },
+          { n: "Tusla", logo: "tusla" },
+          { n: "HIQA", logo: "hiqa" },
+          { n: "Children's Health Ireland", logo: "chi" },
+        ] },
+        { sector: "Public", names: [
+          { n: "Department of Justice", logo: "doj" },
+          { n: "EirGrid", logo: "eirgrid" },
+          { n: "Central Statistics Office", logo: "cso" },
+        ] },
+        { sector: "Private food & beverage", names: [
+          { n: "Kerry Group", logo: "kerry" },
+        ] },
       ],
     },
   },

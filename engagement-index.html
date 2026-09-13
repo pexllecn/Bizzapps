@@ -241,8 +241,11 @@
     var n = $("#engNav");
     n.innerHTML = '<div class="hd">Client engagements</div>' +
       C.clients.map(function (c, i) {
+        /* the client's own mark where we have it, the index number otherwise */
+        var lg = c.logo && icon(c.logo);
         return '<button data-cid="' + c.id + '">' +
-          '<span class="ix">' + ("0" + (i + 1)) + "</span>" +
+          (lg ? '<span class="ix lg"><img alt="" src="' + lg + '"></span>'
+              : '<span class="ix">' + ("0" + (i + 1)) + "</span>") +
           '<span class="nm">' + esc(c.name) + '<span class="sc">' + esc(c.sector) + "</span></span>" +
         "</button>";
       }).join("") +
@@ -314,7 +317,11 @@
           ? '<div class="blk"><h4>Related engagements</h4><div class="relrow">' +
               c.related.map(function (rid) {
                 var r = client(rid);
-                return r ? '<button class="rel" data-cid="' + rid + '"><i>&rarr;</i>' + esc(r.name) + "</button>" : "";
+                if (!r) return "";
+                var lg = r.logo && icon(r.logo);
+                return '<button class="rel" data-cid="' + rid + '">' +
+                  (lg ? '<span class="rmk"><img alt="" src="' + lg + '"></span>' : "<i>&rarr;</i>") +
+                  esc(r.name) + "</button>";
               }).join("") + "</div></div>"
           : "") +
 

@@ -161,6 +161,13 @@
 
   var BIZ = window.BIZ, C = BIZ.city, ICONS = window.ICONS || {};
   var icon = function (k) { return ICONS[k] || ""; };
+  /* A client's own mark for use in a list row, or nothing if none was
+     supplied - the row then falls back to text alone rather than to a
+     placeholder or somebody else's logo. */
+  function mark(c) {
+    return icon(c.logo)
+      ? '<span class="rmk"><img alt="" src="' + icon(c.logo) + '"></span>' : "";
+  }
   var client = function (id) { return C.clients.filter(function (c) { return c.id === id; })[0]; };
   var sol = function (id) { return C.solutions[id]; };
 
@@ -365,7 +372,8 @@
         esc(BIZ.brand.unit) + " &middot; " + esc(BIZ.brand.firm) + "</p></div>" +
       '<div class="blk"><h3>Engagements in the city</h3><div class="dlinks" id="coreLinks">' +
         C.clients.map(function (x) {
-          return '<button data-id="' + x.id + '"><b>' + esc(x.name) + "</b>" + esc(x.sector) + "</button>";
+          return '<button data-id="' + x.id + '">' + mark(x) +
+                 "<span><b>" + esc(x.name) + "</b>" + esc(x.sector) + "</span></button>";
         }).join("") + "</div></div>";
     $$("#coreLinks button").forEach(function (b) {
       b.addEventListener("click", function () { focusOn(b.dataset.id); showClient(b.dataset.id); });
@@ -530,8 +538,8 @@
       (elsewhere.length
         ? '<div class="blk"><h3>Also running at</h3><div class="dlinks" id="elsew">' +
           elsewhere.map(function (x) {
-            return '<button data-id="' + x.id + '"><b>' + esc(x.name) + "</b>" +
-                   esc(x.sector) + "</button>";
+            return '<button data-id="' + x.id + '">' + mark(x) +
+                   "<span><b>" + esc(x.name) + "</b>" + esc(x.sector) + "</span></button>";
           }).join("") + "</div></div>"
         : "") +
       '<div class="blk"><div class="dlinks"><button id="backC"><b>&larr; Back to ' +
@@ -847,7 +855,9 @@
     if (!J) return;
     J.done = true;
     var c = J.c;
-    $("#jSumH").textContent = c.name;
+    $("#jSumH").innerHTML = (icon(c.logo)
+        ? '<img class="jsum-lg" alt="" src="' + icon(c.logo) + '">' : "") +
+      "<span>" + esc(c.name) + "</span>";
     $("#jSumP").textContent = c.outcome;
     $("#jSumS").innerHTML = (c.stats || []).map(function (st) {
       return '<div class="s"><div class="v">' + esc(st.v) + '</div>' +
@@ -924,23 +934,54 @@
   $("#btnExit").addEventListener("click", function () { stopTour(); closePanel(); goHome(); });
 
   /* -------------------------------------------------------------- labels */
+  /* Each landmark is signed with the client's own mark on a rotating plate.
+     The plate is a real six-face solid, and its width is derived from the
+     mark's own aspect ratio once the image reports its intrinsic size, so a
+     wide wordmark and a square device carry the same optical weight. */
+  var LBL_H = 58, LBL_MIN = 68, LBL_MAX = 148, LBL_PAD = 16;
+
+  function buildLabel(cls, tone, key, name) {
+    var e = document.createElement("div");
+    e.className = "c-lbl" + (cls ? " " + cls : "");
+    e.style.setProperty("--c", tone);
+
+    var src = icon(key);
+    var face = src
+      ? '<img alt="" src="' + src + '">'
+      : '<b style="font:700 15px/1 var(--f);color:#14151C">' + esc(name) + "</b>";
+
+    e.innerHTML =
+      '<div class="halo"></div>' +
+      '<div class="plate">' +
+        '<div class="fc f">' + face + "</div>" +
+        '<div class="fc b">' + face + "</div>" +
+        '<div class="ed l"></div><div class="ed r"></div>' +
+        '<div class="ed u"></div><div class="ed d"></div>' +
+      "</div>" +
+      '<div class="cap">' + esc(name) + "</div>" +
+      '<div class="stem"></div>' +
+      '<span class="sr">' + esc(name) + "</span>";
+
+    /* size the plate from the mark itself rather than a guessed constant */
+    var im = e.querySelector(".fc.f img");
+    if (im) {
+      var fit = function () {
+        var a = im.naturalWidth / (im.naturalHeight || 1);
+        if (!a || !isFinite(a)) return;
+        var w = Math.round(Math.min(LBL_MAX, Math.max(LBL_MIN, LBL_H * a + LBL_PAD)));
+        e.style.setProperty("--w", w + "px");
+      };
+      if (im.complete) fit(); else im.addEventListener("load", fit, { once: true });
+    }
+
+    $("#labels").appendChild(e);
+    return e;
+  }
+
   var labelEls = LMS.map(function (L) {
-    var e = document.createElement("div");
-    e.className = "c-lbl";
-    e.style.setProperty("--c", L.c.tone);
-    e.innerHTML = '<div class="tag"><span class="sw"></span>' + esc(L.c.short) +
-                  '</div><div class="stem"></div>';
-    $("#labels").appendChild(e);
-    return e;
+    return buildLabel("", L.c.tone, L.c.logo, L.c.short);
   });
-  var hqLabel = (function () {
-    var e = document.createElement("div");
-    e.className = "c-lbl hq";
-    e.style.setProperty("--c", "#FFE600");
-    e.innerHTML = '<div class="tag"><span class="sw"></span>EY HQ</div><div class="stem"></div>';
-    $("#labels").appendChild(e);
-    return e;
-  })();
+  var hqLabel = buildLabel("hq", "#FFE600", "ey", "EY HQ");
 
   function layoutLabels() {
     var hp = R.toScreen(0, 0, SCENE.hq.top + 2.6);
@@ -949,6 +990,9 @@
         (!state.active || hqSel || state.hoverId === HQ_ID)) {
       hqLabel.classList.add("on");
       hqLabel.classList.toggle("sel", hqSel);
+      /* stop the spin and turn the mark square to the camera for whichever
+         landmark the pointer is on or the user has opened */
+      hqLabel.classList.toggle("face", hqSel || state.hoverId === HQ_ID);
       hqLabel.style.left = hp.x.toFixed(1) + "px";
       hqLabel.style.top  = hp.y.toFixed(1) + "px";
     } else hqLabel.classList.remove("on");
@@ -965,6 +1009,7 @@
       var show = !state.active || sel || state.hoverId === i + 1;
       e.classList.toggle("on", show);
       e.classList.toggle("sel", sel);
+      e.classList.toggle("face", sel || state.hoverId === i + 1);
       e.style.left = p.x.toFixed(1) + "px";
       e.style.top  = p.y.toFixed(1) + "px";
     }

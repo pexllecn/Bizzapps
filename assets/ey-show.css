@@ -337,3 +337,25 @@ footer{border-top:1px solid var(--line);padding:36px 0 54px}
   .nav a:last-child{border-bottom:0}
 }
 @media (max-width:620px){ .navfs{display:none} }
+
+/* ===================================================== client marks =======
+ * The managed-client list carries the real brand assets. Each mark sits on
+ * its own white plate because these are wordmarks with dark type: knocking
+ * the white out would delete the type, and recolouring a client's mark is not
+ * ours to do. Heights are normalised so no one logo dominates the row.
+ * ========================================================================== */
+.chips.logos{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chips.logos .lgo{display:inline-flex;align-items:center;justify-content:center;
+  height:46px;padding:0;border:0;border-radius:8px;overflow:hidden;background:none;
+  transition:transform .3s var(--ease),filter .3s var(--ease)}
+.chips.logos .lgo img{height:46px;width:auto;display:block;
+  filter:saturate(.94) brightness(.97)}
+.chips.logos .lgo:hover{transform:translateY(-2px)}
+.chips.logos .lgo:hover img{filter:none}
+/* a name with no supplied mark keeps the original text chip */
+.chips.logos .lgo.txt{height:auto;padding:7px 13px;border:1px solid var(--line-2);
+  border-radius:100px;font-size:12.5px;color:var(--ink-2);font-weight:400}
+.chips.logos .lgo.txt:hover{border-color:var(--ey-yellow);color:var(--ink)}
+@media (max-width:520px){
+  .chips.logos .lgo,.chips.logos .lgo img{height:38px}
+}

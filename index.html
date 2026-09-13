@@ -518,8 +518,16 @@
     $("#clTitle").textContent = s.clients.title;
     var c = $("#clGrid");
     s.clients.groups.forEach(function (grp) {
-      c.appendChild(el("div", "", "<h4>" + esc(grp.sector) + '</h4><div class="chips">' +
-        grp.names.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>"));
+      c.appendChild(el("div", "", "<h4>" + esc(grp.sector) + '</h4><div class="chips logos">' +
+        grp.names.map(function (x) {
+          /* tolerate the old string form as well as the {n, logo} object */
+          var nm = typeof x === "string" ? x : x.n;
+          var lg = typeof x === "string" ? null : x.logo;
+          var src = lg && ICONS[lg];
+          return '<span class="lgo' + (src ? "" : " txt") + '" title="' + esc(nm) + '">' +
+                 (src ? '<img src="' + src + '" alt="' + esc(nm) + '" loading="lazy">'
+                      : esc(nm)) + "</span>";
+        }).join("") + "</div>"));
     });
   }
 
