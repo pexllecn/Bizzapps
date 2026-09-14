@@ -109,88 +109,28 @@ body.panel-open .c-view{transform:translateY(-50%) translateX(calc(-1 * var(--pa
 }
 @media (max-width:1024px){.c-roster{bottom:calc(clamp(14px,2.2vw,26px) + 0px)}}
 
-/* ============================================================== labels */
-/* HTML labels pinned to projected world points. Kept as DOM rather than drawn
-   into the canvas so they stay crisp, selectable and readable by assistive
-   technology. */
+/* ============================================================== labels ====
+ * A landmark marker names the building and nothing more: the client's mark is
+ * real signage on the roof and the facade now, so repeating it here would
+ * double the logo and pull the eye off the model.
+ * ========================================================================== */
 .c-labels{position:absolute;inset:0;z-index:8;pointer-events:none}
-
-/* Each landmark is signed with the client's own mark, carried on a slowly
-   rotating plate above the roof - the way a real building is signed, rather
-   than a text chip floating over it. The plate is a true six-face CSS 3D
-   solid, so it has thickness and reads as an object in the scene instead of
-   a flat card doing a flip animation.
-
-   --w is written per label from the mark's own aspect ratio, so a wide
-   wordmark and a square device both sit at the same optical weight. */
-.c-lbl{--w:104px; --h:58px; --t:11px;
-  position:absolute;transform:translate(-50%,-100%);
-  display:flex;flex-direction:column;align-items:center;gap:0;
-  opacity:0;transition:opacity .3s var(--ease);
-  perspective:620px;perspective-origin:50% 42%}
+.c-lbl{position:absolute;top:0;left:0;display:flex;flex-direction:column;
+  align-items:center;opacity:0;transition:opacity .32s var(--ease)}
 .c-lbl.on{opacity:1}
-
-.c-lbl .plate{position:relative;width:var(--w);height:var(--h);
-  transform-style:preserve-3d;
-  animation:lblspin 17s linear infinite;
-  transition:transform .55s var(--ease)}
-@keyframes lblspin{from{transform:rotateY(0deg)}to{transform:rotateY(360deg)}}
-
-/* Hovering or selecting a landmark stops its plate and turns the mark square
-   to the camera, so the thing you are pointing at becomes readable. */
-.c-lbl.face .plate{animation:none;transform:rotateY(0deg)}
-
-.c-lbl .fc{position:absolute;inset:0;border-radius:7px;overflow:hidden;
-  background:linear-gradient(180deg,#FFF,#EDEDF2);
-  border:1px solid rgba(255,255,255,.34);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
-  display:grid;place-items:center;padding:7px;backface-visibility:hidden}
-.c-lbl .fc img{max-width:100%;max-height:100%;width:auto;height:auto;display:block}
-.c-lbl .fc.b{transform:rotateY(180deg)}
-
-/* the four edge faces that give the plate its depth */
-.c-lbl .ed{position:absolute;background:linear-gradient(180deg,
-  color-mix(in srgb,var(--c) 62%,#14151C),color-mix(in srgb,var(--c) 28%,#0A0B10))}
-.c-lbl .ed.l,.c-lbl .ed.r{top:0;height:var(--h);width:var(--t);
-  left:calc(50% - var(--t) / 2)}
-.c-lbl .ed.l{transform:rotateY(-90deg) translateZ(calc(var(--w) / 2))}
-.c-lbl .ed.r{transform:rotateY(90deg)  translateZ(calc(var(--w) / 2))}
-.c-lbl .ed.u,.c-lbl .ed.d{left:0;width:var(--w);height:var(--t);
-  top:calc(50% - var(--t) / 2)}
-.c-lbl .ed.u{transform:rotateX(90deg)  translateZ(calc(var(--h) / 2))}
-.c-lbl .ed.d{transform:rotateX(-90deg) translateZ(calc(var(--h) / 2))}
-
-.c-lbl .fc.f{transform:translateZ(calc(var(--t) / 2))}
-.c-lbl .fc.b{transform:rotateY(180deg) translateZ(calc(var(--t) / 2))}
-
-/* contact glow in the client tone, so the plate sits in the scene's light */
-.c-lbl .halo{position:absolute;left:50%;top:50%;width:calc(var(--w) * 1.9);
-  height:calc(var(--h) * 1.9);transform:translate(-50%,-50%);border-radius:50%;
-  background:radial-gradient(closest-side,color-mix(in srgb,var(--c) 40%,transparent),transparent);
-  opacity:.5;pointer-events:none}
-
-/* the name is held back until the plate is the one you are looking at */
-.c-lbl .cap{margin-top:9px;font-size:10px;font-weight:700;letter-spacing:.16em;
-  text-transform:uppercase;color:var(--ink-2);white-space:nowrap;
-  opacity:0;transform:translateY(-4px);transition:opacity .3s var(--ease),transform .3s var(--ease)}
-.c-lbl.face .cap{opacity:1;transform:none}
-.c-lbl.sel .cap{color:var(--ey-yellow)}
-
-.c-lbl .stem{width:1px;height:26px;margin-top:7px;
+.c-lbl .tag{display:flex;align-items:center;gap:8px;padding:5px 13px;
+  border-radius:100px;background:rgba(8,9,13,.84);border:1px solid var(--line-2);
+  backdrop-filter:blur(10px);white-space:nowrap;
+  font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-2);
+  transition:color .3s var(--ease),border-color .3s var(--ease),
+             background .3s var(--ease)}
+.c-lbl .tag .sw{width:6px;height:6px;border-radius:50%;background:var(--c);flex:none}
+.c-lbl .stem{width:1px;height:22px;
   background:linear-gradient(180deg,var(--line-2),transparent)}
-.c-lbl.sel .stem{background:linear-gradient(180deg,var(--ey-yellow),transparent)}
-.c-lbl.sel .halo{opacity:.85}
-.c-lbl.sel .fc{border-color:var(--ey-yellow);
-  box-shadow:0 0 0 1px var(--ey-yellow),0 14px 38px rgba(0,0,0,.55)}
-
-/* the mark is decoration; the roster and the dossier carry the real names */
-.c-lbl .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-
-@media (max-width:720px){.c-lbl{--w:78px;--h:44px;--t:8px}}
-@media (prefers-reduced-motion:reduce){
-  .c-lbl .plate{animation:none;transform:rotateY(0deg)}
-  .c-lbl .cap{opacity:1;transform:none}
-}
+.c-lbl.sel .tag{color:var(--ink);border-color:var(--c);background:rgba(8,9,13,.92)}
+.c-lbl.hq .tag{color:var(--ink)}
+.c-lbl.hq.sel .tag{border-color:var(--ey-yellow)}
 
 /* ============================================================= dossier */
 .dossier{position:absolute;top:0;right:0;height:100%;width:var(--panel);z-index:22;

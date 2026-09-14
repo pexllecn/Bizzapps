@@ -90,6 +90,9 @@
     this.p = []; this.n = []; this.c = []; this.i = []; this.a = []; this.e = [];
     this.T = null;
     this.EM = 0;          // current emissive level, applied to new vertices
+    /* glow stream: position, uv, colour, intensity, sprite flag */
+    this.gp = []; this.gu = []; this.gc = []; this.gi = []; this.gs = [];
+    this.GS = 0;
   }
   /* Emissive is a per-vertex multiplier on the base colour, added after
      lighting. It exists so signage and lamp heads can read as lit without a
@@ -198,6 +201,83 @@
     this.tri([x0,y1,z],[x0,y0,z],[rx0,y,rz], col, id, 0.86);
   };
   Builder.prototype.count = function () { return this.i.length; };
+
+  /* ---- glow geometry -------------------------------------------------
+     A second, separate stream of triangles drawn in an additive pass after
+     the solid model. It carries no normals, no id and no shadow: it is not
+     surface, it is light in the air. Each vertex carries a colour, an
+     intensity, and a (u, v) where u runs -1..1 across the shaft and v runs
+     0 at the source to 1 at the far end, so the fragment stage can feather
+     the edges instead of drawing a hard-edged quad.
+
+     This exists because a lit sign washed by opaque wedges of geometry read
+     as four solid stripes leaning on the board. Light has no silhouette. */
+  Builder.prototype.glowVert = function (x, y, z, u, v, col, inten) {
+    var T = this.T;
+    if (T) { x = T.ox + (x - T.ox) * T.s; y = T.oy + (y - T.oy) * T.s; z = z * T.sz; }
+    this.gp.push(x, y, z);
+    this.gu.push(u, v);
+    this.gc.push(col[0], col[1], col[2]);
+    this.gi.push(inten);
+    this.gs.push(this.GS);
+  };
+  Builder.prototype.glowQuad = function (a, b, c, d, col, i0, i1) {
+    /* a-b is the near edge (v = 0), d-c the far edge (v = 1) */
+    var n = i0 === undefined ? 1 : i0, f = i1 === undefined ? n : i1;
+    this.glowVert(a[0],a[1],a[2], -1, 0, col, n);
+    this.glowVert(b[0],b[1],b[2],  1, 0, col, n);
+    this.glowVert(c[0],c[1],c[2],  1, 1, col, f);
+    this.glowVert(a[0],a[1],a[2], -1, 0, col, n);
+    this.glowVert(c[0],c[1],c[2],  1, 1, col, f);
+    this.glowVert(d[0],d[1],d[2], -1, 1, col, f);
+  };
+  /* A shaft of light from p0 to p1, widening from r0 to r1. Drawn as a pair
+     of crossed cards, which is what makes it hold up as a volume from any
+     bearing - a single card vanishes edge-on as you orbit. */
+  Builder.prototype.glowShaft = function (p0, p1, r0, r1, col, i0, i1, cards) {
+    var dx = p1[0]-p0[0], dy = p1[1]-p0[1], dz = p1[2]-p0[2];
+    var L = Math.hypot(dx, dy, dz) || 1;
+    var d = [dx/L, dy/L, dz/L];
+    /* any vector not parallel to the axis gives a usable first perpendicular */
+    var t = Math.abs(d[2]) > 0.9 ? [1,0,0] : [0,0,1];
+    var e1 = [d[1]*t[2]-d[2]*t[1], d[2]*t[0]-d[0]*t[2], d[0]*t[1]-d[1]*t[0]];
+    var l1 = Math.hypot(e1[0],e1[1],e1[2]) || 1; e1 = [e1[0]/l1, e1[1]/l1, e1[2]/l1];
+    var e2 = [d[1]*e1[2]-d[2]*e1[1], d[2]*e1[0]-d[0]*e1[2], d[0]*e1[1]-d[1]*e1[0]];
+    var n = cards || 2, self = this;
+    for (var k = 0; k < n; k++) {
+      var a = k / n * Math.PI;
+      var ax = e1[0]*Math.cos(a) + e2[0]*Math.sin(a),
+          ay = e1[1]*Math.cos(a) + e2[1]*Math.sin(a),
+          az = e1[2]*Math.cos(a) + e2[2]*Math.sin(a);
+      var A = [p0[0]-ax*r0, p0[1]-ay*r0, p0[2]-az*r0];
+      var B = [p0[0]+ax*r0, p0[1]+ay*r0, p0[2]+az*r0];
+      var C = [p1[0]+ax*r1, p1[1]+ay*r1, p1[2]+az*r1];
+      var D = [p1[0]-ax*r1, p1[1]-ay*r1, p1[2]-az*r1];
+      self.glowQuad(A, B, C, D, col, i0, i1);
+    }
+  };
+  /* A soft disc of light, used for the lamp head itself and for the pool the
+     beam throws on a surface. `right` and `up` set its plane. */
+  Builder.prototype.glowSprite = function (p, right, up, w, h, col, inten) {
+    var hw = w / 2, hh = h / 2;
+    /* flag these rows so the shader uses the radial falloff, not the shaft's */
+    this.GS = 1;
+    function c(sx, sy) {
+      return [p[0] + right[0]*hw*sx + up[0]*hh*sy,
+              p[1] + right[1]*hw*sx + up[1]*hh*sy,
+              p[2] + right[2]*hw*sx + up[2]*hh*sy];
+    }
+    /* v is carried as the vertical axis here, remapped -1..1 in the shader by
+       the same falloff as u, so the sprite reads as a round soft blob */
+    var A = c(-1,-1), B = c(1,-1), C = c(1,1), D = c(-1,1);
+    this.glowVert(A[0],A[1],A[2], -1, -1, col, inten);
+    this.glowVert(B[0],B[1],B[2],  1, -1, col, inten);
+    this.glowVert(C[0],C[1],C[2],  1,  1, col, inten);
+    this.glowVert(A[0],A[1],A[2], -1, -1, col, inten);
+    this.glowVert(C[0],C[1],C[2],  1,  1, col, inten);
+    this.glowVert(D[0],D[1],D[2], -1,  1, col, inten);
+    this.GS = 0;
+  };
 
   /* ==================================================== 3. GL HELPERS ===== */
   function compile(gl, type, src) {
@@ -320,6 +400,57 @@
        stone reads correctly against the dark fabric. Encode back to sRGB on
        the way out. */
     "  gl_FragColor = vec4(pow(max(col, 0.0), vec3(1.0 / 2.2)), 1.0);",
+    "}"
+  ].join("\n");
+
+  /* ---- glow pass ----
+     Additive, depth-tested but not depth-writing, and unlit. The falloff is
+     computed per fragment rather than baked into geometry so a shaft stays
+     soft at any zoom, and so the near edge of a beam is brightest where it
+     leaves the fixture. */
+  var VS_GLOW = [
+    "precision highp float;",
+    "attribute vec3 aPos; attribute vec2 aUV; attribute vec3 aCol;",
+    "attribute float aInt; attribute float aSpr;",
+    "uniform mat4 uVP;",
+    "varying vec2 vUV; varying vec3 vC; varying float vI; varying float vS;",
+    "varying vec3 vW;",
+    "void main(){ vUV=aUV; vC=aCol; vI=aInt; vS=aSpr; vW=aPos;",
+    "  gl_Position = uVP * vec4(aPos,1.0); }"
+  ].join("\n");
+
+  var FS_GLOW = [
+    "precision highp float;",
+    "varying vec2 vUV; varying vec3 vC; varying float vI; varying float vS;",
+    "varying vec3 vW;",
+    "uniform vec3 uEye; uniform float uFar; uniform float uDim;",
+    "void main(){",
+    /* across the shaft: a smooth bell, zero at the edges, so the card has no
+       visible boundary. For a sprite the same bell is applied radially. */
+    "  float u = clamp(abs(vUV.x), 0.0, 1.0);",
+    "  float side = 1.0 - u * u;",
+    "  side *= side;",
+    "  float a;",
+    "  if (vS > 0.5) {",
+    "    float r = clamp(length(vUV), 0.0, 1.0);",
+    "    a = 1.0 - r * r; a *= a;",
+    "  } else {",
+    /* along the shaft: strongest at the fixture, thinning as the cone opens,
+       with the last stretch faded out so the beam dissolves instead of
+       ending on a line */
+    "    float v = clamp(vUV.y, 0.0, 1.0);",
+    "    float along = (1.0 - v * 0.72) * (1.0 - smoothstep(0.72, 1.0, v) * 0.55);",
+    "    a = side * along;",
+    "  }",
+    "  a *= vI * uDim;",
+    "  if (a <= 0.002) discard;",
+    /* the main pass writes sRGB, so the glow is encoded the same way and
+       added on top; scaling after the encode keeps faint light faint */
+    "  vec3 col = pow(max(vC, 0.0), vec3(1.0/2.2)) * a;",
+    /* light in the distance is absorbed by the same haze as everything else */
+    "  float d = length(uEye - vW);",
+    "  col *= 1.0 - clamp(1.0 - exp(-pow(d / uFar, 1.65) * 3.4), 0.0, 0.95);",
+    "  gl_FragColor = vec4(col, 1.0);",
     "}"
   ].join("\n");
 
@@ -449,6 +580,7 @@
     this.progPick = program(gl, VS_FLAT, FS_PICK);
     this.progDep  = program(gl, VS_FLAT, FS_DEPTH);
     this.progDec  = program(gl, VS_DECAL, FS_DECAL);
+    this.progGlow = program(gl, VS_GLOW, FS_GLOW);
     this.decals = [];
 
     this.cam = new Camera();
@@ -512,6 +644,48 @@
     this.bAo  = buffer(gl, new Float32Array(b.a), 1);
     this.bEm  = buffer(gl, new Float32Array(b.e), 1);
     this.nVerts = b.i.length;
+    /* glow stream, uploaded separately: it takes no part in the shadow or
+       pick passes, which is the whole point of keeping it out of the main
+       buffers */
+    this.nGlow = (b.gi && b.gi.length) || 0;
+    if (this.nGlow) {
+      this.gPos = buffer(gl, new Float32Array(b.gp), 3);
+      this.gUV  = buffer(gl, new Float32Array(b.gu), 2);
+      this.gCol = buffer(gl, new Float32Array(b.gc), 3);
+      this.gInt = buffer(gl, new Float32Array(b.gi), 1);
+      this.gSpr = buffer(gl, new Float32Array(b.gs), 1);
+    }
+  };
+
+  /* Additive glow pass: after the solid model so it can be occluded by it,
+     before the decals so a lit mark still reads on top of its own wash. */
+  Renderer.prototype._drawGlow = function (vp, eye) {
+    var gl = this.gl, p = this.progGlow;
+    if (!this.nGlow) return;
+    gl.useProgram(p);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);       // additive: light adds, never covers
+    gl.depthMask(false);
+    gl.disable(gl.CULL_FACE);           // a shaft is seen from both sides
+    um4(gl, p, 'uVP', vp);
+    u3f(gl, p, 'uEye', eye);
+    u1f(gl, p, 'uFar', this.cam.far);
+    u1f(gl, p, 'uDim', this.sel > 0 ? 0.55 : 1.0);
+    function bind(buf, loc) {
+      if (loc === undefined || loc < 0) return;
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.enableVertexAttribArray(loc);
+      gl.vertexAttribPointer(loc, buf.size, gl.FLOAT, false, 0, 0);
+    }
+    bind(this.gPos, p.a.aPos);
+    bind(this.gUV,  p.a.aUV);
+    bind(this.gCol, p.a.aCol);
+    bind(this.gInt, p.a.aInt);
+    bind(this.gSpr, p.a.aSpr);
+    gl.drawArrays(gl.TRIANGLES, 0, this.nGlow);
+    gl.depthMask(true);
+    gl.enable(gl.CULL_FACE);
+    gl.disable(gl.BLEND);
   };
 
   Renderer.prototype.resize = function () {
@@ -621,6 +795,7 @@
     }
     gl.drawArrays(gl.TRIANGLES, 0, this.nVerts);
 
+    this._drawGlow(vp, eye);
     this._drawDecals(vp, eye);
   };
 
@@ -648,7 +823,12 @@
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-      var rec = { buf: buf, tex: null };
+      /* `dim` is the decal's own base brightness and `id` is the landmark it
+         belongs to, so the selection dimming can match the geometry instead of
+         knocking back every mark in the scene including the selected one. */
+      var rec = { buf: buf, tex: null,
+                  dim: d.dim === undefined ? 1 : d.dim,
+                  id:  d.id  === undefined ? 0 : d.id };
       var im = new Image();
       im.onload = function () {
         var t = gl.createTexture();
@@ -679,10 +859,15 @@
     u3f(gl, p, 'uEye', eye);
     u3f(gl, p, 'uFog', this.fog);
     u1f(gl, p, 'uFar', this.cam.far);
-    u1f(gl, p, 'uDim', this.sel > 0 ? 0.34 : 1.0);
     for (var i = 0; i < this.decals.length; i++) {
       var d = this.decals[i];
       if (!d.tex) continue;
+      /* A decal on the selected landmark stays at full value; everything else
+         steps back with the rest of the model. Previously one uniform dimmed
+         ALL decals whenever anything was selected, so opening a client faded
+         that client's own logo along with the scene. */
+      var lit = (this.sel <= 0 || d.id === this.sel) ? 1.0 : 0.34;
+      u1f(gl, p, 'uDim', d.dim * lit);
       gl.bindBuffer(gl.ARRAY_BUFFER, d.buf);
       gl.enableVertexAttribArray(p.a.aPos);
       gl.vertexAttribPointer(p.a.aPos, 3, gl.FLOAT, false, 20, 0);

@@ -8,6 +8,8 @@
 <meta name="theme-color" content="#05060A">
 <link rel="stylesheet" href="assets/ey-core.css">
 <link rel="stylesheet" href="assets/ey-city.css">
+<link rel="stylesheet" href="assets/ey-gov.css">
+<link rel="stylesheet" href="assets/ey-print.css">
 </head>
 <body>
 
@@ -115,6 +117,8 @@
       <div class="jsum-h" id="jSumH"></div>
       <p id="jSumP"></p>
       <div class="jsum-s" id="jSumS"></div>
+      <!-- the two routes in. The journey used to end on a Close button. -->
+      <div class="jsum-next" id="jNext2"></div>
       <div class="jctl">
         <button id="jAgain">&#8635; Replay</button>
         <button id="jOpen">Full engagement</button>
@@ -142,8 +146,24 @@
 
 <script src="assets/ey-content.js"></script>
 <script src="assets/ey-icons.js"></script>
+<script src="assets/ey-gov.js"></script>
+<script src="assets/ey-diagram.js"></script>
+<script src="assets/ey-brief.js"></script>
 <script src="assets/ey-gl.js"></script>
 <script src="assets/ey-city.js"></script>
+
+<script>
+/* ----------------------------------------------------------------------------
+ *  Governance bootstrap. This runs BEFORE the city controller below, and that
+ *  ordering is the whole point: EYGOV.apply rewrites the content model in
+ *  place, and EYCITY.build reads client logos out of that model to bake the
+ *  facade decals. Apply first and a sanitised session simply has no logos to
+ *  bake. Apply afterwards and the names are already burned into the geometry.
+ * ------------------------------------------------------------------------- */
+EYGOV.apply(window.BIZ);
+EYGOV.gate(function () { EYGOV.track("city.open", {}); });
+</script>
+
 <script>
 /* ============================================================================
  *  BizApps City - page controller
@@ -152,7 +172,7 @@
   "use strict";
 
   var $  = function (s) { return document.querySelector(s); };
-  var $$ = function (s) { return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var esc = function (s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (m) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
@@ -246,9 +266,15 @@
     var L = lmOf(id); if (!L) return;
     state.active = id;
     R.sel = LMS.indexOf(L) + 1;
-    var d = Math.max(30, L.top * 2.6 + 14);
+    /* Pulled back from 2.6x/+14. At the old distance the camera sat so close
+       that the roof plate was cropped by the top of the frame and the
+       building filled the stage, so selecting a client hid the very mark that
+       identifies it. This holds the whole massing plus its signage, and the
+       slightly higher eye keeps the roof in view rather than looking at the
+       facade edge-on. */
+    var d = Math.max(46, L.top * 3.9 + 30);
     R.cam.distT = d;
-    R.cam.elT = 0.40;
+    R.cam.elT = 0.47;
     /* approach from the side of the plan the building faces the centre from,
        so the camera never ends up looking through the fabric */
     R.cam.azT = Math.atan2(L.y, L.x) + 0.55;
@@ -347,8 +373,10 @@
   function focusHQ() {
     state.active = "__ey";
     R.sel = HQ_ID;
-    var d = 58;
-    R.cam.distT = d; R.cam.elT = 0.46; R.cam.azT = -0.86;
+    /* matched to the client framing so moving between the HQ and a landmark
+       does not jump scale */
+    var d = Math.max(72, SCENE.hq.top * 3.9 + 30);
+    R.cam.distT = d; R.cam.elT = 0.50; R.cam.azT = -0.86;
     retarget([0, 0, SCENE.hq.top * 0.40], d);
     markRoster("__ey");
     $("#btnExit").disabled = false;
@@ -469,6 +497,7 @@
   function showClient(id) {
     var c = client(id); if (!c) return;
     state.view = { kind: "client", id: id };
+    EYGOV.track("client.open", { client: c.realId || c.id });
     var d = $("#dossier");
     d.style.setProperty("--c", c.tone);
     $("#dSec").textContent = "Client engagement";
@@ -510,6 +539,7 @@
   }
 
   function showSolution(sid, cid) {
+    EYGOV.track("solution.open", { solution: sid, client: cid });
     var s = sol(sid), c = client(cid); if (!s) return;
     state.view = { kind: "solution", id: sid, client: cid };
     $("#dSec").textContent = "Capability" + (c ? " · " + c.short : "");
@@ -671,18 +701,20 @@
         '<span class="ic">' + (icon(pkey) ? '<img alt="" src="' + icon(pkey) + '">' : "") + "</span>" +
         '<span class="tx"><b>' + esc(sol0.short || sol0.name || st.sid) + "</b>" +
         '<em class="st">' + esc(pname) + "</em></span>";
-      el.addEventListener("click", function () { jGo(i); });
+      el.addEventListener("click", function () { jGo(i, true); });
       host.appendChild(el);
       return el;
     });
   }
 
-  function jGo(i) {
+  /* `manual` marks a step the user asked for, by arrow key, transport button
+     or clicking a node. Manual steps never move the camera - see renderStep. */
+  function jGo(i, manual) {
     if (!J) return;
     if (J.done) hideSummary();
     J.i = Math.max(0, Math.min(J.c.journey.length - 1, i));
     J.t0 = performance.now(); J.acc = 0;
-    renderStep();
+    renderStep(manual);
   }
 
   function stopJourney(reopen) {
@@ -701,7 +733,7 @@
     dirty();
   }
 
-  function renderStep() {
+  function renderStep(manual) {
     var st = J.c.journey[J.i], s = sol(st.sid) || {};
     $("#jStep").textContent = String(J.i + 1).padStart(2, "0") + " / " +
                               String(J.c.journey.length).padStart(2, "0");
@@ -731,9 +763,12 @@
       el.querySelector(".pin i").textContent = String(k + 1);
     });
 
-    /* a slow quarter turn per step keeps the model legible in three dimensions
-       without becoming a camera move for its own sake */
-    R.cam.azT += REDUCED ? 0 : 0.30;
+    /* A slow quarter turn per step, but ONLY when the story is advancing on
+       its own. This was firing on every step change, so arrowing through the
+       journey swung the camera a further 0.30 rad each press - skip four
+       steps and the model had rotated more than a right angle out from under
+       you. When the user is driving, the view holds still. */
+    if (!manual && !REDUCED) R.cam.azT += 0.30;
     dirty();
   }
 
@@ -815,7 +850,7 @@
       var p = Math.min(1, el / STEP_MS);
       var now = document.querySelector("#jDots i.now");
       if (now) now.style.setProperty("--p", (p * 100).toFixed(1) + "%");
-      if (p >= 1) { jNext(); return; }
+      if (p >= 1) { jNext(false); return; }
     } else {
       J.t0 = t - J.acc;
       /* manual: the active dot is simply full, not creeping toward a deadline */
@@ -826,16 +861,19 @@
     jRAF = requestAnimationFrame(tick);
   }
 
-  function jNext() {
+  /* `manual` is threaded through so the auto-advance keeps its camera move
+     while a user-driven step does not. tick() is the only caller that passes
+     false. */
+  function jNext(manual) {
     if (!J || J.done) return;          // already on the closing frame
     if (J.i >= J.c.journey.length - 1) { showSummary(); return; }
-    jGo(J.i + 1);
+    jGo(J.i + 1, manual);
     if (!jRAF) jRAF = requestAnimationFrame(tick);
   }
-  function jPrev() {
+  function jPrev(manual) {
     if (!J) return;
-    if (J.done) { hideSummary(); jGo(J.c.journey.length - 1); return; }
-    if (J.i > 0) jGo(J.i - 1);
+    if (J.done) { hideSummary(); jGo(J.c.journey.length - 1, manual); return; }
+    if (J.i > 0) jGo(J.i - 1, manual);
   }
   function setAuto(v) {
     jAuto = !!v;
@@ -851,6 +889,34 @@
   /* The journey used to stop dead on the last step. An engagement walkthrough
      has to land on what it delivered, in the client's own numbers - which were
      sitting in the content model, shown nowhere. */
+  /* The two routes in, rendered wherever they are asked for. Kept in one
+     place so the city, the index and the printed brief cannot drift into
+     offering the client three different next steps. */
+  function renderEntry(host, c) {
+    if (!host) return;
+    var ctx = c ? (" · " + c.name) : "";
+    host.innerHTML =
+      '<p class="k">Where this goes next</p>' +
+      '<div class="ns-grid">' +
+        EYGOV.entry.map(function (e) {
+          return '<a class="ns" style="--c:' + esc(e.tone) + '" data-e="' + esc(e.id) + '" href="' +
+            esc(EYGOV.mailto(e, "BizApps · " + e.name + ctx,
+              "Following the BizApps session, we would like to talk about a " + e.name + ".")) + '">' +
+            '<span class="w">' + esc(e.when) + "</span>" +
+            "<h5>" + esc(e.name) + "</h5>" +
+            "<p>" + esc(e.body) + "</p>" +
+            "<ul>" + e.gives.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul>" +
+            '<span class="own">Owner <b>' + esc(e.owner) + '</b><span class="go">Start the conversation &rarr;</span></span>' +
+          "</a>";
+        }).join("") +
+      "</div>";
+    $$("[data-e]", host).forEach(function (a) {
+      a.addEventListener("click", function () {
+        EYGOV.track("entry.open", { entry: a.dataset.e, client: c ? (c.realId || c.id) : null });
+      });
+    });
+  }
+
   function showSummary() {
     if (!J) return;
     J.done = true;
@@ -863,6 +929,8 @@
       return '<div class="s"><div class="v">' + esc(st.v) + '</div>' +
              '<div class="l">' + esc(st.l) + "</div></div>";
     }).join("");
+    renderEntry($("#jNext2"), c);
+    EYGOV.track("journey.complete", { client: c.realId || c.id });
     $("#jSum").hidden = false;
     $("#jrny").classList.add("summary");
     $("#live").textContent = "Journey complete. " + c.name + ". " + c.outcome;
@@ -884,11 +952,13 @@
     dirty();
   }
 
-  $("#jNext").addEventListener("click", jNext);
-  $("#jPrev").addEventListener("click", jPrev);
+  /* passed explicitly rather than relying on the click Event arriving in the
+     `manual` slot and happening to be truthy */
+  $("#jNext").addEventListener("click", function () { jNext(true); });
+  $("#jPrev").addEventListener("click", function () { jPrev(true); });
   $("#jAuto").addEventListener("click", function () { setAuto(!jAuto); });
   $("#jStop").addEventListener("click", function () { stopJourney(); });
-  $("#jAgain").addEventListener("click", function () { hideSummary(); jGo(0); });
+  $("#jAgain").addEventListener("click", function () { hideSummary(); jGo(0, true); });
   $("#jDone").addEventListener("click", function () { stopJourney(); });
   $("#jOpen").addEventListener("click", function () {
     var cid = J ? J.c.id : null;
@@ -940,78 +1010,44 @@
      wide wordmark and a square device carry the same optical weight. */
   var LBL_H = 58, LBL_MIN = 68, LBL_MAX = 148, LBL_PAD = 16;
 
-  function buildLabel(cls, tone, key, name) {
+  /* Each landmark now carries its client's mark as real signage on the roof
+     and on the facade, so the floating label does not repeat it. It names the
+     landmark and gets out of the way. The previous version was a six-face CSS
+     3D plate spinning continuously above every roof: it pulled the eye off
+     the model it was labelling, and a rotating logo is not something to put
+     in front of a client. */
+  function buildLabel(cls, tone, name) {
     var e = document.createElement("div");
     e.className = "c-lbl" + (cls ? " " + cls : "");
     e.style.setProperty("--c", tone);
-
-    var src = icon(key);
-    var face = src
-      ? '<img alt="" src="' + src + '">'
-      : '<b style="font:700 15px/1 var(--f);color:#14151C">' + esc(name) + "</b>";
-
-    e.innerHTML =
-      '<div class="halo"></div>' +
-      '<div class="plate">' +
-        '<div class="fc f">' + face + "</div>" +
-        '<div class="fc b">' + face + "</div>" +
-        '<div class="ed l"></div><div class="ed r"></div>' +
-        '<div class="ed u"></div><div class="ed d"></div>' +
-      "</div>" +
-      '<div class="cap">' + esc(name) + "</div>" +
-      '<div class="stem"></div>' +
-      '<span class="sr">' + esc(name) + "</span>";
-
-    /* size the plate from the mark itself rather than a guessed constant */
-    var im = e.querySelector(".fc.f img");
-    if (im) {
-      var fit = function () {
-        var a = im.naturalWidth / (im.naturalHeight || 1);
-        if (!a || !isFinite(a)) return;
-        var w = Math.round(Math.min(LBL_MAX, Math.max(LBL_MIN, LBL_H * a + LBL_PAD)));
-        e.style.setProperty("--w", w + "px");
-      };
-      if (im.complete) fit(); else im.addEventListener("load", fit, { once: true });
-    }
-
+    e.innerHTML = '<div class="tag"><span class="sw"></span>' + esc(name) +
+                  '</div><div class="stem"></div>';
     $("#labels").appendChild(e);
     return e;
   }
 
-  var labelEls = LMS.map(function (L) {
-    return buildLabel("", L.c.tone, L.c.logo, L.c.short);
-  });
-  var hqLabel = buildLabel("hq", "#FFE600", "ey", "EY HQ");
+  var labelEls = LMS.map(function (L) { return buildLabel("", L.c.tone, L.c.short); });
+  var hqLabel  = buildLabel("hq", "#FFE600", "EY HQ");
+
+  function place(e, p, show, sel) {
+    if (!p || p.x < -140 || p.x > R.w + 140 || p.y < -70 || p.y > R.h + 70) {
+      e.classList.remove("on"); return;
+    }
+    e.classList.toggle("on", show);
+    e.classList.toggle("sel", sel);
+    e.style.transform = "translate(-50%,-100%) translate(" +
+                        p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px)";
+  }
 
   function layoutLabels() {
-    var hp = R.toScreen(0, 0, SCENE.hq.top + 2.6);
     var hqSel = state.active === "__ey";
-    if (hp && hp.x > -120 && hp.x < R.w + 120 && hp.y > -60 && hp.y < R.h + 60 &&
-        (!state.active || hqSel || state.hoverId === HQ_ID)) {
-      hqLabel.classList.add("on");
-      hqLabel.classList.toggle("sel", hqSel);
-      /* stop the spin and turn the mark square to the camera for whichever
-         landmark the pointer is on or the user has opened */
-      hqLabel.classList.toggle("face", hqSel || state.hoverId === HQ_ID);
-      hqLabel.style.left = hp.x.toFixed(1) + "px";
-      hqLabel.style.top  = hp.y.toFixed(1) + "px";
-    } else hqLabel.classList.remove("on");
-
+    place(hqLabel, R.toScreen(0, 0, SCENE.hq.top + 2.4),
+          !state.active || hqSel || state.hoverId === HQ_ID, hqSel);
     for (var i = 0; i < LMS.length; i++) {
-      var L = LMS[i], e = labelEls[i];
-      var p = R.toScreen(L.x, L.y, L.top + 2.4);
-      var sel = state.active === L.c.id;
-      if (!p || p.x < -120 || p.x > R.w + 120 || p.y < -60 || p.y > R.h + 60) {
-        e.classList.remove("on"); continue;
-      }
-      /* while a building is selected, the other labels step back so the
-         selected one is unambiguous */
-      var show = !state.active || sel || state.hoverId === i + 1;
-      e.classList.toggle("on", show);
-      e.classList.toggle("sel", sel);
-      e.classList.toggle("face", sel || state.hoverId === i + 1);
-      e.style.left = p.x.toFixed(1) + "px";
-      e.style.top  = p.y.toFixed(1) + "px";
+      var L = LMS[i], sel = state.active === L.c.id;
+      /* while a landmark is open the others step back */
+      place(labelEls[i], R.toScreen(L.x, L.y, L.top + 2.2),
+            !state.active || sel || state.hoverId === i + 1, sel);
     }
   }
 
@@ -1052,11 +1088,16 @@
     else if (k === "-" || k === "_") cam.distT *= 1.16;
     else if (lk === "r") { closePanel(); goHome(); }
     else if (lk === "f") { fsBtn.click(); }
-    else if (k === "ArrowLeft")  { J ? jPrev() : (cam.azT += 0.18); }
-    else if (k === "ArrowRight") { J ? jNext() : (cam.azT -= 0.18); }
-    else if (k === "ArrowUp")    cam.elT += 0.09;
-    else if (k === "ArrowDown")  cam.elT -= 0.09;
-    else if (k === " ") { J ? jNext() : (state.active && startJourney(state.active)); }
+    /* While a journey is running the arrow keys belong to the story, not the
+       camera. Left and right step the narration; up and down do nothing at
+       all. Stepping and simultaneously swinging the view made it impossible
+       to skip forward without losing your place in the model. Orbit and tilt
+       stay available on A/D/W/S and the view dock. */
+    else if (k === "ArrowLeft")  { if (J) jPrev(true); else cam.azT += 0.18; }
+    else if (k === "ArrowRight") { if (J) jNext(true); else cam.azT -= 0.18; }
+    else if (k === "ArrowUp")    { if (!J) cam.elT += 0.09; }
+    else if (k === "ArrowDown")  { if (!J) cam.elT -= 0.09; }
+    else if (k === " ") { J ? jNext(true) : (state.active && startJourney(state.active)); }
     else if (k === "Escape") {
       if (J) stopJourney(false);
       else if (state.view && state.view.kind === "solution") showClient(state.view.client);
@@ -1116,6 +1157,8 @@
   }
   dirty(240);
   requestAnimationFrame(frame);
+
+  
 
   /* deep link: city.html?c=<client>&s=<solution> */
   (function () {
