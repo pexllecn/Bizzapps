@@ -648,7 +648,12 @@
       gl.bindBuffer(gl.ARRAY_BUFFER, buf);
       gl.bufferData(gl.ARRAY_BUFFER, verts, gl.STATIC_DRAW);
 
-      var rec = { buf: buf, tex: null };
+      /* `dim` is the decal's own base brightness and `id` is the landmark it
+         belongs to, so the selection dimming can match the geometry instead of
+         knocking back every mark in the scene including the selected one. */
+      var rec = { buf: buf, tex: null,
+                  dim: d.dim === undefined ? 1 : d.dim,
+                  id:  d.id  === undefined ? 0 : d.id };
       var im = new Image();
       im.onload = function () {
         var t = gl.createTexture();
@@ -679,10 +684,15 @@
     u3f(gl, p, 'uEye', eye);
     u3f(gl, p, 'uFog', this.fog);
     u1f(gl, p, 'uFar', this.cam.far);
-    u1f(gl, p, 'uDim', this.sel > 0 ? 0.34 : 1.0);
     for (var i = 0; i < this.decals.length; i++) {
       var d = this.decals[i];
       if (!d.tex) continue;
+      /* A decal on the selected landmark stays at full value; everything else
+         steps back with the rest of the model. Previously one uniform dimmed
+         ALL decals whenever anything was selected, so opening a client faded
+         that client's own logo along with the scene. */
+      var lit = (this.sel <= 0 || d.id === this.sel) ? 1.0 : 0.34;
+      u1f(gl, p, 'uDim', d.dim * lit);
       gl.bindBuffer(gl.ARRAY_BUFFER, d.buf);
       gl.enableVertexAttribArray(p.a.aPos);
       gl.vertexAttribPointer(p.a.aPos, 3, gl.FLOAT, false, 20, 0);

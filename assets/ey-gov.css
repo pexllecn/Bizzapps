@@ -1,0 +1,436 @@
+/* ============================================================================
+ *  EY BizApps - ey-gov.css
+ *  The access gate, the audience-mode bar, the usage panel, the entry points
+ *  and the diagram styling. Loaded by all three views after ey-core.css so it
+ *  inherits the same tokens rather than restating them.
+ * ========================================================================== */
+
+/* ============================================================ 1 · THE GATE */
+body.gated { overflow: hidden; }
+
+.gate{
+  position:fixed; inset:0; z-index:9000;
+  display:grid; place-items:center; padding:24px;
+  opacity:1; transition:opacity .26s var(--ease);
+}
+.gate.out{ opacity:0; pointer-events:none }
+.gate-bg{
+  position:absolute; inset:0; background:
+    radial-gradient(120% 90% at 50% -10%, rgba(255,230,0,.10), transparent 62%),
+    radial-gradient(90% 70% at 80% 110%, rgba(179,155,232,.10), transparent 60%),
+    var(--bg);
+}
+.gate-bg::after{
+  content:""; position:absolute; inset:0; opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent 78%);
+}
+.gate-card{
+  position:relative; width:min(392px,100%);
+  background:rgba(14,14,21,.92); border:1px solid var(--line-2);
+  border-radius:var(--r-lg); padding:32px 30px 24px;
+  box-shadow:0 40px 90px rgba(0,0,0,.6);
+  backdrop-filter:blur(14px);
+}
+.gate-card::before{
+  content:""; position:absolute; left:30px; right:30px; top:0; height:2px;
+  background:var(--ey-yellow); border-radius:0 0 2px 2px;
+}
+.gate-ey{ width:46px; margin-bottom:20px }
+.gate-k{
+  margin:0 0 6px; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); font-family:var(--mono);
+}
+.gate-card h1{ margin:0 0 10px; font-size:27px; font-weight:300; letter-spacing:-.01em }
+.gate-l{ margin:0 0 22px; font-size:13.5px; line-height:1.5; color:var(--ink-2) }
+.gate-card label{
+  display:block; margin-bottom:13px;
+  font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3);
+}
+.gate-card input{
+  display:block; width:100%; margin-top:7px; padding:11px 13px;
+  background:rgba(255,255,255,.05); border:1px solid var(--line-2);
+  border-radius:var(--r-sm); color:var(--ink);
+  font:400 14px/1.2 var(--f); letter-spacing:normal; text-transform:none;
+}
+.gate-card input:focus{ outline:none; border-color:var(--ey-yellow); background:rgba(255,255,255,.08) }
+.gate-err{
+  margin:0 0 12px; padding:9px 12px; border-radius:var(--r-sm);
+  background:rgba(245,118,154,.12); border:1px solid rgba(245,118,154,.34);
+  color:#F5769A; font-size:12.5px;
+}
+.gate-go{
+  width:100%; margin-top:6px; padding:12px;
+  background:var(--ey-yellow); color:#1A1A24;
+  border-radius:var(--r-sm); font-weight:700; font-size:13.5px;
+  transition:transform .16s var(--ease), filter .16s var(--ease);
+}
+.gate-go:hover{ filter:brightness(1.08); transform:translateY(-1px) }
+.gate-alt{ margin:16px 0 0; font-size:12.5px; color:var(--ink-2); text-align:center }
+.gate-alt a{ color:var(--ey-yellow); text-decoration:none; border-bottom:1px solid rgba(255,230,0,.4) }
+.gate-note{
+  margin:18px -30px -24px; padding:12px 30px;
+  border-top:1px solid var(--line);
+  font-size:10.5px; line-height:1.45; color:var(--ink-3);
+}
+@keyframes gshake{ 10%,90%{transform:translateX(-2px)} 30%,70%{transform:translateX(3px)} 50%{transform:translateX(-3px)} }
+.gate-card.shake{ animation:gshake .34s }
+
+/* ========================================================= 2 · MODE BAR */
+.govbar{
+  position:fixed; left:0; right:0; bottom:0; z-index:800;
+  background:rgba(10,10,16,.93); backdrop-filter:blur(16px);
+  border-top:1px solid var(--line-2);
+}
+.govbar::before{
+  content:""; position:absolute; top:-1px; left:0; right:0; height:2px;
+  background:var(--ey-yellow); opacity:.9;
+}
+.govbar.mode-sanitised::before{ background:#87D3F2 }
+.govbar.mode-external::before{ background:#7DDBB0 }
+.gb-in{
+  display:flex; align-items:center; gap:18px;
+  padding:8px clamp(12px,3vw,26px); max-width:1680px; margin:0 auto;
+}
+.gb-lab{
+  font-size:9.5px; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--ink-3); font-family:var(--mono); margin-right:9px;
+}
+.gb-mode{ display:flex; align-items:center; flex:none }
+.gb-seg{ display:flex; border:1px solid var(--line-2); border-radius:999px; overflow:hidden }
+.gb-seg button{
+  padding:5px 13px; font-size:11.5px; font-weight:600; color:var(--ink-3);
+  transition:background .16s var(--ease), color .16s var(--ease);
+}
+.gb-seg button + button{ border-left:1px solid var(--line) }
+.gb-seg button:hover{ color:var(--ink); background:rgba(255,255,255,.05) }
+.gb-seg button.on{ background:var(--ey-yellow); color:#1A1A24 }
+.govbar.mode-sanitised .gb-seg button.on{ background:#87D3F2 }
+.govbar.mode-external  .gb-seg button.on{ background:#7DDBB0 }
+.gb-note{
+  margin:0; flex:1 1 auto; min-width:0; font-size:11.5px; color:var(--ink-2);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.gb-r{ display:flex; align-items:center; gap:9px; flex:none }
+.gb-chip{
+  padding:4px 10px; border-radius:999px; font-size:10.5px; font-weight:700;
+  letter-spacing:.03em; border:1px solid var(--line-2); color:var(--ink-2);
+}
+.gb-chip.warn{ background:rgba(255,152,49,.13); border-color:rgba(255,152,49,.4); color:#FFB870 }
+.gb-chip.ok{ background:rgba(125,219,176,.13); border-color:rgba(125,219,176,.4); color:#7DDBB0 }
+.gb-btn{
+  padding:5px 12px; border:1px solid var(--line-2); border-radius:999px;
+  font-size:11.5px; color:var(--ink-2);
+}
+.gb-btn:hover{ border-color:var(--ey-yellow); color:var(--ink) }
+.gb-v{ font-family:var(--mono); font-size:10px; color:var(--ink-3); cursor:help }
+@media (max-width:900px){ .gb-note{display:none} }
+@media (max-width:620px){ .gb-lab{display:none} .gb-seg button{padding:5px 9px;font-size:10.5px} }
+
+/* keep the bar off the bottom of the page content */
+body.has-govbar{ padding-bottom:46px }
+body.has-govbar .c-tools,
+body.has-govbar .c-note{ bottom:60px }
+
+/* =========================================================== 3 · USAGE */
+.telpanel{
+  position:fixed; right:clamp(12px,3vw,26px); bottom:56px; z-index:820;
+  width:min(400px,calc(100vw - 24px)); max-height:min(74vh,660px);
+  display:flex; flex-direction:column;
+  background:rgba(14,14,21,.97); border:1px solid var(--line-2);
+  border-radius:var(--r-lg); box-shadow:0 30px 70px rgba(0,0,0,.6);
+  backdrop-filter:blur(16px); overflow:hidden;
+}
+.tp-h{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:15px 18px; border-bottom:1px solid var(--line);
+}
+.tp-h h3{ margin:0; font-size:15px; font-weight:600 }
+.tp-x{ font-size:14px; color:var(--ink-3); padding:4px }
+.tp-b{ padding:16px 18px 18px; overflow:auto }
+.tp-kpi{ display:flex; gap:10px; margin-bottom:6px }
+.tp-kpi div{
+  flex:1; padding:11px 13px; border:1px solid var(--line);
+  border-radius:var(--r-md); background:rgba(255,255,255,.03);
+}
+.tp-kpi b{ display:block; font-size:24px; font-weight:300; line-height:1.1 }
+.tp-kpi span{ font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3) }
+.tp-b h4{
+  margin:20px 0 9px; font-size:10px; letter-spacing:.13em;
+  text-transform:uppercase; color:var(--ink-3); font-family:var(--mono);
+}
+.tp-bars{ list-style:none; margin:0; padding:0 }
+.tp-bars li{ display:flex; align-items:center; gap:9px; padding:3px 0; font-size:12px }
+.tp-bars .n{ flex:0 0 118px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+.tp-bars i{ height:7px; border-radius:4px; background:var(--ey-yellow); opacity:.85 }
+.tp-bars b{ font-family:var(--mono); font-size:11px; color:var(--ink-3) }
+.tp-empty{ margin:0; font-size:12px; color:var(--ink-3) }
+.tp-f{ display:flex; gap:8px; margin-top:22px }
+.tp-f button{
+  flex:1; padding:8px; border:1px solid var(--line-2); border-radius:var(--r-sm);
+  font-size:11.5px; color:var(--ink-2);
+}
+.tp-f button:hover{ border-color:var(--ey-yellow); color:var(--ink) }
+.tp-f button.warn:hover{ border-color:#F5769A; color:#F5769A }
+.tp-note{ margin:14px 0 0; font-size:10.5px; line-height:1.45; color:var(--ink-3) }
+
+/* ==================================================== 4 · ENTRY POINTS */
+.nextstep{ margin-top:30px; padding-top:26px; border-top:1px solid var(--line-2) }
+.nextstep > .k{
+  font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ey-yellow); margin:0 0 6px;
+}
+.nextstep > h4{ margin:0 0 4px; font-size:19px; font-weight:300 }
+.nextstep > p{ margin:0 0 18px; font-size:13px; color:var(--ink-2); max-width:62ch }
+.ns-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(248px,1fr)); gap:12px }
+.ns{
+  --c:var(--ey-yellow);
+  position:relative; display:block; padding:17px 18px 15px;
+  border:1px solid var(--line-2); border-radius:var(--r-md);
+  background:rgba(255,255,255,.03); text-align:left; width:100%;
+  transition:border-color .18s var(--ease), transform .18s var(--ease), background .18s var(--ease);
+}
+.ns::before{
+  content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px;
+  border-radius:0 3px 3px 0; background:var(--c);
+}
+.ns:hover{ border-color:var(--c); transform:translateY(-2px); background:rgba(255,255,255,.055) }
+.ns .w{ font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); font-family:var(--mono) }
+.ns h5{ margin:6px 0 6px; font-size:16px; font-weight:600 }
+.ns p{ margin:0 0 11px; font-size:12.5px; line-height:1.5; color:var(--ink-2) }
+.ns ul{ margin:0 0 12px; padding:0; list-style:none }
+.ns li{ font-size:12px; color:var(--ink-2); padding-left:15px; position:relative; line-height:1.7 }
+.ns li::before{ content:""; position:absolute; left:0; top:9px; width:5px; height:5px; border-radius:50%; background:var(--c) }
+.ns .own{
+  display:flex; align-items:center; gap:7px; padding-top:11px;
+  border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-3);
+}
+.ns .own b{ color:var(--ink); font-weight:600 }
+.ns .own .go{ margin-left:auto; color:var(--c); font-weight:700 }
+
+/* ===================================================== 5 · DIAGRAMS */
+.dg{ display:block; width:100%; height:auto; overflow:visible }
+.dg text{ font-family:var(--f); fill:var(--ink) }
+.dg-cap{ font-size:10.5px; fill:var(--ink-3) }
+.dg-hd{ font-size:9.5px; letter-spacing:.14em; fill:var(--ink-3); font-weight:700 }
+
+/* flow */
+.dg-flow .dg-band rect{ fill:rgba(255,255,255,.045); stroke:var(--line); }
+.dg-flow .dg-band text{ font-size:9px; letter-spacing:.14em; fill:var(--ink-3); font-weight:700 }
+.dg-flow .bx{ fill:rgba(255,255,255,.035); stroke:var(--line-2); transition:fill .18s, stroke .18s }
+.dg-flow .tp{ fill:var(--c); opacity:.5; transition:opacity .18s }
+.dg-flow .ix{ font-size:9.5px; font-weight:700; fill:var(--ink-3); font-family:var(--mono) }
+.dg-flow .nm{ font-size:13px; fill:var(--ink) }
+.dg-flow .dg-link{ stroke:var(--line-2); stroke-width:1 }
+.dg-flow .dg-dot{ fill:var(--line-2) }
+.dg-flow .dg-step{ cursor:pointer }
+.dg-flow .dg-step:hover .bx,
+.dg-flow .dg-step:focus-visible .bx{ fill:rgba(255,255,255,.075); stroke:var(--c) }
+.dg-flow .dg-step:hover .tp{ opacity:1 }
+.dg-flow .dg-step.on .bx{ fill:rgba(255,255,255,.10); stroke:var(--c) }
+.dg-flow .dg-step.on .tp{ opacity:1 }
+.dg-flow .dg-step.done .bx{ stroke:rgba(255,255,255,.22) }
+.dg-flow .dg-step.done .tp{ opacity:.85 }
+.dg-flow .dg-step:focus{ outline:none }
+
+/* before / after */
+.dg-ba .l{ fill:rgba(245,118,154,.07); stroke:rgba(245,118,154,.26) }
+.dg-ba .r{ fill:rgba(125,219,176,.07); stroke:rgba(125,219,176,.3) }
+.dg-ba .tl, .dg-ba .tr{ font-size:13px }
+.dg-ba .tl{ fill:var(--ink-2) }
+.dg-ba .ar{ stroke:var(--line-2); stroke-width:1; stroke-dasharray:2 3 }
+.dg-ba .ah{ fill:var(--line-2) }
+.dg-ba .dg-hd.a{ fill:#F5769A }
+.dg-ba .dg-hd.b{ fill:#7DDBB0 }
+
+/* matrix */
+.dg-mx .lb{ font-size:12.5px; fill:var(--ink-2) }
+.dg-mx .ct{ font-size:11px; font-family:var(--mono); fill:var(--ink-3); text-anchor:end }
+.dg-mx .hit{ fill:transparent }
+.dg-mx .dg-mr{ cursor:pointer }
+.dg-mx .dg-mr:hover .hit,
+.dg-mx .dg-mr:focus-visible .hit{ fill:rgba(255,255,255,.05) }
+.dg-mx .dg-mr:hover .lb{ fill:var(--ink) }
+.dg-mx .dg-mr:focus{ outline:none }
+.dg-mx .dg-mr.strong .lb{ fill:var(--ink) }
+.dg-mx .dg-mr.strong .ct{ fill:var(--ey-yellow) }
+.dg-mx .cell.on{ fill:var(--ey-yellow); opacity:.82 }
+.dg-mx .dg-mr:hover .cell.on{ opacity:1 }
+.dg-mx .cell.off{ stroke:var(--line-2); stroke-width:1.5; stroke-linecap:round }
+.dg-mx .dg-mh text{ font-size:10px; fill:var(--ink-3); text-anchor:middle; font-weight:600 }
+.dg-mx .anon{ fill:rgba(255,255,255,.07); stroke:var(--line-2) }
+
+/* stack */
+.dg-stack .bx{ fill:rgba(255,255,255,.035); stroke:var(--line-2); transition:fill .18s }
+.dg-stack .ed{ fill:var(--c) }
+.dg-stack .ix{ font-size:11px; font-family:var(--mono); fill:var(--c); font-weight:700 }
+.dg-stack .nm{ font-size:15px; font-weight:600 }
+.dg-stack .cp{ font-size:11.5px; fill:var(--ink-2) }
+.dg-stack .dg-ly{ cursor:pointer }
+.dg-stack .dg-ly:hover .bx,
+.dg-stack .dg-ly:focus-visible .bx{ fill:rgba(255,255,255,.075) }
+.dg-stack .dg-ly:focus{ outline:none }
+
+/* scale bars */
+.dg-scale .v{ font-size:17px; font-weight:300 }
+.dg-scale .br{ fill:var(--ey-yellow); opacity:.75 }
+.dg-scale .l{ font-size:12px; fill:var(--ink-2) }
+
+/* ================================================ 6 · SANITISED MARKERS */
+.anon-tag{
+  display:inline-flex; align-items:center; gap:5px;
+  padding:2px 8px; border-radius:999px; font-size:10px; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase;
+  background:rgba(135,211,242,.13); border:1px solid rgba(135,211,242,.34); color:#87D3F2;
+}
+.gov-hidden{
+  padding:11px 14px; border:1px dashed var(--line-2); border-radius:var(--r-sm);
+  font-size:12px; color:var(--ink-3);
+}
+
+/* ============================================ 7 · CITY JOURNEY NEXT STEPS */
+/* The entry points shown on the closing frame of a city journey. Tighter than
+   the section version in the index: it sits inside a floating panel, so the
+   cards have to stay compact enough not to push the transport controls off. */
+.jsum-next{ margin-top:16px; padding-top:15px; border-top:1px solid var(--line) }
+.jsum-next .k{
+  margin:0 0 9px; font-family:var(--mono); font-size:9.5px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ey-yellow);
+}
+.jsum-next .ns-grid{ grid-template-columns:1fr 1fr; gap:9px }
+.jsum-next .ns{ padding:12px 13px 11px; text-decoration:none }
+.jsum-next .ns h5{ font-size:14px; margin:4px 0 5px }
+.jsum-next .ns p{ font-size:11.5px; margin-bottom:8px }
+.jsum-next .ns ul{ display:none }
+.jsum-next .ns .own{ padding-top:8px; font-size:10.5px }
+.jsum-next .ns .own .go{ font-size:10.5px }
+@media (max-width:720px){ .jsum-next .ns-grid{ grid-template-columns:1fr } }
+
+/* ====================================== 8 · ENGAGEMENT INDEX, BRIEF FORM */
+/* The components the rewritten index needs. Kept here rather than in
+   ey-doc.css so the diagram-led layout and the prose layout it replaced stay
+   separable - if the brief form is ever wrong for an audience, ey-doc.css
+   still has everything needed to render the long form on its own. */
+
+.dgwrap{
+  padding:18px 20px; border:1px solid var(--line);
+  border-radius:var(--r-md); background:rgba(255,255,255,.02);
+}
+.dgwrap.tight{ padding:12px 14px }
+
+/* the one-line problem and result statements that open and close the brief */
+.brf{
+  position:relative; padding:15px 18px 15px 20px; margin-bottom:22px;
+  border:1px solid var(--line); border-left:3px solid var(--c,var(--ey-yellow));
+  border-radius:var(--r-sm); background:rgba(255,255,255,.025);
+}
+.brf .lb{
+  display:block; margin-bottom:5px; font-family:var(--mono);
+  font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3);
+}
+.brf p{ margin:0; font-size:16.5px; font-weight:300; line-height:1.45 }
+.brf.out{ border-left-color:#7DDBB0 }
+.brf.out .lb{ color:#7DDBB0 }
+
+.blk-h{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px }
+.blk-h h4{ margin:0 }
+
+.btn-run{
+  display:inline-flex; align-items:center; gap:7px; flex:none;
+  padding:6px 14px; border:1px solid var(--line-2); border-radius:999px;
+  font-size:12px; font-weight:600; color:var(--ink-2);
+  transition:border-color .18s var(--ease), color .18s var(--ease);
+}
+.btn-run:hover{ border-color:var(--ey-yellow); color:var(--ink) }
+.btn-run.on{ border-color:var(--ey-yellow); color:var(--ey-yellow) }
+.btn-run .tri{
+  width:0; height:0; border-left:7px solid currentColor;
+  border-top:4.5px solid transparent; border-bottom:4.5px solid transparent;
+}
+.btn-run .sq{ width:8px; height:8px; background:currentColor; border-radius:1px }
+
+.flowline{
+  margin:11px 2px 0; font-size:13px; line-height:1.55; color:var(--ink-3);
+  min-height:2.6em; transition:color .2s var(--ease);
+}
+.flowline.live{ color:var(--ink-2) }
+.flowline b{ color:var(--ink); font-weight:600; margin-right:5px }
+
+/* the long-form account, on request */
+.full{ margin:26px 0 0; border-top:1px solid var(--line); }
+.full summary{
+  list-style:none; cursor:pointer; padding:15px 0 0;
+  display:flex; align-items:center; gap:9px;
+  font-size:12.5px; font-weight:600; color:var(--ink-2);
+}
+.full summary::-webkit-details-marker{ display:none }
+.full summary::after{
+  content:""; width:7px; height:7px; margin-top:-3px;
+  border-right:1.6px solid currentColor; border-bottom:1.6px solid currentColor;
+  transform:rotate(45deg); transition:transform .2s var(--ease);
+}
+.full[open] summary::after{ transform:rotate(225deg); margin-top:2px }
+.full summary:hover{ color:var(--ink) }
+.full-b{ padding:8px 0 4px; max-width:74ch }
+.full-b h5{
+  margin:18px 0 6px; font-family:var(--mono); font-size:9.5px;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3); font-weight:700;
+}
+.full-b p{ margin:0; font-size:14px; line-height:1.62; color:var(--ink-2) }
+.full-b p.q{ padding-left:14px; border-left:2px solid var(--c,var(--ey-yellow)); color:var(--ink) }
+.full-b .delivered{ margin-top:20px; font-size:11.5px; color:var(--ink-3) }
+
+/* document footer actions */
+.doc-f{
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+  margin-top:26px; padding-top:20px; border-top:1px solid var(--line);
+}
+.btn-brief,.btn-city{
+  padding:9px 16px; border:1px solid var(--line-2); border-radius:var(--r-sm);
+  font-size:12.5px; font-weight:600; color:var(--ink-2); text-decoration:none;
+  transition:border-color .18s var(--ease), color .18s var(--ease), background .18s var(--ease);
+}
+.btn-brief{ background:var(--ey-yellow); border-color:var(--ey-yellow); color:#1A1A24 }
+.btn-brief:hover{ filter:brightness(1.08) }
+.btn-city:hover{ border-color:var(--ey-yellow); color:var(--ink) }
+
+/* next-step section on a page that already has its own section heading */
+.nextstep.bare{ margin:0; padding:0; border-top:0 }
+
+/* ================================================= 9 · PROPOSITIONS */
+/* Deliberately not styled like an engagement document. Dashed edge, no
+   statistics block, an explicit gap statement - so that at a glance this
+   section reads as intent rather than as evidence. */
+.prgrid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); gap:16px }
+.pr{
+  position:relative; padding:22px 24px 20px;
+  border:1px dashed var(--line-2); border-radius:var(--r-md);
+  background:rgba(255,255,255,.02);
+}
+.pr::before{
+  content:""; position:absolute; left:24px; right:24px; top:-1px; height:2px;
+  background:var(--c); opacity:.75; border-radius:0 0 2px 2px;
+}
+.pr-h{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px }
+.pr-tag{
+  padding:3px 9px; border-radius:999px; font-size:9.5px; font-weight:700;
+  letter-spacing:.11em; text-transform:uppercase;
+  color:var(--c); border:1px solid currentColor; opacity:.85;
+}
+.pr-ic{ display:flex; gap:6px }
+.pr-ic img{ width:19px; height:19px; opacity:.85 }
+.pr h3{ margin:0 0 16px; font-size:20px; font-weight:300 }
+.pr-r{ margin-bottom:13px }
+.pr-r .l{
+  display:block; margin-bottom:3px; font-family:var(--mono); font-size:9.5px;
+  letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3);
+}
+.pr-r p{ margin:0; font-size:13.5px; line-height:1.55; color:var(--ink-2) }
+.pr-gap{
+  margin:16px 0 0; padding:10px 13px; border-radius:var(--r-sm);
+  background:rgba(255,152,49,.10); border:1px solid rgba(255,152,49,.3);
+  font-size:12px; line-height:1.5; color:#FFB870;
+}
+.pr-fit{ margin:11px 0 0; font-size:11.5px; line-height:1.5; color:var(--ink-3) }

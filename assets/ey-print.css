@@ -1,0 +1,127 @@
+/* ============================================================================
+ *  EY BizApps - ey-print.css
+ *  The leave-behind. Screen styling for the brief container is deliberately
+ *  absent - it is display:none until a print is requested, and it is the print
+ *  media block below that actually designs it.
+ *
+ *  Light ground, not the dark interface. A dark screen is right for a room
+ *  with the lights down; it is wrong for a page somebody prints, files and
+ *  reads a week later.
+ * ========================================================================== */
+
+.printbrief{ display:none }
+
+@media print{
+  @page{ size:A4 portrait; margin:14mm 13mm; }
+
+  /* everything that belongs to the interface leaves */
+  body > *:not(.printbrief){ display:none !important }
+  .govbar,.telpanel,.gate,.topbar,.nav,.city,.drawer,.scrim,.dossier{ display:none !important }
+
+  html,body{
+    background:#fff !important; color:#1A1A24 !important;
+    font-family:"EY Interstate","Segoe UI",system-ui,sans-serif;
+    font-size:10pt; line-height:1.45;
+  }
+  body{ padding:0 !important; margin:0 !important }
+
+  .printbrief{ display:block !important }
+
+  /* ------------------------------------------------------------- masthead */
+  .pb-h{
+    display:flex; align-items:flex-start; gap:12pt;
+    padding-bottom:7pt; margin-bottom:14pt;
+    border-bottom:2.4pt solid #FFE600;
+  }
+  .pb-ey{ width:30pt; height:auto }
+  .pb-hm{ display:flex; flex-direction:column; flex:1 }
+  .pb-hm b{ font-size:11pt; font-weight:700 }
+  .pb-hm span{ font-size:7.6pt; color:#5A5A68 }
+  .pb-hr{ font-size:7.6pt; text-align:right; color:#5A5A68; text-transform:uppercase; letter-spacing:.06em }
+  .pb-hr i{ font-style:normal; text-transform:none; letter-spacing:0 }
+
+  /* ----------------------------------------------------------- title bar */
+  .pb-t{ display:flex; align-items:flex-start; gap:14pt; margin-bottom:12pt }
+  .pb-lg{ width:46pt; height:auto; flex:none }
+  .pb-sec{ margin:0; font-size:7.6pt; letter-spacing:.11em; text-transform:uppercase; color:#5A5A68 }
+  .pb-t h1{ margin:2pt 0 3pt; font-size:20pt; font-weight:300; letter-spacing:-.01em; line-height:1.12 }
+  .pb-tag{ margin:0; font-size:10.5pt; color:#2E2E38 }
+  .pb-anon{
+    margin:5pt 0 0; padding:3pt 6pt; font-size:7.8pt; color:#5A5A68;
+    border-left:2pt solid #C9C9D2; background:#F6F6F8;
+  }
+
+  /* --------------------------------------------------------------- stats */
+  .pb-kpi{ display:flex; gap:8pt; margin-bottom:14pt }
+  .pb-kpi div{
+    flex:1; padding:7pt 9pt; border:.6pt solid #DCDCE3; border-radius:3pt;
+    background:#FAFAFC;
+  }
+  .pb-kpi b{ display:block; font-size:15pt; font-weight:300; line-height:1.1 }
+  .pb-kpi span{ font-size:7.2pt; color:#5A5A68; letter-spacing:.04em }
+
+  /* -------------------------------------------------------------- blocks */
+  .pb-s{ margin-bottom:13pt; break-inside:avoid }
+  .pb-s h2{
+    margin:0 0 6pt; padding-bottom:3pt; font-size:8pt; font-weight:700;
+    letter-spacing:.13em; text-transform:uppercase; color:#5A5A68;
+    border-bottom:.6pt solid #E4E4EA;
+  }
+  .pb-s p{ margin:0 0 5pt }
+  .pb-lead{ font-size:11pt; font-weight:300; line-height:1.4 }
+  .pb-col{ font-size:8pt; color:#5A5A68 }
+  .pb-break{ break-before:page }
+
+  .pb-caps{ margin:0; padding:0; list-style:none; columns:2; column-gap:14pt }
+  .pb-caps li{ break-inside:avoid; margin-bottom:6pt; font-size:8.6pt; color:#3C3C48 }
+  .pb-caps b{ display:block; font-size:9.4pt; color:#1A1A24 }
+
+  /* ---------------------------------------------------------- next steps */
+  .pb-ns{ break-inside:avoid }
+  .pb-nsg{ display:flex; gap:10pt }
+  .pb-n{
+    flex:1; padding:9pt 10pt; border:.6pt solid #DCDCE3; border-radius:3pt;
+    border-top:2.4pt solid #FFE600; background:#FAFAFC;
+  }
+  .pb-n .w{ font-size:7.2pt; text-transform:uppercase; letter-spacing:.1em; color:#5A5A68 }
+  .pb-n h3{ margin:3pt 0 4pt; font-size:12pt; font-weight:600 }
+  .pb-n p{ font-size:8.6pt; margin:0 0 5pt }
+  .pb-n ul{ margin:0 0 6pt; padding-left:11pt }
+  .pb-n li{ font-size:8.2pt; color:#3C3C48 }
+  .pb-n .o{ margin:0; padding-top:5pt; border-top:.6pt solid #E4E4EA; font-size:8pt; color:#5A5A68 }
+
+  /* ------------------------------------------------------------ diagrams */
+  /* The SVGs carry their colour from CSS custom properties tuned for a dark
+     ground. Left alone they print as pale grey on white. These overrides put
+     them back on a light ground rather than shipping a second set of files. */
+  .printbrief .dg{ max-width:100%; height:auto }
+  .printbrief .dg text{ fill:#1A1A24 }
+  .printbrief .dg-cap{ fill:#6A6A78; font-size:7.4pt }
+  .printbrief .dg-hd{ fill:#6A6A78 }
+  .printbrief .dg-flow .bx{ fill:#FAFAFC; stroke:#DCDCE3 }
+  .printbrief .dg-flow .ix{ fill:#8A8A98 }
+  .printbrief .dg-flow .dg-link,
+  .printbrief .dg-flow .dg-dot{ stroke:#C9C9D2; fill:#C9C9D2 }
+  .printbrief .dg-flow .dg-band rect{ fill:#F2F2F6; stroke:#E4E4EA }
+  .printbrief .dg-flow .dg-band text{ fill:#8A8A98 }
+  .printbrief .dg-ba .l{ fill:#FDF1F4; stroke:#E8B9C6 }
+  .printbrief .dg-ba .r{ fill:#F0FAF6; stroke:#A9DEC8 }
+  .printbrief .dg-ba .tl{ fill:#5A5A68 }
+  .printbrief .dg-ba .ar,.printbrief .dg-ba .ah{ stroke:#C9C9D2; fill:#C9C9D2 }
+  .printbrief .dg-mx .lb{ fill:#3C3C48 }
+  .printbrief .dg-mx .ct{ fill:#8A8A98 }
+  .printbrief .dg-mx .cell.on{ fill:#2E2E38; opacity:1 }
+  .printbrief .dg-mx .cell.off{ stroke:#D4D4DC }
+  .printbrief .dg-mx .anon{ fill:#F2F2F6; stroke:#DCDCE3 }
+  .printbrief .dg-stack .bx{ fill:#FAFAFC; stroke:#DCDCE3 }
+  .printbrief .dg-stack .cp{ fill:#5A5A68 }
+
+  /* -------------------------------------------------------------- footer */
+  .pb-f{
+    margin-top:16pt; padding-top:6pt; border-top:.6pt solid #E4E4EA;
+    font-size:6.8pt; line-height:1.4; color:#7A7A88;
+  }
+  .pb-f p{ margin:0 0 2pt }
+
+  a{ color:inherit; text-decoration:none }
+}
