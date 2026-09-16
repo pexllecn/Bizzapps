@@ -106,7 +106,7 @@
     <div class="jctl">
       <button id="jPrev">&#9664; Back</button>
       <button id="jNext">Next &#9654;</button>
-      <button class="jauto" id="jAuto" aria-pressed="false"
+      <button class="jauto on" id="jAuto" aria-pressed="true"
               title="Advance automatically">Auto</button>
       <span class="sp"></span>
       <button id="jStop">End</button>
@@ -595,10 +595,15 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
   var J = null, jRAF = null, STEP_MS = 7000;
   /* Advance is MANUAL by default. On a timer the deck fought whoever was
      presenting it: 7 seconds is either dead air after they have made the point
-     or it moves on mid-sentence. The presenter drives; Auto is there for an
-     unattended screen and is remembered for the session. */
-  var jAuto = false;
-  try { jAuto = sessionStorage.getItem("ey-journey-auto") === "1"; } catch (e) {}
+     or it moves on mid-sentence. Auto is now ON by default - the journey runs
+     itself the moment it opens, and a presenter who wants the wheel takes it
+     with Back / Next, the arrow keys or the Auto button. The choice is
+     remembered for the session either way. */
+  var jAuto = true;
+  try {
+    var jPref = sessionStorage.getItem("ey-journey-auto");
+    if (jPref !== null) jAuto = jPref === "1";
+  } catch (e) {}
   var SVGNS = "http://www.w3.org/2000/svg";
 
   $("#dRun").addEventListener("click", function () {
@@ -652,7 +657,9 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
     setAuto(jAuto);
     buildNodes();
     renderStep();
-    jRAF = requestAnimationFrame(tick);
+    if (jRAF) cancelAnimationFrame(jRAF);
+    jRAF = null;
+    jPump();
   }
 
   function buildNodes() {
@@ -715,6 +722,7 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
     J.i = Math.max(0, Math.min(J.c.journey.length - 1, i));
     J.t0 = performance.now(); J.acc = 0;
     renderStep(manual);
+    jPump();                        // a click or key press must not leave the loop dead
   }
 
   function stopJourney(reopen) {
@@ -734,6 +742,7 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
   }
 
   function renderStep(manual) {
+    if (!J) return;
     var st = J.c.journey[J.i], s = sol(st.sid) || {};
     $("#jStep").textContent = String(J.i + 1).padStart(2, "0") + " / " +
                               String(J.c.journey.length).padStart(2, "0");
@@ -829,9 +838,12 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
       J.lead.setAttribute("opacity", "0");
     }
 
-    /* flow travelling into the active node */
-    var a0 = pts[Math.max(0, J.i - 1)], a1 = pts[J.i];
-    if (a0 && a1) {
+    /* Flow travelling into the active node. On step one there is no previous
+       node, so source and target were the same point and the flow sat still -
+       every journey opened on a dead wire. It now runs up from the building
+       itself, which is where the data actually comes from. */
+    var a0 = J.i > 0 ? pts[J.i - 1] : roof, a1 = pts[J.i];
+    if (a0 && a1 && (a0.x !== a1.x || a0.y !== a1.y)) {
       var t = performance.now() / 1000;
       for (i = 0; i < J.flow.length; i++) {
         var u = ((t * 0.55 + i / J.flow.length) % 1);
@@ -840,17 +852,30 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
         J.flow[i].setAttribute("cy", (a0.y + (a1.y - a0.y) * e).toFixed(1));
         J.flow[i].setAttribute("opacity", (Math.sin(u * Math.PI) * 0.9).toFixed(2));
       }
+    } else {
+      for (i = 0; i < J.flow.length; i++) J.flow[i].setAttribute("opacity", "0");
     }
   }
 
+  /* One place that owns the frame handle. The loop used to be restarted with
+     `if (!jRAF)`, but jRAF still held the handle of the frame that had just
+     fired, so the test was always false and nothing was ever rescheduled: the
+     journey froze on the first advance and the flow stopped moving. The handle
+     is now cleared the moment a frame runs, so it means "a frame is pending"
+     and nothing else. */
+  function jPump() {
+    if (J && jRAF === null) jRAF = requestAnimationFrame(tick);
+  }
+
   function tick(t) {
+    jRAF = null;                    // this frame has fired; the handle is spent
     if (!J) return;
     if (jAuto && !J.done) {
       var el = J.acc + (t - J.t0);
       var p = Math.min(1, el / STEP_MS);
       var now = document.querySelector("#jDots i.now");
       if (now) now.style.setProperty("--p", (p * 100).toFixed(1) + "%");
-      if (p >= 1) { jNext(false); return; }
+      if (p >= 1) jNext(false);     // keeps running: the loop is pumped below
     } else {
       J.t0 = t - J.acc;
       /* manual: the active dot is simply full, not creeping toward a deadline */
@@ -858,7 +883,7 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
       if (d) d.style.setProperty("--p", "100%");
     }
     dirty(2);                       // the flow is animating, so keep drawing
-    jRAF = requestAnimationFrame(tick);
+    jPump();
   }
 
   /* `manual` is threaded through so the auto-advance keeps its camera move
@@ -866,23 +891,27 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
      false. */
   function jNext(manual) {
     if (!J || J.done) return;          // already on the closing frame
-    if (J.i >= J.c.journey.length - 1) { showSummary(); return; }
+    if (J.i >= J.c.journey.length - 1) { showSummary(); jPump(); return; }
     jGo(J.i + 1, manual);
-    if (!jRAF) jRAF = requestAnimationFrame(tick);
+    jPump();
   }
   function jPrev(manual) {
     if (!J) return;
     if (J.done) { hideSummary(); jGo(J.c.journey.length - 1, manual); return; }
-    if (J.i > 0) jGo(J.i - 1, manual);
+    if (J.i > 0) jGo(J.i - 1, manual); else jPump();
   }
-  function setAuto(v) {
+  /* `persist` is false for a pause the code imposes rather than one the user
+     chose - opening the capability detail, for instance. Writing those to the
+     session would silently turn auto-play off for every journey afterwards. */
+  function setAuto(v, persist) {
     jAuto = !!v;
-    try { jAuto ? sessionStorage.setItem("ey-journey-auto", "1")
-                : sessionStorage.removeItem("ey-journey-auto"); } catch (e) {}
+    if (persist !== false) {
+      try { sessionStorage.setItem("ey-journey-auto", jAuto ? "1" : "0"); } catch (e) {}
+    }
     var b = $("#jAuto");
     b.setAttribute("aria-pressed", jAuto ? "true" : "false");
     b.classList.toggle("on", jAuto);
-    if (J) { J.t0 = performance.now(); J.acc = 0; }
+    if (J) { J.t0 = performance.now(); J.acc = 0; jPump(); }
   }
 
   /* ---------------------------------------------------- the closing frame */
@@ -950,6 +979,7 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
     $("#jrny").classList.remove("summary");
     R.cam.distT = Math.max(66, J.L.top * 3.8 + 44);
     dirty();
+    jPump();
   }
 
   /* passed explicitly rather than relying on the click Event arriving in the
@@ -974,7 +1004,7 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
     if (!J) return;
     /* stop the clock: reading the commercial detail must not have the story
        advancing underneath you */
-    if (jAuto) setAuto(false);
+    if (jAuto) setAuto(false, false);
     var st = J.c.journey[J.i];
     showSolution(st.sid, J.c.id);
   });
@@ -1136,7 +1166,15 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
 
   document.addEventListener("visibilitychange", function () {
     running = !document.hidden;
-    if (running) { dirty(); requestAnimationFrame(frame); }
+    if (running) {
+      dirty();
+      requestAnimationFrame(frame);
+      /* A hidden tab stops firing frames. Without resetting the clock the
+         first frame back carries the whole away-time and the journey jumps a
+         step the moment you return to it. */
+      if (J) { J.t0 = performance.now(); J.acc = 0; }
+      jPump();
+    }
   });
   window.addEventListener("resize", function () { R.resize(); applyShift(); dirty(); });
 
