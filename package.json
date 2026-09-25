@@ -4,8 +4,8 @@
   "private": true,
   "description": "EY Microsoft AI Business Applications showcase. Static pages; the 3D worlds are bundled from src/ into assets/js/.",
   "scripts": {
-    "build": "node scripts/build.mjs",
-    "watch": "node scripts/build.mjs --watch",
+    "bundle": "node scripts/build.mjs",
+    "bundle:watch": "node scripts/build.mjs --watch",
     "serve": "npx http-server -p 8080 -c-1 ."
   },
   "devDependencies": {

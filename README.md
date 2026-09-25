@@ -20,11 +20,11 @@ npm run serve        # http://localhost:8080
 
 The worlds are written as ES modules in `src/` on [three.js](https://threejs.org) and bundled by esbuild
 into one classic script, `assets/js/worlds.js`, so the pages keep working from `file://`.
-The bundle is committed; rebuild it after changing anything in `src/`:
+The bundle is committed; rebuild it after changing anything in `src/`. (The script is deliberately not called `build`: the site deploys as static files, and a `build` script would make the host try to build it.)
 
 ```sh
 npm install
-npm run build        # or: npm run watch
+npm run bundle       # or: npm run bundle:watch
 ```
 
 | Path | Role |
