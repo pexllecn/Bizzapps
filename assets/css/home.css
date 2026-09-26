@@ -1,11 +1,11 @@
 /* ============================================================================
  *  EY BizApps - home.css · the Showcase
- *  Hero on the Circle at golden hour, the Workbench as a scroll-driven scene,
+ *  Hero on the Digital City at night, the Workbench as a scroll-driven scene,
  *  then the practice set like an exhibition catalogue.
  * ========================================================================== */
 
 /* ------------------------------------------------------------------ hero */
-.hero{position:relative;height:100svh;min-height:620px;overflow:hidden;background:#1a140c}
+.hero{position:relative;height:100svh;min-height:620px;overflow:hidden;background:#041430}
 .hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero .shade{position:absolute;inset:0;pointer-events:none;
   background:
@@ -228,4 +228,4 @@ footer .wrap{display:flex;flex-wrap:wrap;gap:30px;justify-content:space-between;
 footer .dis{font-size:12px;color:var(--ink-3);max-width:80ch;line-height:1.6}
 footer .marks{display:flex;align-items:center;gap:22px}
 footer .marks img{height:30px;width:auto;opacity:.85}
-.hero.flat{background:radial-gradient(120% 90% at 70% 30%,#c98a45 0%,#5a3a1c 38%,#15110b 75%)}
+.hero.flat{background:radial-gradient(120% 90% at 70% 40%,#1d5fa8 0%,#0a2a55 38%,#040c1c 75%)}

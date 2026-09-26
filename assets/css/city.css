@@ -1,11 +1,11 @@
 /* ============================================================================
- *  EY BizApps - circle.css · The Circle (city.html)
+ *  EY BizApps - city.css · The Digital City (city.html)
  *  A full-bleed world with the interface pinned to its edges, set like the
  *  captions in a museum: small, spaced, out of the way of the thing itself.
  * ========================================================================== */
 
 html,body{height:100%;overflow:hidden}
-.stage{position:fixed;inset:0;background:#1a140c}
+.stage{position:fixed;inset:0;background:#041430}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab;outline:none}
 .stage canvas.grab{cursor:grabbing}
 .stage canvas.hot{cursor:pointer}
@@ -22,7 +22,7 @@ html,body{height:100%;overflow:hidden}
 .c-title p.l{margin:16px 0 0;color:var(--ink-2);font-size:14.5px;line-height:1.6;max-width:44ch}
 body.panel-open .c-title,body.journey .c-title{opacity:0;transform:translateY(-10px);pointer-events:none}
 
-/* roster: the five gateways, and EY at the centre */
+/* roster: the five landmarks, and EY at the centre */
 .roster{left:var(--pad);bottom:28px;display:flex;flex-direction:column;gap:2px;min-width:280px}
 .roster .hd{font-size:10.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-3);margin:0 0 10px}
 .roster button{text-shadow:0 1px 12px rgba(0,0,0,.6);display:grid;grid-template-columns:26px 12px 1fr;align-items:center;gap:10px;height:34px;text-align:left;
@@ -49,7 +49,7 @@ body.journey .roster{opacity:.0;pointer-events:none}
 body.panel-open .tools{right:calc(min(500px,100vw) + 20px)}
 body.journey .tools .view{display:none}
 
-/* labels over the gateways */
+/* labels over the landmarks */
 .labels{position:fixed;inset:0;pointer-events:none;z-index:10}
 .lb{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;opacity:0;transition:opacity .45s;white-space:nowrap}
 .lb.on{opacity:1}

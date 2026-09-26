@@ -2,7 +2,7 @@
  *  EY BizApps - site.css
  *  The design system for all three views, rebuilt from the ground up.
  *  ---------------------------------------------------------------------------
- *  The pages are now built around two photographed-looking places, the Circle
+ *  The pages are now built around two photographed-looking places, the Digital City
  *  and the Workbench, so the interface steps back: it is set like film titles
  *  and an exhibition caption, not like a dashboard. Light type at large sizes,
  *  small spaced capitals for labels, hairlines instead of boxes, and one
@@ -197,7 +197,7 @@ a{color:inherit}
 
 /* ---------------------------------------------------------- world fallback */
 .nogl{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;
-  background:radial-gradient(120% 90% at 70% 20%,#3a2a14 0%,#14110c 55%,#0b0a08 100%)}
+  background:radial-gradient(120% 90% at 70% 20%,#123a6e 0%,#081a33 55%,#050b16 100%)}
 .nogl p{max-width:52ch;color:var(--ink-2);margin:12px auto 22px}
 
 /* full screen restore prompt (ey-fs.js) */

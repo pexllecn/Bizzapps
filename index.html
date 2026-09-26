@@ -28,7 +28,7 @@
   </nav>
   <nav class="views" aria-label="Views">
     <a href="index.html" aria-current="page"><i>01</i><span class="tx">Showcase</span></a>
-    <a href="city.html"><i>02</i><span class="tx">The Circle</span></a>
+    <a href="city.html"><i>02</i><span class="tx">The City</span></a>
     <a href="engagement-index.html"><i>03</i><span class="tx">Index</span></a>
   </nav>
   <button class="fsb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">
@@ -49,7 +49,7 @@
       <h1 class="display" id="hTitle"></h1>
       <p class="lede" id="hSub"></p>
       <div class="hero-cta">
-        <a class="btn pri" href="city.html">Walk the Circle <span class="ar">&rarr;</span></a>
+        <a class="btn pri" href="city.html">Enter the City <span class="ar">&rarr;</span></a>
         <a class="btn" href="#platform">See the platform</a>
       </div>
     </div>
@@ -124,7 +124,7 @@
     <div class="eng rv" id="engList"></div>
     <div class="work-foot rv">
       <p id="workNote"></p>
-      <a class="btn pri" href="city.html">Walk the Circle <span class="ar">&rarr;</span></a>
+      <a class="btn pri" href="city.html">Enter the City <span class="ar">&rarr;</span></a>
     </div>
   </div>
 </section>
@@ -179,7 +179,7 @@
     <p class="lede" id="clsBody"></p>
     <div class="cta">
       <a class="btn pri" id="clsCta" href="#"></a>
-      <a class="btn" href="city.html">Walk the Circle</a>
+      <a class="btn" href="city.html">Enter the City</a>
       <a class="btn" href="engagement-index.html">Read the Index</a>
     </div>
   </div>
@@ -212,7 +212,7 @@
 <script src="assets/js/worlds.js"></script>
 <script>
 /* ============================================================================
- *  Showcase runtime: the Circle behind the title, the Workbench as a scene the
+ *  Showcase runtime: the Digital City behind the title, the Workbench as a scene the
  *  page scrolls through, then the practice as a catalogue.
  * ========================================================================== */
 (function () {
@@ -221,7 +221,7 @@
   var C = D.city;
 
   /* ------------------------------------------------------------ hero */
-  var circle = null;
+  var city = null;
   function hero() {
     var h = D.hero;
     $("#hEyebrow").textContent = h.eyebrow;
@@ -239,30 +239,30 @@
     countUp();
 
     var canvas = $("#heroGL");
-    if (!window.EYCIRCLE || !EYCIRCLE.supported()) { canvas.parentNode.classList.add("flat"); return; }
-    try { circle = EYCIRCLE.mount(canvas, D, { mode: "hero" }); } catch (e) { circle = null; }
+    if (!window.EYCITY || !EYCITY.supported()) { canvas.parentNode.classList.add("flat"); return; }
+    try { city = EYCITY.mount(canvas, D, { mode: "hero" }); } catch (e) { city = null; }
     /* the camera leans a little toward the pointer, as if hand-held */
-    if (circle && !UI.REDUCED) {
+    if (city && !UI.REDUCED) {
       var heroEl = $("#top");
       heroEl.addEventListener("pointermove", function (e) {
         var r = heroEl.getBoundingClientRect();
-        circle.rig.swayT.set(((e.clientX - r.left) / r.width - 0.5) * 2, ((e.clientY - r.top) / r.height - 0.5) * 2);
+        city.rig.swayT.set(((e.clientX - r.left) / r.width - 0.5) * 2, ((e.clientY - r.top) / r.height - 0.5) * 2);
       });
-      heroEl.addEventListener("pointerleave", function () { circle.rig.swayT.set(0, 0); });
+      heroEl.addEventListener("pointerleave", function () { city.rig.swayT.set(0, 0); });
     }
-    var times = EYCIRCLE.TIMES, keys = Object.keys(times), tod = $("#tod");
-    function scene(k) { $("#hScene").innerHTML = "Scene 01 &mdash; <b>The Circle</b>, " + esc(times[k].name.toLowerCase()); }
+    var times = EYCITY.TIMES, keys = Object.keys(times), tod = $("#tod");
+    function scene(k) { $("#hScene").innerHTML = "Scene 01 &mdash; <b>The Digital City</b>, " + esc(times[k].name.toLowerCase()); }
     keys.forEach(function (k) {
       var b = el("button", "", esc(times[k].name));
-      b.setAttribute("aria-pressed", k === "golden" ? "true" : "false");
+      b.setAttribute("aria-pressed", k === "night" ? "true" : "false");
       b.addEventListener("click", function () {
-        if (circle) circle.setTime(k);
+        if (city) city.setTime(k);
         $$("button", tod).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
         scene(k);
       });
       tod.appendChild(b);
     });
-    scene("golden");
+    scene("night");
   }
   function countUp() {
     $$(".cnt").forEach(function (n) {
@@ -459,7 +459,7 @@
         '<div class="ic">' + (icon(it.icon) ? '<img alt="" src="' + icon(it.icon) + '">' : "") + "</div>" +
         "<h3>" + esc(it.name) + "</h3><p>" + esc(it.body) + "</p>" +
         '<div class="ft"><div class="who">' + (it.contact ? "<b>" + esc(it.contact) + '</b><a href="mailto:' + esc(it.email) + '">' + esc(it.email) + "</a>" : "") + "</div>" +
-        (c ? '<a class="go" href="city.html?c=' + encodeURIComponent(c.id) + '">See it in the Circle <span>&rarr;</span></a>' : "") +
+        (c ? '<a class="go" href="city.html?c=' + encodeURIComponent(c.id) + '">See it in the City <span>&rarr;</span></a>' : "") +
         "</div></article>";
     }).join("");
   }
@@ -512,7 +512,7 @@
     $("#scrim").addEventListener("click", closeDrawer);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
     window.BizApps = { product: openProduct, layer: openLayer, close: closeDrawer,
-      circle: function () { return circle; }, bench: function () { return bench; } };
+      city: function () { return city; }, bench: function () { return bench; } };
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
