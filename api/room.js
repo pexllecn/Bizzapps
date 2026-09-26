@@ -14,7 +14,7 @@ const STORE = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
 const TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
 const TTL = 4 * 60 * 60;
 const TAIL = 40;
-const COMMANDS = new Set(["select", "home", "tour", "journey", "step", "next", "prev", "stop", "time", "turn", "card", "labels", "reload"]);
+const COMMANDS = new Set(["select", "home", "tour", "journey", "step", "next", "prev", "stop", "time", "turn", "card", "spin", "labels", "reload"]);
 
 async function redis(cmds) {
   const r = await fetch(STORE.replace(/\/$/, "") + "/pipeline", {

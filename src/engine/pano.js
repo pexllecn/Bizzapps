@@ -85,6 +85,10 @@ export class PanoStage {
     this.camera.position.copy(this.eye);
 
     this.yaw = 0; this.yawT = 0;
+    this.spin = 0;                                          // radians a second the room turns by itself
+    // the colours along the bottom of the walls, by bearing, for the floor to blend into
+    this.edgeBins = +(q.get("edgebins")) || 48;
+    this.edge = null; this.edgeAt = -1e9;
     this.front = q.has("front") ? +q.get("front") : 0.5;
     this.horizon = q.has("horizon") ? +q.get("horizon") : 0.4;
     this.fpsCap = +(q.get("fps")) || 60;
@@ -161,15 +165,84 @@ export class PanoStage {
     this.time += dt;
     const t0 = performance.now();
     for (const fn of this.frameHooks) fn(dt, this.time);
-    // ease the room's turn
+    // the room's own slow turn, then ease toward where it should face. Both run on
+    // the clock rather than the frame, so a slow frame never puts the floor out of step
+    const rdt = this.stillAfter ? dt : Math.min(1, (now - (this._rt || now)) / 1000);
+    this._rt = now;
+    if (this.spin) this.yawT += this.spin * rdt;
     let d = this.yawT - this.yaw; d = Math.atan2(Math.sin(d), Math.cos(d));
-    this.yaw += d * (1 - Math.exp(-1.6 * dt));
+    this.yaw += d * (1 - Math.exp(-1.6 * rdt));
     const u = this.pano.material.uniforms;
     u.uYaw.value = this.yaw; u.uFront.value = this.front; u.uHorizon.value = this.horizon;
     this.cubeCam.update(this.renderer, this.scene);
     this.grade.uniforms.uTime.value = this.time;
     this.composer.render(dt);
+    this._collectEdge();
+    if (now - this.edgeAt > 2500) { this.edgeAt = now; this._sampleEdge(); }
     this._adapt(performance.now() - t0, dt);
+  }
+
+  /**
+   * Read the bottom rows of the wall, straight after they are drawn, and bin
+   * them by world bearing. Keyed by bearing rather than column, the colours
+   * stay put while the room turns, so the floor can turn them itself and only
+   * needs them again when the light changes. The read goes into a pixel buffer
+   * and is collected a few frames later, once the GPU has finished with it,
+   * so the wall never waits on it.
+   */
+  _sampleEdge() {
+    const gl = this.renderer.getContext(), w = this.w, rows = 2;
+    if (!w || !gl.fenceSync || this._edgeFence) return;
+    const size = w * rows * 4;
+    if (!this._edgePBO || this._edgeSize !== size) {
+      if (this._edgePBO) gl.deleteBuffer(this._edgePBO);
+      this._edgePBO = gl.createBuffer(); this._edgeSize = size;
+      gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._edgePBO);
+      gl.bufferData(gl.PIXEL_PACK_BUFFER, size, gl.STREAM_READ);
+    } else gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._edgePBO);
+    this.renderer.setRenderTarget(null);
+    gl.readPixels(0, 2, w, rows, gl.RGBA, gl.UNSIGNED_BYTE, 0);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    this._edgeFence = gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE, 0);
+    this._edgeRead = { w, rows, yaw: this.yaw };
+    gl.flush();
+  }
+
+  _collectEdge() {
+    const gl = this.renderer.getContext(), f = this._edgeFence;
+    if (!f) return;
+    const st = gl.clientWaitSync(f, 0, 0);
+    if (st !== gl.ALREADY_SIGNALED && st !== gl.CONDITION_SATISFIED) return;
+    gl.deleteSync(f); this._edgeFence = null;
+    const { w, rows, yaw } = this._edgeRead;
+    const buf = this._edgeBuf && this._edgeBuf.length === this._edgeSize ? this._edgeBuf : (this._edgeBuf = new Uint8Array(this._edgeSize));
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, this._edgePBO);
+    gl.getBufferSubData(gl.PIXEL_PACK_BUFFER, 0, buf);
+    gl.bindBuffer(gl.PIXEL_PACK_BUFFER, null);
+    const N = this.edgeBins, acc = new Float32Array(N * 4);
+    for (let x = 0; x < w; x++) {
+      // the bearing of this column when it was drawn
+      let th = (yaw - ((x + 0.5) / w - this.front) * TAU) / TAU; th -= Math.floor(th);
+      const k = Math.min(N - 1, Math.floor(th * N)) * 4;
+      for (let r = 0; r < rows; r++) {
+        const i = (r * w + x) * 4;
+        acc[k] += buf[i]; acc[k + 1] += buf[i + 1]; acc[k + 2] += buf[i + 2]; acc[k + 3]++;
+      }
+    }
+    const prev = this.edge, out = [];
+    for (let k = 0; k < N; k++) {
+      const n = acc[k * 4 + 3];
+      let c = n ? [acc[k * 4] / n, acc[k * 4 + 1] / n, acc[k * 4 + 2] / n] : prev ? prev[k] : [0, 0, 0];
+      if (prev && n) c = c.map((v, j) => prev[k][j] * 0.4 + v * 0.6);
+      out.push(c);
+    }
+    this.edge = out;
+  }
+
+  /** The edge colours as short hex strings, for the room's state. */
+  edgeHex() {
+    if (!this.edge) return null;
+    return this.edge.map((c) => c.map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join(""));
   }
 
   /**

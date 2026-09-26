@@ -85,10 +85,14 @@ body.pointer{cursor:default}
 .debug.on{display:block}
 .nogl{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--u) * 2.4);color:rgba(243,238,228,.8);text-align:center}
 
-/* the floor */
-.floor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;border-radius:50%}
+/* the floor: the whole layer, the city fading out into the walls' own edge colours */
+.fl{position:fixed;inset:0;overflow:hidden;background:#1b1f33}
+.fl .edge{position:absolute;left:50%;top:50%;width:150vmax;height:150vmax;border-radius:50%;transform:translate(-50%,-50%);
+  background:#1b1f33;will-change:transform}
+.floor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
 .floor canvas{width:100%;height:100%;display:block}
-.floor .read{position:absolute;inset:0;pointer-events:none}
-.floor .read span{position:absolute;left:50%;top:3%;transform:translateX(-50%);font-size:2.4vmin;font-weight:700;letter-spacing:.3em;text-transform:uppercase;
-  color:rgba(243,238,228,.85);white-space:nowrap}
-.floor .read span i{font-style:normal;color:var(--c,#FFE600)}
+.fl .read{position:absolute;left:50%;top:50%;width:100vmin;height:100vmin;transform:translate(-50%,-50%);pointer-events:none}
+.fl .read div{position:absolute;inset:0}
+.fl .read span{position:absolute;left:50%;top:2.5%;transform:translateX(-50%);font-size:2.4vmin;font-weight:700;letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(243,238,228,.9);white-space:nowrap;text-shadow:0 1px 12px rgba(0,0,0,.45)}
+.fl .read span i{font-style:normal;color:var(--c,#FFE600)}

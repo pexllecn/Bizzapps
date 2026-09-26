@@ -19,6 +19,8 @@
     room=main     room code shared with the floor and the controller
     tour=1        run the city by itself until the controller takes over
     idle=180      seconds without a command before the tour resumes
+    spin=2        degrees a second the room turns by itself (0 to stand still)
+    hold=1        stop turning while a landmark is on the front wall (0 keeps turning)
     card=1        show the join card for the first 30 seconds
     q=high        high | mid | low; face=2048 caps the cube map
     fps=60        frame cap; adaptive=0 fixes the resolution
@@ -134,12 +136,16 @@
 
   /* ----------------------------------------------------------- the state */
   var TOUR = q.get("tour") !== "0", IDLE = num("idle", 180) * 1000;
-  var st = { id: null, step: -1, tour: TOUR, time: "night", card: q.get("card") !== "0", turn: 0 };
+  var SPIN = num("spin", 2) * Math.PI / 180, HOLD = q.get("hold") !== "0";
+  var st = { id: null, step: -1, tour: TOUR, time: "night", card: q.get("card") !== "0", turn: 0, spin: SPIN > 0 };
   var lastUser = 0, tourT = 0, stepT = 0, tourI = -1;
 
   function publish(beat) {
-    room.publish({ id: st.id, step: st.step, tour: st.tour, time: st.time, card: st.card, yaw: S.yawT, turn: st.turn, beat: !!beat });
+    room.publish({ id: st.id, step: st.step, tour: st.tour, time: st.time, card: st.card, yaw: S.yawT, turn: st.turn,
+      spin: st.spin, rate: S.spin, edge: S.edgeHex(), beat: !!beat });
   }
+  // the room turns by itself unless it is holding a landmark on the front wall
+  function turning() { S.spin = st.spin && !(HOLD && st.id && st.id !== "__ey") ? SPIN || 2 * Math.PI / 180 : 0; }
   function user() { lastUser = performance.now(); if (st.tour) { st.tour = false; } }
 
   function select(id) {
@@ -150,6 +156,7 @@
       S.turnTo(W.bearingOf(st.id) + st.turn);
       startJourney(st.id);
     } else S.turnTo(S.yawT);
+    turning();
     render(); publish();
   }
   function startJourney(id) {
@@ -231,9 +238,10 @@
       case "prev": go(st.step - 1); break;
       case "stop": W.clearJourney(); st.step = -1; render(); publish(); break;
       case "tour": st.tour = !!c.on; tourT = 1e9; publish(); break;
-      case "time": if (EYCITY.TIMES[c.key]) { st.time = c.key; W.setTime(c.key); publish(); } break;
+      case "time": if (EYCITY.TIMES[c.key]) { st.time = c.key; W.setTime(c.key); publish(); setTimeout(publish, 6000); } break;
       case "turn": st.turn = ((st.turn + (+c.deg || 0) * Math.PI / 180) % TAU + TAU) % TAU; S.turnTo(S.yawT + (+c.deg || 0) * Math.PI / 180); publish(); break;
       case "card": st.card = !!c.on; join(); publish(); break;
+      case "spin": st.spin = !!c.on; turning(); publish(); break;
       case "reload": location.reload(); break;
     }
   });
@@ -268,7 +276,9 @@
   var dbg = q.get("debug") === "1" ? $("#debug") : null;
   if (dbg) dbg.classList.add("on");
 
+  turning();
   render(); publish();
+  setTimeout(function () { publish(); }, 3000);   // once the edge colours are first read
   window.BizApps = { select: select, step: go, room: room, world: function () { return W; }, state: function () { return st; } };
 })();
 </script>
