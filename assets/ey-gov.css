@@ -19,15 +19,13 @@ body.gated .ui, body.gated .labels, body.gated .bar{ opacity:0; pointer-events:n
 .gate.out{ opacity:0; pointer-events:none }
 .gate-bg{
   position:absolute; inset:0;
-  background:linear-gradient(180deg,rgba(11,10,8,.35),rgba(11,10,8,.7));
-  -webkit-backdrop-filter:blur(18px) saturate(1.1); backdrop-filter:blur(18px) saturate(1.1);
+  background:linear-gradient(180deg,rgba(11,10,8,.75),rgba(11,10,8,.7));
 }
 .gate-card{
   position:relative; width:min(420px,100%);
-  background:rgba(14,13,10,.72); border:1px solid var(--hair-2);
+  background:rgba(8,12,24,.96); border:1px solid var(--hair-2);
   border-radius:22px; padding:40px 38px 28px;
   box-shadow:0 50px 120px rgba(0,0,0,.55);
-  -webkit-backdrop-filter:blur(26px); backdrop-filter:blur(26px);
 }
 .gate-ey{ width:52px; margin-bottom:26px }
 .gate-k{ margin:0 0 8px; font-size:10.5px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-3) }
@@ -68,7 +66,7 @@ body.gated .ui, body.gated .labels, body.gated .bar{ opacity:0; pointer-events:n
 /* ========================================================= 2 · MODE BAR */
 .govbar{
   position:fixed; left:0; right:0; bottom:0; z-index:800;
-  background:rgba(10,10,16,.93); backdrop-filter:blur(16px);
+  background:rgba(10,10,16,.93);
   border-top:1px solid var(--line-2);
 }
 .govbar::before{
@@ -127,8 +125,7 @@ body.has-govbar .c-note{ bottom:60px }
   width:min(400px,calc(100vw - 24px)); max-height:min(74vh,660px);
   display:flex; flex-direction:column;
   background:rgba(14,14,21,.97); border:1px solid var(--line-2);
-  border-radius:var(--r-lg); box-shadow:0 30px 70px rgba(0,0,0,.6);
-  backdrop-filter:blur(16px); overflow:hidden;
+  border-radius:var(--r-lg); box-shadow:0 30px 70px rgba(0,0,0,.6); overflow:hidden;
 }
 .tp-h{
   display:flex; align-items:center; justify-content:space-between;

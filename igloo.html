@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BizApps City · Igloo walls | EY</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="assets/css/igloo.css">
+</head>
+<body>
+<!--
+  BizApps City for the Igloo: the walls.
+  One continuous 360-degree canvas. Point an Igloo Core Engine web layer here.
+  Parameters (all optional):
+    band=1        fraction of the canvas height the content fills
+    offset=0      fraction of the canvas height above the content
+    front=0.5     where the front wall is, as a fraction of the canvas width
+    horizon=0.4   height of the horizon in the band, from the bottom
+    room=main     room code shared with the floor and the controller
+    tour=1        run the city by itself until the controller takes over
+    idle=180      seconds without a command before the tour resumes
+    card=1        show the join card for the first 30 seconds
+    q=high        high | mid | low; face=2048 caps the cube map
+    fps=60        frame cap; adaptive=0 fixes the resolution
+    mode=internal audience mode: internal | sanitised | external
+    debug=1       frame rate and cube-map size in the corner
+-->
+<div class="band" id="band">
+  <canvas id="gl"></canvas>
+  <div class="layer" id="rails"></div>
+  <div class="layer" id="tags"></div>
+  <div class="layer" id="panels">
+    <div class="intro on" id="intro">
+      <div class="k">EY · Microsoft AI Business Applications</div>
+      <h1>BizApps <em>City</em></h1>
+      <p id="introP"></p>
+    </div>
+    <div class="panel" id="panel"></div>
+    <div class="join" id="join"></div>
+  </div>
+  <div class="debug" id="debug"></div>
+</div>
+
+<script src="assets/ey-content.js"></script>
+<script src="assets/ey-icons.js"></script>
+<script src="assets/ey-gov.js"></script>
+<script>EYGOV.apply(window.BIZ);</script>
+<script src="assets/igloo-room.js"></script>
+<script src="assets/js/worlds.js"></script>
+<script>
+/* ============================================================================
+ *  The walls own the room: they run the city, decide what is shown, and
+ *  publish it. The controller sends commands; the floor follows.
+ * ========================================================================== */
+(function () {
+  "use strict";
+  var q = new URLSearchParams(location.search);
+  var num = function (k, d) { var v = parseFloat(q.get(k)); return isFinite(v) ? v : d; };
+  var BIZ = window.BIZ, C = BIZ.city, ICONS = window.ICONS || {};
+  var $ = function (s) { return document.querySelector(s); };
+  var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var client = function (id) { return C.clients.filter(function (c) { return c.id === id; })[0]; };
+  var sol = function (id) { return C.solutions[id]; };
+  var TAU = Math.PI * 2;
+
+  /* ------------------------------------------------ the band on the canvas */
+  var band = $("#band");
+  var BAND = Math.max(0.1, Math.min(1, num("band", 1))), OFFSET = Math.max(0, Math.min(0.9, num("offset", 0)));
+  function layout() {
+    band.style.top = (OFFSET * innerHeight) + "px";
+    band.style.height = (BAND * innerHeight) + "px";
+    band.style.setProperty("--u", (BAND * innerHeight / 100) + "px");
+  }
+  layout();
+  addEventListener("resize", function () { layout(); if (W) W.stage.resize(); });
+  if (q.get("pointer") === "1") document.body.classList.add("pointer");
+
+  $("#introP").textContent = "Five landmarks round the room. Each is a client engagement EY has delivered on the Microsoft cloud, in the client's own tenant. You are standing where EY stands.";
+
+  if (!window.EYCITY || !EYCITY.supported()) {
+    band.insertAdjacentHTML("beforeend", '<div class="nogl">This layer has no WebGL. Enable hardware acceleration in the Igloo layer\'s browser.</div>');
+    return;
+  }
+  var W = EYCITY.mount($("#gl"), BIZ, { mode: "wall" });
+  var S = W.stage;
+  var room = ROOM.connect("wall");
+
+  /* -------------------------------------------- the brand, round the room */
+  function rails() {
+    var h = "";
+    for (var k = 0; k < 4; k++) {
+      h += '<div class="rail" data-k="' + k + '"><img src="assets/img/ey.png" alt="EY"><div class="t"><b>BizApps <em>City</em></b><span>Microsoft AI Business Applications</span></div></div>';
+    }
+    $("#rails").innerHTML = h;
+  }
+  rails();
+  function placeRails() {
+    Array.prototype.forEach.call(document.querySelectorAll(".rail"), function (r) {
+      var u = (S.front + (+r.dataset.k) * 0.25) % 1;
+      r.style.left = (u * S.w) + "px";
+    });
+  }
+
+  /* ------------------------------------------------ names over the towers */
+  var tags = {};
+  W.monuments.forEach(function (M) {
+    var pt = { id: M.id }, c = M.client;
+    // over the tower, but never above the top of the band: a third of the way up the view
+    var hd = Math.hypot(M.pos.x, M.pos.z);
+    pt.p = M.pos.clone().setY(Math.min(M.H + 8, S.eye.y + hd * 0.62));
+    // two copies, so a name crossing the seam of the canvas is never cut in half
+    tags[pt.id] = [0, 1].map(function () {
+      var e = document.createElement("div");
+      e.className = "tag";
+      e.style.setProperty("--c", c.tone);
+      e.innerHTML = '<div class="pl"><span class="sw"></span><div><b>' + esc(c.short) + "</b><br><i>" + esc(c.sector) + '</i></div></div><div class="st"></div>';
+      e.addEventListener("pointerup", function () { user(); select(c.id); });
+      $("#tags").appendChild(e);
+      return e;
+    });
+    tags[pt.id].p = pt.p;
+  });
+  function placeTags() {
+    Object.keys(tags).forEach(function (id) {
+      var p = S.project(tags[id].p);
+      tags[id].forEach(function (e, i) {
+        var x = p.x + (i ? (p.x < S.w / 2 ? S.w : -S.w) : 0);
+        e.style.transform = "translate(-50%,-100%) translate(" + x.toFixed(0) + "px," + p.y.toFixed(0) + "px)";
+        e.classList.toggle("sel", st.id === id);
+        e.classList.toggle("dim", !!st.id && st.id !== id);
+      });
+    });
+  }
+
+  /* ----------------------------------------------------------- the state */
+  var TOUR = q.get("tour") !== "0", IDLE = num("idle", 180) * 1000;
+  var st = { id: null, step: -1, tour: TOUR, time: "night", card: q.get("card") !== "0", turn: 0 };
+  var lastUser = 0, tourT = 0, stepT = 0, tourI = -1;
+
+  function publish(beat) {
+    room.publish({ id: st.id, step: st.step, tour: st.tour, time: st.time, card: st.card, yaw: S.yawT, turn: st.turn, beat: !!beat });
+  }
+  function user() { lastUser = performance.now(); if (st.tour) { st.tour = false; } }
+
+  function select(id) {
+    st.id = id || null; st.step = -1;
+    W.setSelected(st.id);
+    W.clearJourney();
+    if (st.id && st.id !== "__ey") {
+      S.turnTo(W.bearingOf(st.id) + st.turn);
+      startJourney(st.id);
+    } else S.turnTo(S.yawT);
+    render(); publish();
+  }
+  function startJourney(id) {
+    var c = client(id); if (!c || !c.journey) return;
+    st.step = 0; stepT = 0;
+    W.setJourney(id, W.journeyAnchors(id, c.journey.length), 0, c.tone);
+  }
+  function go(i) {
+    var c = client(st.id); if (!c || !c.journey) return;
+    st.step = Math.max(0, Math.min(c.journey.length - 1, i)); stepT = 0;
+    W.setJourneyStep(st.step);
+    render(); publish();
+  }
+
+  /* ------------------------------------------------------------- panels */
+  function render() {
+    var c = st.id && st.id !== "__ey" ? client(st.id) : null;
+    $("#intro").classList.toggle("on", !st.id);
+    var P = $("#panel");
+    if (!st.id) { P.classList.remove("on"); return; }
+    if (st.id === "__ey") {
+      P.style.setProperty("--c", "#FFE600");
+      P.innerHTML = '<div class="k">At the centre</div><h2>EY</h2><p class="tl">' + esc(C.core.body) + "</p>" +
+        '<div class="kp">' + C.stats.slice(0, 3).map(function (s) { return "<div><b>" + esc(s.v) + "</b><span>" + esc(s.l) + "</span></div>"; }).join("") + "</div>";
+      P.classList.add("on");
+      return;
+    }
+    var b = (BIZ.briefs || {})[c.realId || c.id] || {};
+    var j = c.journey || [], cur = j[st.step] || null, s = cur ? sol(cur.sid) || {} : {};
+    P.style.setProperty("--c", c.tone);
+    P.innerHTML =
+      '<div class="k">' + esc(c.sector) + "</div><h2>" + esc(c.name) + "</h2>" +
+      '<p class="tl">' + esc(c.tagline) + "</p>" +
+      '<div class="kp">' + c.stats.map(function (x) { return "<div><b>" + esc(x.v) + "</b><span>" + esc(x.l) + "</span></div>"; }).join("") + "</div>" +
+      (b.problem ? '<div class="pr"><em>Before</em><p>' + esc(b.problem) + "</p><em>After</em><p>" + esc(b.result) + "</p></div>" : "") +
+      '<ol class="steps">' + j.map(function (x, i) {
+        var so = sol(x.sid) || {};
+        return '<li class="' + (i < st.step ? "done" : i === st.step ? "now" : "") + '"><i>' + (i + 1) + "</i>" + esc(so.short || so.name || x.sid) + "</li>";
+      }).join("") + "</ol>" +
+      '<p class="say">' + (cur ? esc(cur.t) : "") + "</p>";
+    P.classList.add("on");
+  }
+  function placePanels() {
+    var front = S.front * S.w, u = parseFloat(getComputedStyle(band).getPropertyValue("--u")) || 10;
+    $("#intro").style.left = front + "px";
+    // the panel stands beside the chosen tower, on the side toward the room's centre line
+    var P = $("#panel");
+    if (st.id && st.id !== "__ey") {
+      var p = S.project(tags[st.id].p);
+      P.style.left = (p.x + u * 12) + "px";
+    } else P.style.left = (front - u * 31) + "px";
+    $("#join").style.left = front + "px";
+  }
+
+  /* ------------------------------------------------------- the join card */
+  function join() {
+    var base = location.href.split("?")[0].replace(/igloo\.html$/, "");
+    var rq = room.code === "main" ? "" : "?room=" + room.code;
+    var s = room.status();
+    $("#join").innerHTML = "<b>Join this room</b> &nbsp; <span class=\"r\">room " + esc(room.code) + " · " + esc(s.reach) + "</span><br>" +
+      "Controller <code>" + esc(base + "igloo-control.html" + rq) + "</code><br>" +
+      "Floor <code>" + esc(base + "igloo-floor.html" + rq) + "</code>";
+    $("#join").classList.toggle("on", st.card);
+  }
+  room.on("status", join);
+  join();
+  if (st.card) setTimeout(function () { st.card = false; join(); publish(); }, 30000);
+
+  /* ----------------------------------------------------------- commands */
+  room.on("command", function (c) {
+    if (!c || !c.type) return;
+    if (c.type !== "tour") user();
+    switch (c.type) {
+      case "select": select(c.id); break;
+      case "home": select(null); break;
+      case "journey": if (c.id) { if (st.id !== c.id) select(c.id); else { startJourney(c.id); render(); publish(); } } break;
+      case "step": go(+c.i || 0); break;
+      case "next": go(st.step + 1); break;
+      case "prev": go(st.step - 1); break;
+      case "stop": W.clearJourney(); st.step = -1; render(); publish(); break;
+      case "tour": st.tour = !!c.on; tourT = 1e9; publish(); break;
+      case "time": if (EYCITY.TIMES[c.key]) { st.time = c.key; W.setTime(c.key); publish(); } break;
+      case "turn": st.turn = ((st.turn + (+c.deg || 0) * Math.PI / 180) % TAU + TAU) % TAU; S.turnTo(S.yawT + (+c.deg || 0) * Math.PI / 180); publish(); break;
+      case "card": st.card = !!c.on; join(); publish(); break;
+      case "reload": location.reload(); break;
+    }
+  });
+
+  /* -------------------------------------------------------- touch the wall */
+  $("#gl").addEventListener("pointerup", function (e) {
+    var r = $("#gl").getBoundingClientRect();
+    var id = W.pickAt(e.clientX - r.left, e.clientY - r.top);
+    user();
+    if (id) select(id);
+  });
+
+  /* ------------------------------------------------------ the tour, and time */
+  var order = C.clients.map(function (c) { return c.id; }).concat(["__ey", null]);
+  var DWELL = 8000;                            // per journey step
+  var last = performance.now(), beat = 0;
+  (function loop(now) {
+    requestAnimationFrame(loop);
+    var dt = now - last; last = now;
+    if (!st.tour && IDLE > 0 && lastUser && now - lastUser > IDLE) { st.tour = true; tourT = 1e9; publish(); }
+    if (st.tour) {
+      tourT += dt;
+      var c = st.id && st.id !== "__ey" ? client(st.id) : null;
+      var span = c ? DWELL * (c.journey || []).length : 14000;
+      if (c && st.step >= 0) { stepT += dt; if (stepT > DWELL && st.step < c.journey.length - 1) go(st.step + 1); }
+      if (tourT > span) { tourT = 0; tourI = (tourI + 1) % order.length; select(order[tourI]); }
+    }
+    placeRails(); placeTags(); placePanels();
+    beat += dt; if (beat > 10000) { beat = 0; publish(true); }
+    if (dbg) dbg.textContent = (S.fps ? S.fps.toFixed(0) : "–") + " fps · cube " + S.face + " · " + S.w + "×" + S.h;
+  })(last);
+  var dbg = q.get("debug") === "1" ? $("#debug") : null;
+  if (dbg) dbg.classList.add("on");
+
+  render(); publish();
+  window.BizApps = { select: select, step: go, room: room, world: function () { return W; }, state: function () { return st; } };
+})();
+</script>
+</body>
+</html>

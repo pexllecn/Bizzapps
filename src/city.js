@@ -1,4 +1,4 @@
-// The City: the practice drawn as a digital city at night.
+// BizApps City: the practice drawn as a digital city at night.
 //
 // A skyline stands on an island in a mirror-still sea under a field of stars.
 // Five landmark towers are the five client engagements, each with its own
@@ -11,10 +11,23 @@
 import * as THREE from "three";
 import { Stage, Rig, REDUCED, webglAvailable } from "./engine/core.js";
 import { Night, TIMES, waterMaterial } from "./engine/night.js";
+import { PanoStage } from "./engine/pano.js";
 import { rng } from "./engine/noise.js";
 
 const DEG = Math.PI / 180;
 const ISLAND = 86;
+const TAU = Math.PI * 2;
+
+/**
+ * Two plans of the same city. "island" is the skyline seen from outside, for a
+ * screen. "lagoon" turns it inside out for the Igloo: the audience stands at
+ * the centre of a lagoon, where EY is, with the city built round them on a
+ * ring of land and the five landmarks spaced round the room.
+ */
+const LAYOUTS = {
+  island: { inner: 0, outer: ISLAND, slotR: null, skyMin: 0, skyMax: ISLAND - 6, step: 9.6 },
+  lagoon: { inner: 84, outer: 178, slotR: [104, 112, 104, 112, 108], skyMin: 90, skyMax: 172, step: 9.2 },
+};
 
 /** The generic skyline's facade tints: cool glass, a few warm towers. */
 const TINTS = [0x2fd0ff, 0x3a7bff, 0x27e0c4, 0x7a6bff, 0x49a8ff, 0xffb45e];
@@ -226,8 +239,25 @@ const FORM_BY_KIND = { courthouse: "aperture", hospital: "twist", observatory: "
 class City {
   constructor(canvas, BIZ, opts = {}) {
     this.BIZ = BIZ;
-    this.mode = opts.mode || "explore";
-    const stage = new Stage(canvas, { fov: this.mode === "hero" ? 30 : 36, bloom: 0.95, bloomThreshold: 0.62, quality: opts.quality, lowBloom: true });
+    this.mode = opts.mode || "explore";            // "explore" | "hero" | "wall" | "floor"
+    this.lagoon = this.mode === "wall" || this.mode === "floor";
+    this.L = LAYOUTS[this.lagoon ? "lagoon" : "island"];
+    let stage;
+    if (this.mode === "wall") {
+      stage = new PanoStage(canvas, { eye: [0, 13, 0], bloom: 0.9, bloomThreshold: 0.62 });
+    } else if (this.mode === "floor") {
+      const S = 190;
+      const cam = new THREE.OrthographicCamera(-S, S, S, -S, 1, 3000);
+      cam.position.set(0, 1200, 0);
+      cam.up.set(0, 0, -1);
+      cam.lookAt(0, 0, 0);
+      stage = new Stage(canvas, { camera: cam, bloom: 0.8, bloomThreshold: 0.6, quality: opts.quality, lowBloom: true });
+      stage.onResize = (w, h) => { const a = w / h; cam.left = -S * Math.max(1, a); cam.right = S * Math.max(1, a); cam.top = S / Math.min(1, a); cam.bottom = -S / Math.min(1, a); cam.updateProjectionMatrix(); };
+      stage.onResize(stage.w, stage.h);
+      this.floorCam = cam;
+    } else {
+      stage = new Stage(canvas, { fov: this.mode === "hero" ? 30 : 36, near: 1, far: 6000, bloom: 0.95, bloomThreshold: 0.62, quality: opts.quality, lowBloom: true });
+    }
     this.stage = stage;
     this.quality = stage.quality;
     stage.renderer.shadowMap.enabled = false;
@@ -243,9 +273,9 @@ class City {
     this.monuments = [];
     this._island();
     this._landmarks(this.clients);
-    this._hub();
+    if (this.lagoon) this._plaza(); else this._hub();
     this._skyline();
-    this._horizon();
+    if (!this.lagoon) this._horizon();
 
     // the reflection: the city again, upside down, seen through the water
     this.mirror = this.city.clone(true);
@@ -260,6 +290,12 @@ class City {
 
     this.setTime(opts.time || "night");
 
+    if (this.lagoon) {
+      stage.onFrame((dt, t) => this._frame(dt, t));
+      stage.start();
+      if (REDUCED) stage.renderOnce();
+      return;
+    }
     const fit = () => { const a = stage.w / stage.h; return Math.max(1, Math.pow(1.3 / a, 0.9)); };
     this.HOME = this.mode === "hero" ? heroHome() : { az: 0.42, el: 0.24, dist: 490, target: [0, 66, 0] };
     this.baseDist = this.HOME.dist;
@@ -288,9 +324,12 @@ class City {
   /* ------------------------------------------------------------ island */
 
   _island() {
-    const g = new THREE.CylinderGeometry(ISLAND, ISLAND + 1.5, 1.4, 96, 1);
-    g.translate(0, 0.2, 0);
-    const deck = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: 0x0b111c, metalness: 0.5, roughness: 0.5, envMapIntensity: 0.8 }));
+    const deckMat = new THREE.MeshStandardMaterial({ color: 0x0b111c, metalness: 0.5, roughness: 0.5, envMapIntensity: 0.8 });
+    if (this.lagoon) return this._ring(deckMat);
+    // the deck sits on the water rather than through it, so it never fights its own reflection
+    const g = new THREE.CylinderGeometry(ISLAND, ISLAND + 1.5, 0.9, 96, 1);
+    g.translate(0, 0.45, 0);
+    const deck = new THREE.Mesh(g, deckMat);
     this.city.add(deck);
     // the waterfront: a warm line of lamps, the brightest thing at the water's edge
     const shore = new THREE.Mesh(new THREE.TorusGeometry(ISLAND + 0.6, 0.35, 6, 160), neon(0xffc37a, 2.2));
@@ -307,11 +346,39 @@ class City {
     this.city.add(lamps);
   }
 
+  /** The lagoon's land: a ring of city round the water, lit along both shores. */
+  _ring(mat) {
+    const { inner, outer } = this.L;
+    const shape = new THREE.Shape();
+    shape.absarc(0, 0, outer, 0, TAU, false);
+    const hole = new THREE.Path();
+    hole.absarc(0, 0, inner, 0, TAU, true);
+    shape.holes.push(hole);
+    const g = new THREE.ExtrudeGeometry(shape, { depth: 0.9, bevelEnabled: false, curveSegments: 96 });
+    g.rotateX(-Math.PI / 2);
+    this.city.add(new THREE.Mesh(g, mat));
+    for (const [r, c, k, th] of [[inner - 0.5, 0xffc37a, 2.2, 0.35], [inner + 4, 0x5fd6ff, 1.6, 0.18], [outer + 0.5, 0xffc37a, 1.6, 0.3]]) {
+      const t = new THREE.Mesh(new THREE.TorusGeometry(r, th, 6, 200), neon(c, k));
+      t.rotation.x = Math.PI / 2; t.position.y = 0.95;
+      this.city.add(t);
+    }
+    const n = this.quality === "low" ? 90 : 180;
+    const lamps = new THREE.InstancedMesh(new THREE.SphereGeometry(0.5, 8, 6), neon(0xffd29a, 2.4), n);
+    const m4 = new THREE.Matrix4();
+    for (let i = 0; i < n; i++) { const a = i / n * TAU; m4.makeTranslation(Math.cos(a) * (inner + 1.6), 2.8, Math.sin(a) * (inner + 1.6)); lamps.setMatrixAt(i, m4); }
+    this.city.add(lamps);
+  }
+
   /**
-   * Where the five landmarks stand: round the hub, but never directly in
-   * front of it or behind it from the home view, so every one reads.
+   * Where the five landmarks stand. On the island: round the hub, but never
+   * directly in front of it or behind it from the home view. In the lagoon:
+   * evenly round the room, the first straight ahead.
    */
   _slot(i) {
+    if (this.lagoon) {
+      const a = (i / 5) * TAU, r = this.L.slotR[i % 5];
+      return new THREE.Vector3(Math.sin(a) * r, 0.9, Math.cos(a) * r);
+    }
     const rel = [32, 98, 152, -148, -96][i % 5] * DEG;
     const a = 0.42 + rel, r = [44, 52, 48, 50, 46][i % 5];
     return new THREE.Vector3(Math.sin(a) * r, 0.9, Math.cos(a) * r);
@@ -324,6 +391,7 @@ class City {
       this.mats.push(mat);
       const form = FORMS[FORM_BY_KIND[c.kind] || FORM_ORDER[i]](mat, c.tone);
       const g = form.group;
+      if (this.lagoon) { g.scale.setScalar(1.15); form.H *= 1.15; }
       g.position.copy(pos);
       g.rotation.y = Math.atan2(pos.x, pos.z);
       this.city.add(g);
@@ -346,6 +414,57 @@ class City {
         pos, dir, H: form.H, anchor: new THREE.Vector3(pos.x, form.H + 10, pos.z), hover: 0, sel: 0,
       });
     });
+  }
+
+  /**
+   * In the lagoon, EY is where the audience stands: a lit platform on the
+   * water at the centre of the room, EY's own mark set into it, with a line
+   * of light running out from under the room to every landmark.
+   */
+  _plaza() {
+    const g = new THREE.Group();
+    this.city.add(g);
+    const deck = new THREE.Mesh(new THREE.CylinderGeometry(24, 25, 0.5, 96), new THREE.MeshStandardMaterial({ color: 0x070b14, metalness: 0.8, roughness: 0.25, envMapIntensity: 1.2 }));
+    deck.position.y = 0.25; g.add(deck);
+    const crown = [];
+    for (const [r, k, th] of [[24.6, 1.6, 0.3], [19, 0.9, 0.1], [12, 0.7, 0.07]]) {
+      const t = new THREE.Mesh(new THREE.TorusGeometry(r, th, 6, 160), neon(0xffe600, k));
+      t.rotation.x = Math.PI / 2; t.position.y = 0.55; g.add(t); crown.push(t);
+    }
+    const src = (window.ICONS || {})["ey-decal"] || (window.ICONS || {}).ey;
+    if (src) {
+      const tex = new THREE.TextureLoader().load(src);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mark = new THREE.Mesh(new THREE.PlaneGeometry(14, 14 * 512 / 498), new THREE.MeshBasicMaterial({ map: tex, transparent: true, toneMapped: false }));
+      mark.rotation.x = -Math.PI / 2; mark.position.y = 0.56;
+      // the floor looks down with the front wall at the top, so the mark turns to read from there
+      if (this.mode === "floor") mark.rotation.z = Math.PI;
+      g.add(mark);
+    }
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(40, 64), glowMaterial(0xffe600, "pool"));
+    pool.rotation.x = -Math.PI / 2; pool.position.y = 0.05; pool.renderOrder = 2;
+    this.city.add(pool);
+    const proxy = new THREE.Mesh(new THREE.CylinderGeometry(24, 24, 2, 32), new THREE.MeshBasicMaterial({ visible: false }));
+    proxy.position.y = 0.5; proxy.userData.id = "__ey"; proxy.userData.pick = true;
+    this.city.add(proxy);
+    this.spokes = this.monuments.map((M) => {
+      const from = 25, len = M.pos.length() - from - 14;
+      const sg = new THREE.PlaneGeometry(len, 2.2, 24, 1);
+      sg.rotateX(-Math.PI / 2);
+      const sp = new THREE.Mesh(sg, glowMaterial(0xffe600, "line"));
+      const mid = M.dir.clone().multiplyScalar(from + len / 2);
+      sp.position.set(mid.x, 0.12, mid.z);
+      sp.rotation.y = Math.atan2(-M.dir.z, M.dir.x);
+      sp.renderOrder = 2;
+      this.city.add(sp);
+      M.spoke = sp;
+      return sp;
+    });
+    this.beacon = null;
+    // on the walls the platform is under the audience's feet, where the floor
+    // projection draws it; rendered into the walls too, its glow floods the band
+    if (this.mode === "wall") { g.visible = false; pool.visible = false; }
+    this.core = { group: g, mat: null, crown, pool, proxy, anchor: new THREE.Vector3(0, 2, 0), H: 1, hover: 0, sel: 0 };
   }
 
   /** EY at the centre: the tallest tower, crowned in EY Yellow, threaded to every landmark. */
@@ -402,19 +521,23 @@ class City {
     const r = rng(2026);
     const boxes = [], octs = [], spires = [];
     const keep = this.monuments.map((m) => m.pos).concat([new THREE.Vector3()]);
-    const step = 9.6;
-    for (let gx = -ISLAND; gx <= ISLAND; gx += step) {
-      for (let gz = -ISLAND; gz <= ISLAND; gz += step) {
+    const step = this.L.step;
+    const { skyMin, skyMax } = this.L;
+    for (let gx = -skyMax; gx <= skyMax; gx += step) {
+      for (let gz = -skyMax; gz <= skyMax; gz += step) {
         const x = gx + (r() - 0.5) * 2.5, z = gz + (r() - 0.5) * 2.5, d = Math.hypot(x, z);
-        if (d > ISLAND - 6) continue;
+        if (d > skyMax || d < skyMin) continue;
         let near = false;
-        for (let k = 0; k < keep.length; k++) { if (Math.hypot(x - keep[k].x, z - keep[k].z) < (k === keep.length - 1 ? 22 : 15)) { near = true; break; } }
+        for (let k = 0; k < keep.length; k++) { if (Math.hypot(x - keep[k].x, z - keep[k].z) < (k === keep.length - 1 ? 22 : this.lagoon ? 18 : 15)) { near = true; break; } }
         if (near) continue;
-        if (r() < 0.12) continue;                    // a square, a street
-        const peak = Math.exp(-Math.pow(d / 46, 2));
-        const h = 9 + 95 * peak * Math.pow(r(), 1.05) + r() * 16 * (0.4 + peak);
+        if (r() < (this.lagoon ? 0.3 : 0.12)) continue;   // a square, a street
+        // the island peaks in the middle; the lagoon's ring climbs away from the water
+        const peak = this.lagoon ? Math.min(1, (d - skyMin) / (skyMax - skyMin) * 1.4 + 0.15) : Math.exp(-Math.pow(d / 46, 2));
+        const h = this.lagoon
+          ? 8 + 40 * peak * Math.pow(r(), 1.25) + r() * 10
+          : 9 + 95 * peak * Math.pow(r(), 1.05) + r() * 16 * (0.4 + peak);
         const w = 6 + r() * 4.5, dd = 6 + r() * 4.5;
-        const tint = d > ISLAND - 16 && r() < 0.28 ? 0xffb45e : TINTS[Math.floor(r() * (TINTS.length - 1))];
+        const tint = (this.lagoon ? d < skyMin + 14 : d > ISLAND - 16) && r() < 0.28 ? 0xffb45e : TINTS[Math.floor(r() * (TINTS.length - 1))];
         const rec = { x, z, h, w, d: dd, tint, rot: (r() - 0.5) * 0.3 };
         const t = r();
         if (t < 0.2 && h > 30) octs.push(rec); else boxes.push(rec);
@@ -493,10 +616,12 @@ class City {
     const r = rng(404);
     const nodes = [];
     const cols = [0x6fe3ff, 0x9d7bff, 0xff6bd5, 0x5fa8ff, 0xffffff];
-    const count = this.quality === "low" ? 26 : 38;
+    const count = this.lagoon ? 30 : this.quality === "low" ? 26 : 38;
     for (let i = 0; i < count; i++) {
-      const a = r() * Math.PI * 2, d = ISLAND + 18 + Math.pow(r(), 0.8) * 190;
-      nodes.push({ p: new THREE.Vector3(Math.sin(a) * d * 1.25, 0.3, Math.cos(a) * d), c: cols[Math.floor(r() * cols.length)] });
+      const a = r() * Math.PI * 2;
+      const d = this.lagoon ? 32 + Math.pow(r(), 0.9) * 44 : ISLAND + 18 + Math.pow(r(), 0.8) * 190;
+      const sx = this.lagoon ? 1 : 1.25;
+      nodes.push({ p: new THREE.Vector3(Math.sin(a) * d * sx, 0.3, Math.cos(a) * d), c: cols[Math.floor(r() * cols.length)] });
     }
     // join each node to its nearest two or three, once
     const edges = new Set(), segs = [];
@@ -555,7 +680,8 @@ class City {
     const n = this.quality === "low" ? 60 : 160;
     const r = rng(8), a = new Float32Array(n * 4);
     const pos = new Float32Array(n * 3);
-    for (let i = 0; i < n; i++) { a[i * 4] = 20 + r() * 70; a[i * 4 + 1] = 18 + r() * 90; a[i * 4 + 2] = (r() < 0.5 ? -1 : 1) * (0.05 + r() * 0.12); a[i * 4 + 3] = r() * 6.28; }
+    const r0 = this.lagoon ? 95 : 20, r1 = this.lagoon ? 80 : 70;
+    for (let i = 0; i < n; i++) { a[i * 4] = r0 + r() * r1; a[i * 4 + 1] = 18 + r() * 90; a[i * 4 + 2] = (r() < 0.5 ? -1 : 1) * (0.05 + r() * 0.12); a[i * 4 + 3] = r() * 6.28; }
     const g = new THREE.BufferGeometry();
     g.setAttribute("position", new THREE.BufferAttribute(pos, 3));
     g.setAttribute("orbit", new THREE.BufferAttribute(a, 4));
@@ -588,8 +714,18 @@ class City {
   journeyAnchors(id, n) {
     const M = this.monuments.find((m) => m.id === id);
     if (!M) return [];
-    const face = Math.atan2(M.dir.x, M.dir.z);
     const out = [];
+    if (this.lagoon) {
+      // a path that climbs up the room-facing side of the tower
+      const face = Math.atan2(-M.dir.x, -M.dir.z);
+      for (let i = 0; i < n; i++) {
+        const u = n === 1 ? 0.5 : i / (n - 1);
+        const a = face + (u - 0.5) * 1.5;
+        out.push(new THREE.Vector3(M.pos.x + Math.sin(a) * 30, 14 + u * M.H * 0.7, M.pos.z + Math.cos(a) * 30));
+      }
+      return out;
+    }
+    const face = Math.atan2(M.dir.x, M.dir.z);
     for (let i = 0; i < n; i++) {
       const u = n === 1 ? 0.5 : i / (n - 1);
       const a = face + (u - 0.5) * 2.2;
@@ -687,6 +823,20 @@ class City {
     this.rig.fly({ az, el: 0.1, dist, target: t.toArray() });
   }
 
+  /** Bearing of a landmark from the centre of the room. */
+  bearingOf(id) {
+    if (id === "__ey" || !id) return null;
+    const M = this.monuments.find((m) => m.id === id);
+    return M ? Math.atan2(M.pos.x, M.pos.z) : null;
+  }
+
+  /** The floor's turn, kept in step with the walls'. */
+  setFloorYaw(yaw) {
+    if (!this.floorCam) return;
+    this.floorCam.up.set(Math.sin(yaw), 0, Math.cos(yaw));
+    this.floorCam.lookAt(0, 0, 0);
+  }
+
   pickAt(x, y) {
     const objs = this.monuments.map((m) => m.proxy).concat([this.core.proxy]);
     const hit = this.stage.pick(x, y, objs);
@@ -710,7 +860,7 @@ class City {
       this.rig.azT = this.HOME.az + Math.sin(t * 0.035) * 0.12;
       this.rig.distT = this.HOME.dist + Math.sin(t * 0.06) * 12;
     }
-    this.rig.update(dt);
+    if (this.rig) this.rig.update(dt);
     const k = 1 - Math.exp(-6 * dt);
     for (const m of this.mats) m.userData.U.uTime.value = t;
     const any = this.selId;
@@ -722,15 +872,15 @@ class City {
       M.beam.material.uniforms.uI.value = M.sel * 0.45;
       M.beam.material.uniforms.uTime.value = t;
       M.pool.material.uniforms.uI.value = (0.55 + M.hover * 0.6 + M.sel * 0.8) * dim;
-      if (M.spoke) { const su = M.spoke.material.uniforms; su.uTime.value = t; su.uI.value = (this.mode === "hero" ? 0.6 : 1) * (0.8 + M.sel * 1.5) * dim; }
+      if (M.spoke) { const su = M.spoke.material.uniforms; su.uTime.value = t; su.uI.value = (this.mode === "hero" ? 0.6 : this.lagoon ? 0.5 : 1) * (0.8 + M.sel * 1.5) * dim; }
       if (M.glass) M.glass.emissiveIntensity = (0.8 + M.hover * 0.6 + M.sel * 0.8) * dim;
     }
     const C = this.core;
     C.hover += ((this.hoverId === "__ey" ? 1 : 0) - C.hover) * k;
     C.sel += ((this.selId === "__ey" ? 1 : 0) - C.sel) * k;
-    C.mat.userData.U.uBoost.value = C.hover * 0.6 + C.sel;
-    C.pool.material.uniforms.uI.value = 0.6 + C.hover + C.sel * 1.4;
-    if (!REDUCED) this.beacon.material.color.setRGB(1, 0.25, 0.2).multiplyScalar(Math.sin(t * 2.2) > 0.6 ? 3.2 : 0.4);
+    if (C.mat) C.mat.userData.U.uBoost.value = C.hover * 0.6 + C.sel;
+    C.pool.material.uniforms.uI.value = (this.lagoon ? 0.12 : 1) * (0.6 + C.hover + C.sel * 1.4);
+    if (!REDUCED && this.beacon) this.beacon.material.color.setRGB(1, 0.25, 0.2).multiplyScalar(Math.sin(t * 2.2) > 0.6 ? 3.2 : 0.4);
     this.water.material.uniforms.uTime.value = t;
     this.water.material.uniforms.uCam.value.copy(this.stage.camera.position);
     const fog = this.stage.scene.fog;

@@ -1,0 +1,94 @@
+/* ============================================================================
+ *  EY BizApps - igloo.css · BizApps City in the Igloo
+ *  Everything on the walls is sized from --u, one hundredth of the height of
+ *  the band the content occupies, so a 7680 × 2160 strip and a laptop preview
+ *  lay out identically and only the band changes between rooms.
+ *  No backdrop-filter anywhere over the canvas: it is the commonest cause of
+ *  a WebGL canvas flickering black, and on a wall this wide it is expensive.
+ * ========================================================================== */
+
+html,body{margin:0;height:100%;overflow:hidden;background:#000;color:#F3EEE4;
+  font-family:"EY Interstate","Helvetica Neue",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;
+  cursor:none;user-select:none;-webkit-user-select:none}
+body.pointer{cursor:default}
+.band{position:absolute;left:0;right:0;overflow:hidden;--u:10px}
+.band canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.layer{position:absolute;inset:0;pointer-events:none}
+
+/* the brand, four times round the room, so it is in front of everyone */
+.rail{position:absolute;top:calc(var(--u) * 3);transform:translateX(-50%);display:flex;align-items:center;gap:calc(var(--u) * 1.6);
+  white-space:nowrap;opacity:.92}
+.rail img{height:calc(var(--u) * 4.4);width:auto}
+.rail .t{display:flex;flex-direction:column;padding-left:calc(var(--u) * 1.6);border-left:1px solid rgba(243,238,228,.35)}
+.rail b{font-weight:300;font-size:calc(var(--u) * 3.1);letter-spacing:-.02em;line-height:1}
+.rail b em{font-style:normal;color:#FFE600}
+.rail span{font-size:calc(var(--u) * 1.15);font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:rgba(243,238,228,.6);margin-top:calc(var(--u) * .6)}
+
+/* a landmark's name over its tower */
+.tag{position:absolute;left:0;top:0;display:flex;flex-direction:column;align-items:center;transition:opacity .6s;pointer-events:auto;cursor:pointer}
+.tag .pl{display:flex;align-items:center;gap:calc(var(--u) * .9);padding:calc(var(--u) * .7) calc(var(--u) * 1.5) calc(var(--u) * .7) calc(var(--u) * .9);
+  border-radius:999px;background:rgba(5,12,28,.78);border:1px solid rgba(243,238,228,.22);white-space:nowrap}
+.tag .sw{width:calc(var(--u) * 1.1);height:calc(var(--u) * 1.1);border-radius:50%;background:var(--c)}
+.tag b{font-size:calc(var(--u) * 1.9);font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.tag i{font-style:normal;font-size:calc(var(--u) * 1.2);color:rgba(243,238,228,.62);letter-spacing:.06em}
+.tag .st{width:1px;height:calc(var(--u) * 4);background:linear-gradient(rgba(243,238,228,.7),rgba(243,238,228,0))}
+.tag.sel .pl{background:var(--c);border-color:var(--c);color:#0b0f1a}
+.tag.sel .sw{background:#0b0f1a}
+.tag.sel i{color:rgba(11,15,26,.7)}
+.tag.dim{opacity:.35}
+
+/* the panel beside the chosen landmark */
+.panel{position:absolute;top:50%;width:calc(var(--u) * 62);transform:translateY(-44%);padding:calc(var(--u) * 3) calc(var(--u) * 3.4);
+  background:linear-gradient(180deg,rgba(4,10,24,.88),rgba(4,10,24,.8));border:1px solid rgba(243,238,228,.16);border-radius:calc(var(--u) * 1.4);
+  opacity:0;transition:opacity .9s,transform 1s cubic-bezier(.2,.7,.2,1);pointer-events:none}
+.panel.on{opacity:1;transform:translateY(-50%)}
+.panel::before{content:"";position:absolute;left:calc(var(--u) * 3.4);right:calc(var(--u) * 3.4);top:-1px;height:calc(var(--u) * .3);background:var(--c,#FFE600)}
+.panel .k{font-size:calc(var(--u) * 1.3);font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--c,#FFE600)}
+.panel h2{font-weight:300;font-size:calc(var(--u) * 5.2);line-height:1;letter-spacing:-.03em;margin:calc(var(--u) * 1) 0 0}
+.panel .tl{font-weight:300;font-size:calc(var(--u) * 2.3);line-height:1.3;margin:calc(var(--u) * 1.4) 0 0;color:rgba(243,238,228,.86)}
+.panel .kp{display:grid;grid-template-columns:repeat(3,1fr);margin:calc(var(--u) * 2.4) 0 0;border-top:1px solid rgba(243,238,228,.18);border-bottom:1px solid rgba(243,238,228,.18)}
+.panel .kp div{padding:calc(var(--u) * 1.3) calc(var(--u) * 1) calc(var(--u) * 1.3) 0}
+.panel .kp div + div{padding-left:calc(var(--u) * 1.4);border-left:1px solid rgba(243,238,228,.18)}
+.panel .kp b{display:block;font-weight:300;font-size:calc(var(--u) * 3.6);letter-spacing:-.03em;line-height:1}
+.panel .kp span{display:block;font-size:calc(var(--u) * 1.2);color:rgba(243,238,228,.6);margin-top:calc(var(--u) * .5);line-height:1.3}
+.panel .pr{display:grid;grid-template-columns:auto 1fr;gap:calc(var(--u) * .8) calc(var(--u) * 1.4);margin:calc(var(--u) * 2.2) 0 0;font-size:calc(var(--u) * 1.75);line-height:1.4}
+.panel .pr em{font-style:normal;font-size:calc(var(--u) * 1.1);font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgba(243,238,228,.5);padding-top:calc(var(--u) * .45)}
+.panel .pr p{margin:0;color:rgba(243,238,228,.85)}
+.steps{list-style:none;margin:calc(var(--u) * 2.2) 0 0;padding:0;border-top:1px solid rgba(243,238,228,.18)}
+.steps li{display:grid;grid-template-columns:calc(var(--u) * 3.2) 1fr;align-items:center;padding:calc(var(--u) * .55) 0;
+  border-bottom:1px solid rgba(243,238,228,.1);font-size:calc(var(--u) * 1.55);color:rgba(243,238,228,.45);transition:color .5s}
+.steps li i{font-style:normal;width:calc(var(--u) * 2.2);height:calc(var(--u) * 2.2);border-radius:50%;display:grid;place-items:center;
+  border:1px solid rgba(243,238,228,.3);font-size:calc(var(--u) * 1);font-family:Menlo,Consolas,monospace}
+.steps li.done{color:rgba(243,238,228,.7)}
+.steps li.done i{background:rgba(243,238,228,.25);border-color:transparent}
+.steps li.now{color:#fff}
+.steps li.now i{background:var(--c);border-color:var(--c);color:#0b0f1a}
+.say{margin:calc(var(--u) * 1.8) 0 0;font-weight:300;font-size:calc(var(--u) * 2.3);line-height:1.35;min-height:calc(var(--u) * 6.2)}
+
+/* the room's opening card, and EY's */
+.intro{position:absolute;top:50%;transform:translate(-50%,-50%);width:calc(var(--u) * 84);text-align:center;opacity:0;transition:opacity 1.2s;pointer-events:none;
+  padding:calc(var(--u) * 3.4) calc(var(--u) * 4);border-radius:calc(var(--u) * 1.6);background:radial-gradient(closest-side,rgba(3,8,20,.92),rgba(3,8,20,.78));border:1px solid rgba(243,238,228,.12)}
+.intro.on{opacity:1}
+.intro .k{font-size:calc(var(--u) * 1.4);font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:rgba(243,238,228,.65)}
+.intro h1{font-weight:300;font-size:calc(var(--u) * 10);letter-spacing:-.04em;line-height:.95;margin:calc(var(--u) * 1.4) 0 0}
+.intro h1 em{font-style:normal;color:#FFE600}
+.intro p{font-weight:300;font-size:calc(var(--u) * 2.4);line-height:1.4;margin:calc(var(--u) * 2) auto 0;max-width:calc(var(--u) * 64);color:rgba(243,238,228,.85)}
+
+/* joining the room: addresses for the controller and the floor */
+.join{position:absolute;bottom:calc(var(--u) * 4);transform:translateX(-50%);padding:calc(var(--u) * 1.6) calc(var(--u) * 2.2);border-radius:calc(var(--u) * 1);
+  background:rgba(4,10,24,.9);border:1px solid rgba(243,238,228,.2);font-size:calc(var(--u) * 1.3);line-height:1.6;opacity:0;transition:opacity .8s;white-space:nowrap}
+.join.on{opacity:1}
+.join b{color:#FFE600;font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:calc(var(--u) * 1.1)}
+.join code{font-family:Menlo,Consolas,monospace;color:#fff}
+.join .r{color:rgba(243,238,228,.6)}
+.debug{position:absolute;right:8px;bottom:8px;font:12px Menlo,Consolas,monospace;color:#9fe;background:rgba(0,0,0,.6);padding:4px 8px;border-radius:4px;display:none}
+.debug.on{display:block}
+.nogl{position:absolute;inset:0;display:grid;place-items:center;font-size:calc(var(--u) * 2.4);color:rgba(243,238,228,.8);text-align:center}
+
+/* the floor */
+.floor{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;border-radius:50%}
+.floor canvas{width:100%;height:100%;display:block}
+.floor .read{position:absolute;inset:0;pointer-events:none}
+.floor .read span{position:absolute;left:50%;top:3%;transform:translateX(-50%);font-size:2.4vmin;font-weight:700;letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(243,238,228,.85);white-space:nowrap}
+.floor .read span i{font-style:normal;color:var(--c,#FFE600)}

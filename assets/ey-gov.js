@@ -16,7 +16,7 @@
  *       render. Internal shows everything. Sanitised strips the identities.
  *       External shows only the credentials a named reviewer has cleared.
  *
- *    2. AN ACCESS GATE - a credential prompt in front of the City view.
+ *    2. AN ACCESS GATE - a credential prompt in front of the BizApps City view.
  *
  *    3. TELEMETRY - which engagement was opened, which capability was read,
  *       how long the session ran. Without this the asset cannot report on
@@ -256,7 +256,7 @@
    *  be leaked: there is no code path that can reach c.name and find the real
    *  one, because the real one is gone.
    *
-   *  It also means the 3D scene sanitises itself for free. The City labels each
+   *  It also means the 3D scene sanitises itself for free. BizApps City labels each
    *  landmark from the sanitised model after this runs, so an anonymised client
    *  is never named on the skyline, and no render code in src/city.js had to
    *  learn what audience mode is.
@@ -466,18 +466,18 @@
     host.className = "gate";
     host.setAttribute("role", "dialog");
     host.setAttribute("aria-modal", "true");
-    host.setAttribute("aria-label", "Sign in to the Digital City");
+    host.setAttribute("aria-label", "Sign in to BizApps City");
     host.innerHTML =
       '<div class="gate-bg" aria-hidden="true"></div>' +
       '<form class="gate-card" autocomplete="off">' +
         '<img class="gate-ey" alt="EY" src="assets/img/ey.png">' +
         '<p class="gate-k">Microsoft AI Business Applications</p>' +
-        '<h1>The Digital City</h1>' +
+        '<h1>BizApps City</h1>' +
         '<p class="gate-l">This view carries delivered client engagements. Sign in to continue.</p>' +
         '<label>Username<input id="gU" name="u" type="text" autocomplete="off" spellcheck="false" autocapitalize="off" required></label>' +
         '<label>Password<input id="gP" name="p" type="password" autocomplete="off" required></label>' +
         '<p class="gate-err" id="gE" role="alert" hidden></p>' +
-        '<button class="gate-go" type="submit">Enter the City</button>' +
+        '<button class="gate-go" type="submit">Enter BizApps City</button>' +
         '<p class="gate-alt">No access? The <a href="engagement-index.html">Engagement Index</a> covers the same work.</p>' +
         '<p class="gate-note">Presentation control only. Client identities and commercial figures are governed by audience mode, not by this prompt.</p>' +
       "</form>";
