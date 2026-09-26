@@ -5,155 +5,199 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>EY | Microsoft AI Business Applications</title>
 <meta name="description" content="EY Ireland Microsoft AI Business Applications: the governed platform, the offerings and the client engagements delivered at national scale.">
-<meta name="theme-color" content="#08080C">
-<link rel="stylesheet" href="assets/ey-core.css">
-<link rel="stylesheet" href="assets/ey-show.css">
+<meta name="theme-color" content="#0B0A08">
+<link rel="stylesheet" href="assets/css/site.css">
+<link rel="stylesheet" href="assets/css/home.css">
+<link rel="stylesheet" href="assets/ey-gov.css">
+<link rel="stylesheet" href="assets/ey-print.css">
 </head>
 <body>
-<div class="prog" id="prog"></div>
 
-<header class="topbar" id="topbar">
-  <a class="bm" href="#top">
-    <img id="eyMark" alt="EY">
-    <div class="lk"><b>Business Applications</b>Customer &amp; Growth</div>
+<header class="bar" id="bar">
+  <a class="brand" href="#top" aria-label="EY Business Applications, back to top">
+    <img src="assets/img/ey.png" alt="EY">
+    <span class="t"><b>Business Applications</b><span>Microsoft AI · Customer &amp; Growth</span></span>
   </a>
-  <div class="nav-right">
-    <nav class="nav" id="nav" aria-label="Sections">
-      <a href="#platform">Platform</a>
-      <a href="#capability">What we do</a>
-      <a href="#offerings">Offerings</a>
-      <a href="#scale">Scale</a>
-      <a href="#team">Team</a>
-    </nav>
-    <nav class="vswitch" aria-label="Views">
-      <a href="index.html" aria-current="page"><span class="n">01</span><span class="t">Showcase</span></a>
-      <a href="city.html"><span class="n">02</span><span class="t">City</span></a>
-      <a href="engagement-index.html"><span class="n">03</span><span class="t">Index</span></a>
-    </nav>
-    <button class="navfs" id="cFull" title="Full screen (F)" aria-label="Full screen">
-      <span class="fsi" aria-hidden="true"></span><span id="cFullTxt">Full screen</span>
-    </button>
-    <button class="navtog" id="navTog" aria-expanded="false" aria-controls="nav"
-            aria-label="Menu"><span></span><span></span><span></span></button>
-  </div>
+  <nav class="links" id="links" aria-label="Sections">
+    <a href="#platform">Platform</a>
+    <a href="#capability">What we do</a>
+    <a href="#work">The work</a>
+    <a href="#offerings">Offerings</a>
+    <a href="#scale">Scale</a>
+    <a href="#team">Team</a>
+  </nav>
+  <nav class="views" aria-label="Views">
+    <a href="index.html" aria-current="page"><i>01</i><span class="tx">Showcase</span></a>
+    <a href="city.html"><i>02</i><span class="tx">The City</span></a>
+    <a href="engagement-index.html"><i>03</i><span class="tx">Index</span></a>
+  </nav>
+  <button class="fsb" id="fsBtn" title="Full screen (F)" aria-label="Full screen">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1.5 5.5v-4h4M10.5 1.5h4v4M14.5 10.5v4h-4M5.5 14.5h-4v-4"/></svg>
+    <span class="sr" id="fsTxt">Full screen</span>
+  </button>
+  <button class="navtog" aria-expanded="false" aria-controls="links" aria-label="Menu"><span></span><span></span></button>
 </header>
 
-<div class="hero" id="top">
-  <div class="field">
-    <canvas id="fieldCanvas"></canvas>
-    <div class="grid"></div>
-    <div class="veil"></div>
-  </div>
-  <div class="wrap">
-    <p class="hero-eyebrow"><span class="dot"></span><span id="hEyebrow"></span></p>
-    <h1 class="hero-h" id="hTitle"></h1>
-    <p class="hero-sub" id="hSub"></p>
-    <div class="hero-cta">
-      <a class="btn" href="#platform">Enter the platform <span class="arw">&rarr;</span></a>
-      <a class="btn ghost" href="city.html">Explore BizApps City</a>
-      <a class="btn ghost" href="engagement-index.html">Read the Engagement Index</a>
+<!-- =============================================================== hero -->
+<section class="hero" id="top" aria-label="Introduction">
+  <canvas id="heroGL" aria-hidden="true"></canvas>
+  <div class="shade"></div>
+  <div class="finder" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+  <div class="hero-in">
+    <div>
+      <p class="kick"><span class="beam"></span><span class="cap" id="hEyebrow"></span></p>
+      <h1 class="display" id="hTitle"></h1>
+      <p class="lede" id="hSub"></p>
+      <div class="hero-cta">
+        <a class="btn pri" href="city.html">Enter the City <span class="ar">&rarr;</span></a>
+        <a class="btn" href="#platform">See the platform</a>
+      </div>
     </div>
-    <div class="hero-stats" id="hStats"></div>
+    <div class="scene">
+      <p class="t" id="hScene"></p>
+      <div class="tod" role="group" aria-label="Time of day" id="tod"></div>
+    </div>
   </div>
-</div>
+  <div class="cue" aria-hidden="true"></div>
+</section>
 
-<section class="stack-sec" id="platform">
+<section class="stats" aria-label="In numbers"><div class="wrap" id="hStats"></div></section>
+
+<!-- ========================================================= workbench -->
+<section class="bench" id="platform" aria-label="From the machine age to the governed platform">
+  <div class="bench-stick" id="benchStick">
+    <canvas id="benchGL" tabindex="0" aria-label="The workbench: a brass engine and five glass platform layers. Select a layer for detail."></canvas>
+    <div class="shade"></div>
+    <div class="wlabels" id="wLabels" aria-hidden="true"></div>
+    <div class="acts">
+      <div class="act warm" data-act="0">
+        <p class="cap"><span class="beam" style="background:var(--amber)"></span>Before · the machine age of service</p>
+        <h2 class="h2">One line. One ledger. One engineer's drawing.</h2>
+        <p class="lede">Every engagement starts in the same place: work held together by hand, by paper and by the one person who knows how it fits.</p>
+        <ul class="was" id="wasList"></ul>
+      </div>
+      <div class="act" data-act="1">
+        <p class="cap y"><span class="beam"></span>The bridge</p>
+        <h2 class="h2" id="brTitle"></h2>
+        <p class="lede">Nothing of what works is thrown away. The process knowledge moves across; the paper, the re-keying and the single point of failure do not.</p>
+      </div>
+      <div class="act cool" data-act="2">
+        <p class="cap"><span class="beam" style="background:var(--cyan)"></span><span id="stKicker"></span></p>
+        <h2 class="h2" id="stTitle"></h2>
+        <p class="lede" id="stLede"></p>
+        <ul class="layers" id="layerList"></ul>
+        <p class="bench-hint">Select a layer, on the bench or in the list.</p>
+      </div>
+    </div>
+    <div class="rail" id="rail" role="group" aria-label="Chapters">
+      <button data-go="0"><span>Before</span><i></i></button>
+      <button data-go="1"><span>Bridge</span><i></i></button>
+      <button data-go="2"><span>Platform</span><i></i></button>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================== capability -->
+<section class="sec on-paper" id="capability">
   <div class="wrap">
-    <div class="stack-head rv">
+    <div class="sec-head rv">
       <div>
-        <p class="kicker" id="stKicker"></p>
-        <h2 class="sec" id="stTitle"></h2>
+        <p class="kick"><span class="ix">01</span><span class="beam"></span><span class="cap" id="capKicker"></span></p>
+        <h2 class="h2" id="capTitle"></h2>
       </div>
-      <p class="lede" id="stLede"></p>
+      <p class="lede" id="capLede"></p>
     </div>
-    <div class="stage-shell rv">
-      <div class="stage" id="stage" tabindex="0" role="application" aria-label="Interactive 3D Microsoft platform stack"></div>
-      <div class="labels" id="labels"></div>
-      <div class="cap" id="stCap"></div>
-      <div class="hint"><span class="ring"></span><span id="stHint"></span></div>
-      <div class="stage-chrome">
-        <div class="keys" id="keys"></div>
-        <div class="tools">
-          <button class="tool" id="tExplode">Pull apart</button>
-          <button class="tool" id="tSpin">Auto-orbit</button>
-          <button class="tool" id="tReset">Reset</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="gate" id="gate">
-  <canvas id="gateCanvas"></canvas>
-  <div class="wrap rv">
-    <p class="kicker" id="gKicker"></p>
-    <h2 id="gTitle"></h2>
-    <p id="gLede"></p>
-    <div class="gate-stats" id="gStats"></div>
-    <a class="btn" href="city.html" id="gCta">Explore the city <span class="arw">&rarr;</span></a>
-    <div class="gate-marks" id="gMarks"></div>
-  </div>
-</section>
-
-<section class="capsec" id="capability">
-  <div class="wrap">
-    <div class="rv"><p class="kicker" id="capKicker"></p><h2 class="sec" id="capTitle"></h2></div>
     <div class="cols rv" id="capCols"></div>
   </div>
 </section>
 
-<section id="offerings">
+<!-- ============================================================== work -->
+<section class="sec work" id="work">
   <div class="wrap">
-    <div class="rv"><p class="kicker" id="ofKicker"></p><h2 class="sec" id="ofTitle"></h2></div>
+    <div class="sec-head rv">
+      <div>
+        <p class="kick"><span class="ix">02</span><span class="beam"></span><span class="cap">The work</span></p>
+        <h2 class="h2">Five engagements.<br>Each stands on its own.</h2>
+      </div>
+      <p class="lede" id="workLede"></p>
+    </div>
+    <div class="eng rv" id="engList"></div>
+    <div class="work-foot rv">
+      <p id="workNote"></p>
+      <a class="btn pri" href="city.html">Enter the City <span class="ar">&rarr;</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================= offerings -->
+<section class="sec offer" id="offerings">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <div>
+        <p class="kick"><span class="ix">03</span><span class="beam"></span><span class="cap" id="ofKicker"></span></p>
+        <h2 class="h2" id="ofTitle"></h2>
+      </div>
+    </div>
     <div class="offs rv" id="ofGrid"></div>
   </div>
 </section>
 
-<section class="scale" id="scale">
+<!-- ============================================================= scale -->
+<section class="sec on-paper" id="scale">
   <div class="wrap">
-    <div class="rv"><p class="kicker" id="scKicker"></p><h2 class="sec" id="scTitle"></h2></div>
+    <div class="sec-head rv">
+      <div>
+        <p class="kick"><span class="ix">04</span><span class="beam"></span><span class="cap" id="scKicker"></span></p>
+        <h2 class="h2" id="scTitle"></h2>
+      </div>
+    </div>
     <div class="mst rv" id="scMst"></div>
-    <div class="rv"><div class="band">Why BizApps</div><div class="g4" id="scWhy"></div></div>
-    <div class="rv"><div class="band" id="clTitle"></div><div class="others" id="clGrid"></div></div>
+    <div class="why rv" id="scWhy"></div>
+    <div class="logos rv" id="clGrid"></div>
   </div>
 </section>
 
-<section id="team">
+<!-- ============================================================== team -->
+<section class="sec" id="team">
   <div class="wrap">
-    <div class="rv">
-      <p class="kicker" id="tmKicker"></p>
-      <h2 class="sec" id="tmTitle"></h2>
+    <div class="sec-head rv">
+      <div>
+        <p class="kick"><span class="ix">05</span><span class="beam"></span><span class="cap" id="tmKicker"></span></p>
+        <h2 class="h2" id="tmTitle"></h2>
+      </div>
       <p class="lede" id="tmLede"></p>
     </div>
     <div class="team rv" id="tmGrid"></div>
   </div>
 </section>
 
-<section class="close">
+<!-- ============================================================= close -->
+<section class="sec close">
   <div class="wrap rv">
-    <p class="kicker" id="clsKicker"></p>
-    <h2 id="clsTitle"></h2>
-    <p id="clsBody"></p>
-    <div class="close-ctas">
-      <a class="btn" id="clsCta" href="#"></a>
-      <a class="btn ghost" href="city.html">Walk the city</a>
+    <p class="kick"><span class="beam"></span><span class="cap" id="clsKicker"></span></p>
+    <h2 class="h2" id="clsTitle"></h2>
+    <p class="lede" id="clsBody"></p>
+    <div class="cta">
+      <a class="btn pri" id="clsCta" href="#"></a>
+      <a class="btn" href="city.html">Enter the City</a>
+      <a class="btn" href="engagement-index.html">Read the Index</a>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap foot">
-    <div class="dis" id="footDis"></div>
-    <div class="marks"><img id="footEy" alt="EY"><img id="footMs" alt="Microsoft"></div>
+  <div class="wrap">
+    <p class="dis" id="footDis"></p>
+    <div class="marks"><img src="assets/img/ey.png" alt="EY"><img data-ms alt="Microsoft"></div>
   </div>
 </footer>
 
 <div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" aria-hidden="true">
+<aside class="drawer" id="drawer" aria-hidden="true" aria-labelledby="dName">
   <div class="dh">
-    <button class="dclose" id="dClose" aria-label="Close">&#10005;</button>
-    <div class="dmark"><img id="dImg" alt=""></div>
-    <div class="dfam" id="dFam"></div>
+    <button class="dx" id="dClose" aria-label="Close">&#10005;</button>
+    <div class="dmark" id="dMark"></div>
+    <p class="cap" id="dFam"></p>
     <h3 id="dName"></h3>
   </div>
   <div class="db" id="dBody"></div>
@@ -161,374 +205,280 @@
 
 <script src="assets/ey-content.js"></script>
 <script src="assets/ey-icons.js"></script>
+<script src="assets/ey-gov.js"></script>
+<script>EYGOV.apply(window.BIZ);</script>
 <script src="assets/ey-fs.js"></script>
-<script src="assets/ey-gl.js"></script>
-<script src="assets/ey-city.js"></script>
-<script src="assets/ey-stack.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/js/worlds.js"></script>
 <script>
-/* ==========================================================================
- *  Showcase page runtime - hero, platform stack, city gateway, sections.
+/* ============================================================================
+ *  Showcase runtime: the Digital City behind the title, the Workbench as a scene the
+ *  page scrolls through, then the practice as a catalogue.
  * ========================================================================== */
 (function () {
   "use strict";
+  var D = window.BIZ, $ = UI.$, $$ = UI.$$, esc = UI.esc, el = UI.el, icon = UI.icon;
+  var C = D.city;
 
-  var D = window.BIZ, ICONS = window.ICONS || {};
-  var $ = function (s, r) { return (r || document).querySelector(s); };
-  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
-  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  function el(t, c, h) { var n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; }
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function icon(k) { return ICONS[k] || ""; }
-  function ini(n) { return n.split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join("").toUpperCase(); }
-
-  var stage = null;
-
-  /* ------------------------------------------------------------ 1 · brand */
-  function brand() {
-    var ey = icon("ey");
-    if (ey) { $("#eyMark").src = ey; $("#footEy").src = ey; }
-    var ms = icon("microsoft");
-    if (ms) $("#footMs").src = ms;
-  }
-
-  /* ------------------------------------------------------------- 2 · hero */
+  /* ------------------------------------------------------------ hero */
+  var city = null;
   function hero() {
     var h = D.hero;
     $("#hEyebrow").textContent = h.eyebrow;
     $("#hTitle").innerHTML = esc(h.line1) + "<br>" + esc(h.line2) + ' <span class="rot">' +
-      h.rotator.map(function (t) { return "<span>" + esc(t) + "</span>"; }).join("") + "</span>";
+      h.rotator.map(function (t, i) { return '<span' + (i ? "" : ' class="on"') + ">" + esc(t) + "</span>"; }).join("") + "</span>";
     $("#hSub").textContent = h.sub;
-    var w = $("#hStats");
-    h.stats.forEach(function (s) {
-      w.appendChild(el("div", "st",
-        '<div class="n"><b class="num" data-to="' + s.n + '">0</b><i>' + esc(s.s) + "</i></div>" +
-        '<div class="l">' + esc(s.l) + '</div><div class="s">' + esc(s.sub) + "</div>"));
-    });
-    countUp(w);
-  }
-  function countUp(scope) {
-    $$(".num", scope).forEach(function (n) {
-      var to = +n.dataset.to, t0 = null;
-      if (REDUCED) { n.textContent = to.toLocaleString("en-IE"); return; }
-      requestAnimationFrame(function step(t) {
-        if (!t0) t0 = t;
-        var p = Math.min(1, (t - t0) / 1800);
-        n.textContent = Math.round(to * (1 - Math.pow(1 - p, 3))).toLocaleString("en-IE");
-        if (p < 1) requestAnimationFrame(step);
-      });
-    });
-  }
+    if (!UI.REDUCED) {
+      var rs = $$("#hTitle .rot span"), ri = 0;
+      setInterval(function () { rs[ri].classList.remove("on"); ri = (ri + 1) % rs.length; rs[ri].classList.add("on"); }, 3200);
+    }
+    $("#hStats").innerHTML = h.stats.map(function (s) {
+      return '<div class="stat rv"><div class="v num"><span class="cnt" data-to="' + s.n + '">0</span><i>' + esc(s.s) + "</i></div>" +
+        '<div class="l">' + esc(s.l) + '</div><div class="s">' + esc(s.sub) + "</div></div>";
+    }).join("");
+    countUp();
 
-  /* --------------------------------------------------- 3 · particle field */
-  function field() {
-    var cvs = $("#fieldCanvas"); if (!cvs) return;
-    var ctx = cvs.getContext("2d");
-    var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var pts = [], W = 0, H = 0, mx = -999, my = -999, raf = null;
-    function size() {
-      var r = cvs.getBoundingClientRect();
-      W = r.width; H = r.height;
-      cvs.width = W * dpr; cvs.height = H * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      var n = Math.min(120, Math.round(W * H / 13000));
-      pts = [];
-      for (var i = 0; i < n; i++) pts.push({
-        x: Math.random() * W, y: Math.random() * H,
-        vx: (Math.random() - .5) * .18, vy: (Math.random() - .5) * .18,
-        r: Math.random() * 1.5 + .5, hot: Math.random() < .18,
+    var canvas = $("#heroGL");
+    if (!window.EYCITY || !EYCITY.supported()) { canvas.parentNode.classList.add("flat"); return; }
+    try { city = EYCITY.mount(canvas, D, { mode: "hero" }); } catch (e) { city = null; }
+    /* the camera leans a little toward the pointer, as if hand-held */
+    if (city && !UI.REDUCED) {
+      var heroEl = $("#top");
+      heroEl.addEventListener("pointermove", function (e) {
+        var r = heroEl.getBoundingClientRect();
+        city.rig.swayT.set(((e.clientX - r.left) / r.width - 0.5) * 2, ((e.clientY - r.top) / r.height - 0.5) * 2);
       });
+      heroEl.addEventListener("pointerleave", function () { city.rig.swayT.set(0, 0); });
     }
-    function frame() {
-      ctx.clearRect(0, 0, W, H);
-      for (var i = 0; i < pts.length; i++) {
-        var p = pts[i];
-        p.x += p.vx; p.y += p.vy;
-        if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
-        if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
-        for (var j = i + 1; j < pts.length; j++) {
-          var q = pts[j], dx = p.x - q.x, dy = p.y - q.y, d2 = dx * dx + dy * dy;
-          if (d2 < 17000) {
-            ctx.strokeStyle = "rgba(255,255,255," + ((1 - d2 / 17000) * .16).toFixed(3) + ")";
-            ctx.lineWidth = 1;
-            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y); ctx.stroke();
-          }
-        }
-        var ddx = p.x - mx, ddy = p.y - my, near = (ddx * ddx + ddy * ddy) < 30000;
-        ctx.fillStyle = (p.hot || near) ? "rgba(255,230,0,.85)" : "rgba(255,255,255,.34)";
-        ctx.beginPath(); ctx.arc(p.x, p.y, near ? p.r * 1.9 : p.r, 0, 6.284); ctx.fill();
-      }
-      raf = requestAnimationFrame(frame);
-    }
-    size();
-    window.addEventListener("resize", size);
-    cvs.parentElement.addEventListener("pointermove", function (e) {
-      var r = cvs.getBoundingClientRect(); mx = e.clientX - r.left; my = e.clientY - r.top;
+    var times = EYCITY.TIMES, keys = Object.keys(times), tod = $("#tod");
+    function scene(k) { $("#hScene").innerHTML = "Scene 01 &mdash; <b>The Digital City</b>, " + esc(times[k].name.toLowerCase()); }
+    keys.forEach(function (k) {
+      var b = el("button", "", esc(times[k].name));
+      b.setAttribute("aria-pressed", k === "night" ? "true" : "false");
+      b.addEventListener("click", function () {
+        if (city) city.setTime(k);
+        $$("button", tod).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        scene(k);
+      });
+      tod.appendChild(b);
     });
-    cvs.parentElement.addEventListener("pointerleave", function () { mx = my = -999; });
-    if (!REDUCED) {
-      frame();
+    scene("night");
+  }
+  function countUp() {
+    $$(".cnt").forEach(function (n) {
+      var to = +n.dataset.to;
+      if (UI.REDUCED) { n.textContent = to.toLocaleString("en-IE"); return; }
+      var go = function () {
+        var t0 = null;
+        requestAnimationFrame(function step(t) {
+          if (!t0) t0 = t;
+          var p = Math.min(1, (t - t0) / 1900);
+          n.textContent = Math.round(to * (1 - Math.pow(1 - p, 4))).toLocaleString("en-IE");
+          if (p < 1) requestAnimationFrame(step);
+        });
+      };
       if ("IntersectionObserver" in window) {
-        new IntersectionObserver(function (es) {
-          es.forEach(function (en) {
-            if (en.isIntersecting) { if (!raf) raf = requestAnimationFrame(frame); }
-            else { cancelAnimationFrame(raf); raf = null; }
-          });
-        }, { threshold: 0 }).observe(cvs);
-      }
-    }
+        var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { go(); io.disconnect(); } });
+        io.observe(n);
+      } else go();
+    });
   }
 
-  /* -------------------------------------------------------- 4 · 3D stack */
-  function buildStack() {
+  /* ------------------------------------------------------- workbench */
+  var bench = null, act = -1, layerSel = null;
+  function workbench() {
     var s = D.stack;
     $("#stKicker").textContent = s.kicker;
     $("#stTitle").textContent = s.title;
-    $("#stLede").textContent = s.lede;
-    $("#stHint").textContent = s.hint;
-
-    var host = $("#stage"), keys = $("#keys"), cap = $("#stCap");
-
-    s.layers.forEach(function (L) {
-      var b = el("button", "");
-      b.style.setProperty("--c", L.color);
-      b.dataset.id = L.id;
-      b.innerHTML = '<span class="sw"></span>' + esc(L.name);
-      b.addEventListener("click", function () { setFocus(L.id); });
-      keys.appendChild(b);
+    $("#stLede").textContent = s.lede.replace(/Rotate it, pull it apart, and click/, "Select");
+    $("#brTitle").textContent = D.capability.title + ".";
+    var briefs = D.briefs || {};
+    $("#wasList").innerHTML = C.clients.map(function (c) {
+      var b = briefs[c.realId || c.id];
+      return b && b.pairs && b.pairs[0] ? "<li>" + esc(b.pairs[0][0]) + "</li>" : "";
+    }).join("");
+    $("#layerList").innerHTML = s.layers.map(function (L) {
+      return '<li><button data-layer="' + L.id + '" style="--c:' + L.color + '"><span class="ix">' + esc(L.index) + '</span><span class="sw"></span>' +
+        "<b>" + esc(L.name) + '</b><span class="n">' + L.products.length + " products</span></button></li>";
+    }).join("");
+    $$("#layerList button").forEach(function (b) {
+      b.addEventListener("click", function () { openLayer(b.dataset.layer); });
+      b.addEventListener("mouseenter", function () { if (bench) bench.setHover(b.dataset.layer); });
+      b.addEventListener("mouseleave", function () { if (bench) bench.setHover(null); });
     });
 
-    try { stage = new window.BizStack(host, s.layers, D.products, ICONS); }
-    catch (e) { stage = null; }
-
-    if (!stage || stage.failed) { fallback(host); return; }
-
-    var lbl = el("div", "lbl");
-    $("#labels").appendChild(lbl);
-    stage.onHover = function (n) {
-      if (!n) { lbl.classList.remove("show"); return; }
-      var p = D.products[n.pid];
-      lbl.textContent = p ? p.name : n.pid;
-      lbl.classList.add("show");
-    };
-    stage.onFrame = function () {
-      var n = stage.hover;
-      if (n && n.scr) { lbl.style.left = n.scr.x + "px"; lbl.style.top = (n.scr.y - n.scr.r - 26) + "px"; }
-    };
-    stage.onSelect = function (pid) { openDrawer(pid); };
-
-    function setFocus(id) {
-      var now = stage.setFocus(id);
-      $$("#keys button").forEach(function (b) { b.classList.toggle("on", b.dataset.id === now); });
-      var L = s.layers.filter(function (x) { return x.id === now; })[0];
-      if (L) { cap.style.setProperty("--c", L.color); cap.textContent = L.caption; cap.classList.add("show"); }
-      else cap.classList.remove("show");
+    var sec = $("#platform"), canvas = $("#benchGL");
+    if (window.EYBENCH && EYBENCH.supported()) {
+      try { bench = EYBENCH.mount(canvas, D, {}); } catch (e) { bench = null; }
     }
-    window.__focus = setFocus;
-
-    $("#tExplode").addEventListener("click", function () {
-      var on = !stage.exploded;
-      stage.setExplode(on);
-      this.classList.toggle("on", on);
-      this.textContent = on ? "Collapse" : "Pull apart";
-    });
-    $("#tSpin").classList.toggle("on", stage.spinning);
-    $("#tSpin").addEventListener("click", function () {
-      var on = !stage.spinning;
-      stage.setSpin(on);
-      this.classList.toggle("on", on);
-    });
-    $("#tReset").addEventListener("click", function () {
-      stage.resetView();
-      if (stage.focus) setFocus(stage.focus);
-    });
-    if (REDUCED) { stage.setSpin(false); $("#tSpin").classList.remove("on"); }
-  }
-
-  /* Content survives with no WebGL: render the stack as HTML instead. */
-  function fallback(host) {
-    host.style.height = "auto"; host.style.cursor = "default";
-    var box = el("div", "gl-fb");
-    D.stack.layers.forEach(function (L) {
-      var r = el("div", "r");
-      r.style.setProperty("--c", L.color);
-      r.innerHTML = "<h4>" + esc(L.index) + " · " + esc(L.name) + "</h4><p>" + esc(L.caption) + '</p><div class="ps"></div>';
-      var ps = $(".ps", r);
-      L.products.forEach(function (pid) {
-        var p = D.products[pid]; if (!p) return;
-        var b = el("span", "", esc(p.name));
-        b.addEventListener("click", function () { openDrawer(pid); });
-        ps.appendChild(b);
+    if (bench) {
+      /* labels over the glass cores */
+      var host = $("#wLabels"), lbls = {};
+      bench.labelPoints().forEach(function (pt) {
+        if (pt.id === "__hub") {
+          lbls[pt.id] = el("div", "wl", '<span class="tg" style="--c:#FFE600"><em>00</em>Governed core</span><span class="st" style="--c:#FFE600"></span>');
+        } else {
+          lbls[pt.id] = el("div", "wl", '<span class="tg" style="--c:' + pt.layer.color + '"><em>' + esc(pt.layer.index) + "</em>" + esc(pt.layer.name) + '</span><span class="st" style="--c:' + pt.layer.color + '"></span>');
+        }
+        lbls[pt.id].style.setProperty("--c", pt.layer ? pt.layer.color : "#FFE600");
+        host.appendChild(lbls[pt.id]);
       });
-      box.appendChild(r);
+      bench.on("frame", function () {
+        var show = act === 2;
+        bench.labelPoints().forEach(function (pt) {
+          var p = bench.project(pt.p), e = lbls[pt.id];
+          if (!p) { e.classList.remove("on"); return; }
+          e.classList.toggle("on", show);
+          e.classList.toggle("sel", layerSel === pt.id);
+          e.style.transform = "translate(-50%,-100%) translate(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px)";
+        });
+      });
+      bench.rig.attach(canvas, {
+        onTap: function (x, y) { var id = bench.pickAt(x, y); if (id) openLayer(id); },
+        onHover: function (x, y) { var id = bench.pickAt(x, y); bench.setHover(id); canvas.classList.toggle("hot", !!id); },
+      });
+    } else {
+      $("#benchStick").insertAdjacentHTML("afterbegin", '<div class="nogl"></div>');
+    }
+
+    function onScroll() {
+      var r = sec.getBoundingClientRect(), span = sec.offsetHeight - innerHeight;
+      var p = Math.max(0, Math.min(1, -r.top / span));
+      var a = p < 0.3 ? 0 : p < 0.62 ? 1 : 2;
+      if (bench) bench.setProgress(Math.max(0, Math.min(1, (p - 0.08) / 0.8)));
+      if (a !== act) {
+        act = a;
+        $$(".act").forEach(function (n) { n.classList.toggle("on", +n.dataset.act === a); });
+        $$("#rail button").forEach(function (b) { b.classList.toggle("on", +b.dataset.go === a); });
+      }
+    }
+    addEventListener("scroll", onScroll, { passive: true });
+    addEventListener("resize", onScroll);
+    onScroll();
+    $$("#rail button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var span = sec.offsetHeight - innerHeight;
+        var at = [0.12, 0.47, 0.9][+b.dataset.go];
+        scrollTo({ top: sec.offsetTop + span * at, behavior: UI.REDUCED ? "auto" : "smooth" });
+      });
     });
-    host.appendChild(box);
-    $(".hint").style.display = "none";
-    $(".tools").style.display = "none";
   }
 
-  /* --------------------------------------------------- 5 · product drawer */
-  function openDrawer(pid) {
+  function layer(id) { return D.stack.layers.filter(function (L) { return L.id === id; })[0]; }
+
+  /* ----------------------------------------------------------- drawer */
+  function openLayer(id) {
+    var L = layer(id); if (!L) return;
+    layerSel = id;
+    if (bench) bench.setSelected(id);
+    $$("#layerList button").forEach(function (b) { b.classList.toggle("on", b.dataset.layer === id); });
+    var d = $("#drawer");
+    d.style.setProperty("--c", L.color);
+    $("#dMark").innerHTML = "";
+    $("#dFam").textContent = "Layer " + L.index;
+    $("#dName").textContent = L.name;
+    $("#dBody").innerHTML =
+      '<div class="dsec hl"><p>' + esc(L.caption) + "</p></div>" +
+      '<div class="dsec"><h4>What sits in this layer</h4><div class="plist">' +
+      L.products.map(function (pid) {
+        var p = D.products[pid]; if (!p) return "";
+        return '<button data-pid="' + pid + '"><span class="pm">' + (icon(pid) ? '<img alt="" src="' + icon(pid) + '">' : "") + "</span>" +
+          "<span><b>" + esc(p.name) + "</b><span>" + esc(p.family) + '</span></span><span class="ar">&rarr;</span></button>';
+      }).join("") + "</div></div>";
+    $$("#dBody [data-pid]").forEach(function (b) { b.addEventListener("click", function () { openProduct(b.dataset.pid, id); }); });
+    showDrawer();
+  }
+
+  function openProduct(pid, fromLayer) {
     var p = D.products[pid]; if (!p) return;
-    if (stage && !stage.failed) stage.select(pid);
-    $("#dImg").src = icon(pid);
+    var L = D.stack.layers.filter(function (x) { return x.products.indexOf(pid) >= 0; })[0];
+    if (L && bench) { layerSel = L.id; bench.setSelected(L.id); }
+    var d = $("#drawer");
+    d.style.setProperty("--c", L ? L.color : "#FFE600");
+    $("#dMark").innerHTML = icon(pid) ? '<img alt="" src="' + icon(pid) + '">' : "";
     $("#dFam").textContent = p.family;
     $("#dName").textContent = p.name;
-    var body = $("#dBody");
-    body.innerHTML = "";
-    body.appendChild(el("div", "dsec", "<h4>What it is</h4><p>" + esc(p.what) + "</p>"));
-    body.appendChild(el("div", "dsec hl", "<h4>What EY does with it</h4><p>" + esc(p.ey) + "</p>"));
-
-    var layer = D.stack.layers.filter(function (L) { return L.products.indexOf(pid) >= 0; })[0];
-    if (layer) {
-      body.appendChild(el("div", "dsec",
-        "<h4>Sits in</h4><p>" + esc(layer.index + " · " + layer.name) + " - " + esc(layer.caption) + "</p>"));
-    }
-    if (p.proof && p.proof.length) {
-      var sec = el("div", "dsec", "<h4>In production at</h4>");
-      var chips = el("div", "pchips");
-      p.proof.forEach(function (cid) {
-        var c = D.city.clients.filter(function (x) { return x.id === cid; })[0];
-        if (!c) return;
-        var a = el("a", "", esc(c.name) + " &rarr;");
-        a.href = "city.html?c=" + encodeURIComponent(cid);
-        chips.appendChild(a);
-      });
-      sec.appendChild(chips);
-      body.appendChild(sec);
-    }
-    $("#drawer").classList.add("open");
-    $("#drawer").setAttribute("aria-hidden", "false");
-    $("#scrim").classList.add("on");
+    var proof = (p.proof || []).map(function (cid) { return C.clients.filter(function (x) { return (x.realId || x.id) === cid || x.id === cid; })[0]; }).filter(Boolean);
+    $("#dBody").innerHTML =
+      '<div class="dsec"><h4>What it is</h4><p>' + esc(p.what) + "</p></div>" +
+      '<div class="dsec hl"><h4>What EY does with it</h4><p>' + esc(p.ey) + "</p></div>" +
+      (L ? '<div class="dsec"><h4>Sits in</h4><p>' + esc(L.index + " · " + L.name) + ". " + esc(L.caption) + "</p></div>" : "") +
+      (proof.length ? '<div class="dsec"><h4>In production at</h4><div class="links-row">' + proof.map(function (c) {
+        return '<a href="city.html?c=' + encodeURIComponent(c.id) + '">' + esc(c.name) + " &rarr;</a>";
+      }).join("") + "</div></div>" : "") +
+      (fromLayer ? '<div class="dsec"><div class="links-row"><button id="dBack">&larr; Back to ' + esc(layer(fromLayer).name) + "</button></div></div>" : "");
+    var bk = $("#dBack"); if (bk) bk.addEventListener("click", function () { openLayer(fromLayer); });
+    showDrawer();
+  }
+  function showDrawer() {
+    $("#drawer").classList.add("open"); $("#drawer").setAttribute("aria-hidden", "false");
+    $("#scrim").classList.add("on"); $("#dBody").scrollTop = 0;
+    setTimeout(function () { $("#dClose").focus({ preventScroll: true }); }, 60);
   }
   function closeDrawer() {
-    $("#drawer").classList.remove("open");
-    $("#drawer").setAttribute("aria-hidden", "true");
+    $("#drawer").classList.remove("open"); $("#drawer").setAttribute("aria-hidden", "true");
     $("#scrim").classList.remove("on");
-    if (stage && !stage.failed) stage.select(null);
+    layerSel = null;
+    if (bench) bench.setSelected(null);
+    $$("#layerList button").forEach(function (b) { b.classList.remove("on"); });
   }
 
-  /* ------------------------------------------------------ 6 · city gate */
-  function gate() {
-    var c = D.city;
-    $("#gKicker").textContent = "The city";
-    $("#gTitle").innerHTML = esc(c.title) + " <em>" + esc(c.titleAccent) + "</em>";
-    $("#gLede").textContent = c.lede;
-    var gs = $("#gStats");
-    c.stats.forEach(function (s) {
-      gs.appendChild(el("div", "", '<div class="v">' + esc(s.v) + '</div><div class="l">' + esc(s.l) + "</div>"));
-    });
-    var gm = $("#gMarks");
-    ["power-platform","power-apps","power-automate","power-bi","power-pages","dataverse",
-     "dynamics365","copilot","azure","fabric","purview"].forEach(function (k) {
-      if (!icon(k)) return;
-      var im = el("img"); im.src = icon(k); im.alt = ""; gm.appendChild(im);
-    });
-    gateSkyline();
-  }
-
-  /* A live preview of the actual city behind the gateway, rendered with the
-     same engine the city page uses. The previous version drew a row of
-     cartoon elevations from a separate 1,200 line 2D landmark library that
-     existed in this page for no other reason - and it previewed a city that
-     no longer looks like that. */
-  function gateSkyline() {
-    var cvs = $("#gateCanvas");
-    if (!cvs || !window.EYGL || !window.EYCITY) return;
-
-    var R = new window.EYGL.Renderer(cvs);
-    if (R.failed) { cvs.style.display = "none"; return; }
-
-    var S = window.EYCITY.build(D);
-    R.upload(S.builder);
-    R.cam.el = 0.34;
-    R.cam.az = -0.9;
-    R.cam.dist = S.LIMIT * 1.34 / Math.tan(R.cam.fov / 2) * 0.62;
-    R.cam.tgt = [0, 0, 7];
-    R.cam.azT = R.cam.az; R.cam.elT = R.cam.el;
-    R.cam.distT = R.cam.dist; R.cam.tgtT = R.cam.tgt.slice();
-
-    var raf = null, shadowR = S.radius * 1.5;
-    function frame() {
-      if (!REDUCED) R.cam.az = R.cam.azT = R.cam.az + 0.00035;
-      R.resize();
-      R.draw(shadowR);
-      raf = requestAnimationFrame(frame);
-    }
-    function start() { if (!raf) raf = requestAnimationFrame(frame); }
-    function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
-
-    R.resize(); R.draw(shadowR);
-    if (REDUCED) return;
-    /* only render while it is actually on screen, and never in a hidden tab */
-    if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (es) {
-        es.forEach(function (e) { e.isIntersecting && !document.hidden ? start() : stop(); });
-      }, { threshold: 0 }).observe(cvs);
-    } else start();
-    document.addEventListener("visibilitychange", function () {
-      if (document.hidden) stop();
-      else if (cvs.getBoundingClientRect().top < innerHeight) start();
-    });
-  }
-
-  /* ----------------------------------------------------- 7 · other blocks */
+  /* -------------------------------------------------------- catalogue */
   function capability() {
     var c = D.capability;
     $("#capKicker").textContent = c.kicker;
     $("#capTitle").textContent = c.title;
-    var g = $("#capCols");
-    c.columns.forEach(function (col) {
-      var n = el("div", "col");
-      n.style.setProperty("--c", col.tone);
-      n.innerHTML = "<h3>" + esc(col.title) + "</h3><ul>" +
-        col.items.map(function (i) { return "<li>" + esc(i) + "</li>"; }).join("") + "</ul>";
-      g.appendChild(n);
-    });
+    $("#capLede").textContent = D.close.body;
+    $("#capCols").innerHTML = c.columns.map(function (col, i) {
+      return '<div class="col" style="--c:' + col.tone + '"><div class="n">0' + (i + 1) + "</div><h3>" + esc(col.title) + "</h3><ul>" +
+        col.items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>";
+    }).join("");
+  }
+
+  function work() {
+    $("#workLede").textContent = C.lede;
+    $("#workNote").textContent = C.core.body;
+    $("#engList").innerHTML = C.clients.map(function (c, i) {
+      var s = c.stats[0] || {};
+      return '<a href="city.html?c=' + encodeURIComponent(c.id) + '" style="--c:' + c.tone + '">' +
+        '<span class="ix">0' + (i + 1) + "</span>" +
+        '<span class="nm">' + esc(c.name) + "<small>" + esc(c.sector) + "</small></span>" +
+        '<span class="tg">' + esc(c.tagline) + "</span>" +
+        '<span class="kpi"><b>' + esc(s.v || "") + "</b><span>" + esc(s.l || "") + "</span></span>" +
+        '<span class="ar">&rarr;</span></a>';
+    }).join("");
   }
 
   function offerings() {
     var o = D.offerings;
     $("#ofKicker").textContent = o.kicker;
     $("#ofTitle").textContent = o.title;
-    var g = $("#ofGrid");
-    o.items.forEach(function (it) {
-      var n = el("div", "off");
-      n.style.setProperty("--c", it.tone);
-      n.innerHTML =
-        '<div class="ic"><img alt="" src="' + icon(it.icon) + '"></div>' +
+    $("#ofGrid").innerHTML = o.items.map(function (it) {
+      var c = C.clients.filter(function (x) { return (x.realId || x.id) === it.client || x.id === it.client; })[0];
+      return '<article class="off" style="--c:' + it.tone + '">' +
+        '<div class="ic">' + (icon(it.icon) ? '<img alt="" src="' + icon(it.icon) + '">' : "") + "</div>" +
         "<h3>" + esc(it.name) + "</h3><p>" + esc(it.body) + "</p>" +
-        '<div class="foot"><div class="who">' + esc(it.contact) +
-        '<a href="mailto:' + esc(it.email) + '">' + esc(it.email) + "</a></div>" +
-        '<a class="jump" href="city.html?c=' + encodeURIComponent(it.client) + '">See it in the city &rarr;</a></div>';
-      g.appendChild(n);
-    });
+        '<div class="ft"><div class="who">' + (it.contact ? "<b>" + esc(it.contact) + '</b><a href="mailto:' + esc(it.email) + '">' + esc(it.email) + "</a>" : "") + "</div>" +
+        (c ? '<a class="go" href="city.html?c=' + encodeURIComponent(c.id) + '">See it in the City <span>&rarr;</span></a>' : "") +
+        "</div></article>";
+    }).join("");
   }
 
   function scale() {
     var s = D.scale;
     $("#scKicker").textContent = s.kicker;
     $("#scTitle").textContent = s.title;
-    var m = $("#scMst");
-    s.milestones.forEach(function (x) {
-      m.appendChild(el("div", "leaf", '<div class="v">' + esc(x.v) + '</div><div class="l">' + esc(x.l) + "</div>"));
-    });
-    var w = $("#scWhy");
-    s.why.forEach(function (x) { w.appendChild(el("div", "c", "<h4>" + esc(x.t) + "</h4><p>" + esc(x.b) + "</p>")); });
-    $("#clTitle").textContent = s.clients.title;
-    var c = $("#clGrid");
-    s.clients.groups.forEach(function (grp) {
-      c.appendChild(el("div", "", "<h4>" + esc(grp.sector) + '</h4><div class="chips logos">' +
-        grp.names.map(function (x) {
-          /* tolerate the old string form as well as the {n, logo} object */
-          var nm = typeof x === "string" ? x : x.n;
-          var lg = typeof x === "string" ? null : x.logo;
-          var src = lg && ICONS[lg];
-          return '<span class="lgo' + (src ? "" : " txt") + '" title="' + esc(nm) + '">' +
-                 (src ? '<img src="' + src + '" alt="' + esc(nm) + '" loading="lazy">'
-                      : esc(nm)) + "</span>";
-        }).join("") + "</div>"));
-    });
+    $("#scMst").innerHTML = s.milestones.map(function (m) {
+      return '<div class="ms"><div class="v num">' + esc(m.v) + '</div><div class="l">' + esc(m.l) + "</div></div>";
+    }).join("");
+    $("#scWhy").innerHTML = s.why.map(function (w) { return '<div><h4><span class="beam"></span>' + esc(w.t) + "</h4><p>" + esc(w.b) + "</p></div>"; }).join("");
+    var named = !window.EYGOV || EYGOV.mode === "internal";
+    $("#clGrid").innerHTML = '<p class="cap" style="grid-column:1/-1;margin:0">' + esc(s.clients.title) + "</p>" + (named ? s.clients.groups.map(function (g) {
+      return "<div><h4 class=\"cap\">" + esc(g.sector) + '</h4><div class="row">' + g.names.map(function (x) {
+        var nm = typeof x === "string" ? x : x.n, src = typeof x === "string" ? "" : icon(x.logo);
+        return '<span class="lg' + (src ? "" : " txt") + '" title="' + esc(nm) + '">' + (src ? '<img alt="' + esc(nm) + '" src="' + src + '" loading="lazy">' : esc(nm)) + "</span>";
+      }).join("") + "</div></div>";
+    }).join("") : '<p class="lede" style="grid-column:1/-1">Client names are withheld in this audience mode.</p>');
   }
 
   function team() {
@@ -536,19 +486,12 @@
     $("#tmKicker").textContent = t.kicker;
     $("#tmTitle").textContent = t.title;
     $("#tmLede").textContent = t.lede;
-    var g = $("#tmGrid");
-    t.people.forEach(function (p) {
-      var a = el("a", "person");
-      a.href = "mailto:" + p.email;
-      a.style.setProperty("--c", p.tone);
-      var av = p.photo
-        ? '<div class="av"><img src="' + p.photo + '" alt="' + esc(p.name) + '" loading="lazy"></div>'
-        : '<div class="av">' + ini(p.name) + '</div>';
-      a.innerHTML = av + '<div class="n">' + esc(p.name) +
-        '</div><div class="r">' + esc(p.role) + '</div><div class="t">' + esc(p.title) +
-        '</div><div class="e">' + esc(p.email) + "</div>";
-      g.appendChild(a);
-    });
+    $("#tmGrid").innerHTML = t.people.map(function (p) {
+      var ini = p.name.split(/\s+/).slice(0, 2).map(function (w) { return w[0]; }).join("");
+      return '<a class="person" href="mailto:' + esc(p.email) + '" style="--c:' + p.tone + '">' +
+        '<div class="ph">' + (p.photo ? '<img src="' + esc(p.photo) + '" alt="' + esc(p.name) + '" loading="lazy">' : '<span class="ini">' + ini + "</span>") + "</div>" +
+        '<div class="n">' + esc(p.name) + '</div><div class="r">' + esc(p.role) + '</div><div class="t">' + esc(p.title) + "</div></a>";
+    }).join("");
   }
 
   function closing() {
@@ -556,89 +499,22 @@
     $("#clsKicker").textContent = c.kicker;
     $("#clsTitle").textContent = c.title;
     $("#clsBody").textContent = c.body;
-    var cta = $("#clsCta");
-    cta.href = "mailto:" + c.email;
-    cta.innerHTML = esc(c.cta) + ' <span class="arw">&rarr;</span>';
+    $("#clsCta").href = "mailto:" + c.email;
+    $("#clsCta").innerHTML = esc(c.cta) + ' <span class="ar">&rarr;</span>';
     $("#footDis").textContent = c.disclaimer;
   }
 
-  function scrollFx() {
-    var bar = $("#prog"), top = $("#topbar");
-    var links = $$("#nav a").filter(function (a) { return a.getAttribute("href").charAt(0) === "#"; });
-    var secs = links.map(function (a) { return document.getElementById(a.getAttribute("href").slice(1)); });
-    function onScroll() {
-      var y = window.scrollY;
-      var max = document.documentElement.scrollHeight - window.innerHeight;
-      bar.style.width = (max > 0 ? (y / max) * 100 : 0) + "%";
-      top.classList.toggle("stuck", y > 40);
-      var cur = -1;
-      secs.forEach(function (s, i) {
-        if (s && s.getBoundingClientRect().top <= window.innerHeight * 0.42) cur = i;
-      });
-      links.forEach(function (a, i) { a.classList.toggle("on", i === cur); });
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    if ("IntersectionObserver" in window) {
-      var io = new IntersectionObserver(function (es) {
-        es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-      }, { threshold: 0.1, rootMargin: "0px 0px -8% 0px" });
-      $$(".rv").forEach(function (n) { io.observe(n); });
-    } else $$(".rv").forEach(function (n) { n.classList.add("in"); });
-  }
-
   function init() {
-    brand(); hero(); buildStack(); gate();
-    capability(); offerings(); scale(); team(); closing();
-    field(); scrollFx();
-
+    UI.bar(); UI.fullscreen();
+    hero(); workbench(); capability(); work(); offerings(); scale(); team(); closing();
+    UI.reveal(); UI.spy();
     $("#dClose").addEventListener("click", closeDrawer);
     $("#scrim").addEventListener("click", closeDrawer);
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeDrawer(); });
-
-    window.BizApps = {
-      product: openDrawer,
-      layer: function (id) { if (window.__focus) window.__focus(id); },
-      explode: function (on) { if (stage && !stage.failed) { stage.setExplode(on); $("#tExplode").classList.toggle("on", on); } },
-      reset: function () { closeDrawer(); if (stage && !stage.failed) stage.resetView(); },
-      stage: function () { return stage; },
-    };
+    window.BizApps = { product: openProduct, layer: openLayer, close: closeDrawer,
+      city: function () { return city; }, bench: function () { return bench; } };
   }
-
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
-  else init();
-  /* ---- full screen (shared with the city page) ------------------------- */
-  (function () {
-    function wire() {
-      if (!window.FS) return;
-      window.FS.bind(document.getElementById("cFull"), document.getElementById("cFullTxt"));
-      document.addEventListener("keydown", function (e) {
-        if (e.target && /input|textarea/i.test(e.target.tagName)) return;
-        if ((e.key || "").toLowerCase() === "f") { window.FS.toggle(); e.preventDefault(); }
-      });
-    }
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
-    else wire();
-  })();
-
-})();
-</script>
-<script>
-/* Mobile navigation. Closes on selection, on Escape and on resize back to the
-   desktop layout, so it can never be left open and orphaned. */
-(function () {
-  var tog = document.getElementById("navTog"), nav = document.getElementById("nav");
-  if (!tog || !nav) return;
-  function set(open) {
-    nav.classList.toggle("open", open);
-    tog.setAttribute("aria-expanded", open ? "true" : "false");
-  }
-  tog.addEventListener("click", function () {
-    set(tog.getAttribute("aria-expanded") !== "true");
-  });
-  nav.addEventListener("click", function (e) { if (e.target.tagName === "A") set(false); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape") set(false); });
-  window.addEventListener("resize", function () { if (innerWidth > 1080) set(false); });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
 </script>
 </body>
