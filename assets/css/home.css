@@ -1,6 +1,6 @@
 /* ============================================================================
  *  EY BizApps - home.css · the Showcase
- *  Hero on the Digital City at night, the Workbench as a scroll-driven scene,
+ *  Hero on BizApps City at night, the Workbench as a scroll-driven scene,
  *  then the practice set like an exhibition catalogue.
  * ========================================================================== */
 
@@ -9,9 +9,9 @@
 .hero canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero .shade{position:absolute;inset:0;pointer-events:none;
   background:
-    linear-gradient(180deg,rgba(11,10,8,.55) 0%,rgba(11,10,8,0) 22%),
-    linear-gradient(0deg,rgba(11,10,8,.88) 0%,rgba(11,10,8,.35) 34%,rgba(11,10,8,0) 58%),
-    linear-gradient(90deg,rgba(11,10,8,.45) 0%,rgba(11,10,8,0) 55%)}
+    linear-gradient(180deg,rgba(8,14,30,.84) 0%,rgba(11,10,8,0) 22%),
+    linear-gradient(0deg,rgba(11,10,8,.88) 0%,rgba(11,10,8,.75) 34%,rgba(11,10,8,0) 58%),
+    linear-gradient(90deg,rgba(11,10,8,.8) 0%,rgba(11,10,8,0) 55%)}
 .finder{position:absolute;inset:calc(var(--bar) + 18px) var(--pad) 26px;pointer-events:none}
 .finder i{position:absolute;width:22px;height:22px;border-color:rgba(243,238,228,.5);border-style:solid;border-width:0}
 .finder i:nth-child(1){left:0;top:0;border-left-width:1px;border-top-width:1px}
@@ -20,7 +20,7 @@
 .finder i:nth-child(4){right:0;bottom:0;border-right-width:1px;border-bottom-width:1px}
 .hero-in{position:absolute;left:0;right:0;bottom:0;padding:0 var(--pad) clamp(40px,7vh,86px);
   display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;align-items:end}
-.hero .display{max-width:15ch;text-shadow:0 2px 40px rgba(0,0,0,.25)}
+.hero .display{max-width:15ch;font-size:clamp(44px,min(7.4vw,11.5vh),128px);text-shadow:0 2px 40px rgba(0,0,0,.25)}
 .hero .display .rot{display:inline-grid;vertical-align:top}
 .hero .display .rot span{grid-area:1/1;color:var(--y);opacity:0;transform:translateY(-.25em);transition:opacity .35s var(--ease),transform .45s var(--ease)}
 .hero .display .rot span.on{opacity:1;transform:none;transition:opacity .6s var(--ease) .15s,transform .7s var(--ease) .15s}
@@ -30,8 +30,7 @@
 .scene{display:flex;flex-direction:column;align-items:flex-end;gap:12px;text-align:right}
 .scene .t{font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:rgba(243,238,228,.7)}
 .scene .t b{color:var(--ink);font-weight:400}
-.tod{display:flex;gap:4px;padding:3px;border-radius:999px;border:1px solid var(--hair);background:rgba(11,10,8,.35);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.tod{display:flex;gap:4px;padding:3px;border-radius:999px;border:1px solid var(--hair);background:rgba(11,10,8,.75);}
 .tod button{height:30px;padding:0 13px;border-radius:999px;font-size:11.5px;font-weight:700;color:var(--ink-3);letter-spacing:.03em}
 .tod button:hover{color:var(--ink)}
 .tod button[aria-pressed="true"]{background:var(--ink);color:var(--char)}
@@ -101,7 +100,7 @@
   opacity:0;transition:opacity .5s;pointer-events:none;white-space:nowrap}
 .wl.on{opacity:1}
 .wl .tg{font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--ink);
-  padding:6px 10px;border-radius:999px;background:rgba(7,7,10,.55);border:1px solid var(--hair);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+  padding:6px 10px;border-radius:999px;background:rgba(7,7,10,.84);border:1px solid var(--hair);}
 .wl .tg em{font-style:normal;font-family:var(--mono);font-weight:400;color:var(--c);margin-right:6px;letter-spacing:.04em}
 .wl .st{width:1px;height:18px;background:linear-gradient(var(--c),transparent)}
 .wl.sel .tg{background:var(--c);color:var(--char);border-color:var(--c)}

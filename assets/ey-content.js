@@ -184,7 +184,7 @@ window.BIZ = {
   /* ============================================================== THE CITY */
   city: {
     eyebrow: "EY · Microsoft AI - Business Applications",
-    title: "The Digital",
+    title: "BizApps",
     titleAccent: "City",
     lede: "Every landmark on the skyline is a real client engagement EY has delivered on the Microsoft cloud. Explore the city, then open any landmark to see the challenge, what we built, and what it means for your organisation.",
     stats: [
@@ -193,7 +193,7 @@ window.BIZ = {
       { v: "40+", l: "EY specialists" },
       { v: "250K+", l: "Citizens reached" },
     ],
-    cta: "Enter the city",
+    cta: "Enter BizApps City",
     note: "Each landmark is one client's separate Microsoft tenant. Drag to orbit, scroll to zoom, shift-drag to pan, and select a landmark to open it.",
 
     lifecycle: [

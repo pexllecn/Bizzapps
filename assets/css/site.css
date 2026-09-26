@@ -2,7 +2,7 @@
  *  EY BizApps - site.css
  *  The design system for all three views, rebuilt from the ground up.
  *  ---------------------------------------------------------------------------
- *  The pages are now built around two photographed-looking places, the Digital City
+ *  The pages are now built around two photographed-looking places, BizApps City
  *  and the Workbench, so the interface steps back: it is set like film titles
  *  and an exhibition caption, not like a dashboard. Light type at large sizes,
  *  small spaced capitals for labels, hairlines instead of boxes, and one
@@ -105,7 +105,7 @@ a{color:inherit}
 
 .pill{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px;border-radius:999px;
   font-size:12px;font-weight:700;letter-spacing:.04em;border:1px solid var(--hair);
-  background:rgba(11,10,8,.42);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  background:rgba(11,10,8,.78);
   color:var(--ink-2);transition:all .25s var(--ease)}
 .pill:hover{color:var(--ink);border-color:var(--hair-2)}
 .pill.on,.pill[aria-pressed="true"]{color:var(--char);background:var(--ink);border-color:var(--ink)}
@@ -114,7 +114,7 @@ a{color:inherit}
 /* ------------------------------------------------------------------ bar */
 .bar{position:fixed;inset:0 0 auto 0;z-index:60;height:var(--bar);display:flex;align-items:center;gap:22px;
   padding:0 var(--pad);transition:background .4s,border-color .4s;border-bottom:1px solid transparent}
-.bar.stuck{background:rgba(11,10,8,.72);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);border-color:var(--hair)}
+.bar.stuck{background:rgba(11,10,8,.94);border-color:var(--hair)}
 .brand{display:flex;align-items:center;gap:14px;text-decoration:none;color:var(--ink);flex:none}
 .brand img{height:34px;width:auto}
 .brand .t{display:flex;flex-direction:column;line-height:1.15;padding-left:14px;border-left:1px solid var(--hair-2)}
@@ -126,7 +126,7 @@ a{color:inherit}
 .bar .links a:hover,.bar .links a.on{color:var(--ink)}
 .bar .links a:hover::after,.bar .links a.on::after{right:0}
 .views{display:flex;align-items:center;border:1px solid var(--hair);border-radius:999px;padding:3px;
-  background:rgba(11,10,8,.4);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  background:rgba(11,10,8,.78);}
 .views a{display:flex;align-items:baseline;gap:7px;height:30px;align-items:center;padding:0 13px;border-radius:999px;
   font-size:12px;font-weight:700;color:var(--ink-3);text-decoration:none;transition:all .25s}
 .views a i{font-style:normal;font-family:var(--mono);font-size:10px;font-weight:400;opacity:.7}
