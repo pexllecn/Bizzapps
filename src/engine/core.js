@@ -41,7 +41,24 @@ function detectQuality(renderer) {
   return "high";
 }
 
-const GRADE = {
+/**
+ * Replaces any pixel that is not a finite number with black, and clamps the
+ * extreme ones, before bloom sees them. A single NaN from any shader on any
+ * GPU is otherwise blurred by the bloom into a black blotch that flickers
+ * across the screen; this pass makes that impossible.
+ */
+export const SANITIZE = {
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: `varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }`,
+  fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+    void main(){
+      vec4 c = texture2D(tDiffuse, vUv);
+      if (!(c.r == c.r) || !(c.g == c.g) || !(c.b == c.b) || isinf(c.r) || isinf(c.g) || isinf(c.b)) c = vec4(0.0, 0.0, 0.0, 1.0);
+      gl_FragColor = vec4(clamp(c.rgb, 0.0, 64.0), 1.0);
+    }`,
+};
+
+export const GRADE = {
   uniforms: {
     tDiffuse: { value: null },
     uTime: { value: 0 },
@@ -88,7 +105,7 @@ export class Stage {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(opts.fov || 38, 1, 0.1, 6000);
+    this.camera = opts.camera || new THREE.PerspectiveCamera(opts.fov || 38, 1, opts.near || 0.1, opts.far || 6000);
     this.clock = new THREE.Clock();
     this.time = 0;
     this.frameHooks = [];
@@ -100,9 +117,13 @@ export class Stage {
     this.stillAfter = still > 0 ? still : 0;
     this.frames = 0;
 
-    const rt = new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType, samples: this.quality === "low" ? 0 : 4 });
+    // MSAA on a half-float target is where some drivers go wrong; ?msaa=0 turns it off
+    const msaa = new URLSearchParams(location.search).get("msaa");
+    const samples = msaa === "0" || this.quality === "low" ? 0 : 4;
+    const rt = new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType, samples });
     const composer = new EffectComposer(renderer, rt);
     composer.addPass(new RenderPass(this.scene, this.camera));
+    composer.addPass(new ShaderPass(SANITIZE));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), opts.bloom ?? 0.5, 0.6, opts.bloomThreshold ?? 1.0);
     if (this.quality !== "low" || opts.lowBloom) composer.addPass(this.bloom);
     composer.addPass(new OutputPass());
@@ -123,6 +144,9 @@ export class Stage {
       }, { threshold: 0 }).observe(canvas);
     }
     document.addEventListener("visibilitychange", () => { if (!document.hidden) this.start(); });
+    // a lost context is recovered by starting again, not by a frozen or black canvas
+    canvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); this.running = false; });
+    canvas.addEventListener("webglcontextrestored", () => location.reload());
   }
 
   resize() {
@@ -133,8 +157,7 @@ export class Stage {
     this.renderer.setSize(w, h, false);
     this.composer.setPixelRatio(this.pixelRatio);
     this.composer.setSize(w, h);
-    this.camera.aspect = w / h;
-    this.camera.updateProjectionMatrix();
+    if (this.camera.isPerspectiveCamera) { this.camera.aspect = w / h; this.camera.updateProjectionMatrix(); }
     this.dirty = 2;
     if (this.onResize) this.onResize(w, h);
   }
