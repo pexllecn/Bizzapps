@@ -52,7 +52,7 @@ function softSprite() {
  */
 function facadeMaterial({ tint = 0x3fb8ff, instanced = false } = {}) {
   const U = {
-    uTime: { value: 0 }, uLit: { value: 0.46 }, uFacade: { value: 1 }, uBoost: { value: 0 },
+    uTime: { value: 0 }, uLit: { value: 0.46 }, uFacade: { value: 1 }, uBoost: { value: 0 }, uRoof: { value: 0 },
     uTint: { value: new THREE.Color(tint) }, uWarm: { value: new THREE.Color(0xffc98a) }, uCool: { value: new THREE.Color(0xbfe6ff) },
   };
   const mat = new THREE.MeshStandardMaterial({ color: 0x0a1422, metalness: 0.75, roughness: 0.22, envMapIntensity: 1.2, vertexColors: false });
@@ -79,7 +79,7 @@ function facadeMaterial({ tint = 0x3fb8ff, instanced = false } = {}) {
         vFWN = normalize(mat3(modelMatrix) * fn);`);
     sh.fragmentShader = sh.fragmentShader
       .replace("#include <common>", `#include <common>
-        uniform float uTime, uLit, uFacade, uBoost; uniform vec3 uTint, uWarm, uCool;
+        uniform float uTime, uLit, uFacade, uBoost, uRoof; uniform vec3 uTint, uWarm, uCool;
         varying vec3 vFWP; varying vec3 vFWN; varying vec3 vSeed; varying vec3 vITint;
         float fh(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }`)
       .replace("#include <emissivemap_fragment>", `#include <emissivemap_fragment>
@@ -105,9 +105,16 @@ function facadeMaterial({ tint = 0x3fb8ff, instanced = false } = {}) {
           // bands of light every so many floors, the way a modern tower is lit
           float band = step(.93, fract(y / 26.)) * step(fh(vSeed.xz), .55);
           totalEmissiveRadiance += side * band * tint * 1.4 * uFacade;
+          // seen from above (the floor): roofs glow faintly in their tint, with a scatter of rooftop lights
+          if (uRoof > 0.) {
+            float top = smoothstep(.7, .9, n.y);
+            vec2 rc = floor(vFWP.xz / 2.6);
+            float rl = step(.9, fh(rc + vSeed.xz * .31)) * (.8 + .2 * sin(uTime * 1.7 + fh(rc) * 30.));
+            totalEmissiveRadiance += top * uRoof * (tint * .07 + mix(uWarm, tint, .5) * rl * .8);
+          }
         }`);
   };
-  mat.customProgramCacheKey = () => "facade-v1" + (instanced ? "i" : "");
+  mat.customProgramCacheKey = () => "facade-v2" + (instanced ? "i" : "");
   return mat;
 }
 
@@ -251,9 +258,11 @@ class City {
       cam.position.set(0, 1200, 0);
       cam.up.set(0, 0, -1);
       cam.lookAt(0, 0, 0);
-      stage = new Stage(canvas, { camera: cam, bloom: 0.8, bloomThreshold: 0.6, quality: opts.quality, lowBloom: true });
+      stage = new Stage(canvas, { camera: cam, bloom: 0.5, bloomThreshold: 0.72, quality: opts.quality, lowBloom: true });
       stage.onResize = (w, h) => { const a = w / h; cam.left = -S * Math.max(1, a); cam.right = S * Math.max(1, a); cam.top = S / Math.min(1, a); cam.bottom = -S / Math.min(1, a); cam.updateProjectionMatrix(); };
       stage.onResize(stage.w, stage.h);
+      stage.grade.uniforms.uVignette.value = 0;     // the page fades the edge into the walls instead
+      stage.onAfter(() => this._toneFloor());
       this.floorCam = cam;
     } else {
       stage = new Stage(canvas, { fov: this.mode === "hero" ? 30 : 36, near: 1, far: 6000, bloom: 0.95, bloomThreshold: 0.62, quality: opts.quality, lowBloom: true });
@@ -318,6 +327,11 @@ class City {
     this.glow = key === "night" ? 1 : key === "blue" ? 0.8 : 0.6;
     for (const m of this.mats) { m.userData.U.uLit.value = T.lit; m.userData.U.uFacade.value = T.facade; }
     if (this.water) this.water.material.uniforms.uColor.value.set(T.water);
+    // from a kilometre up the haze would bury the map; the floor matches the walls' tone instead
+    if (this.mode === "floor") {
+      this.stage.scene.fog.density = 0; this.toneAt = 0;
+      for (const m of this.mats) m.userData.U.uRoof.value = 1;
+    }
     return T;
   }
 
@@ -325,6 +339,7 @@ class City {
 
   _island() {
     const deckMat = new THREE.MeshStandardMaterial({ color: 0x0b111c, metalness: 0.5, roughness: 0.5, envMapIntensity: 0.8 });
+    this.deckMat = deckMat;
     if (this.lagoon) return this._ring(deckMat);
     // the deck sits on the water rather than through it, so it never fights its own reflection
     const g = new THREE.CylinderGeometry(ISLAND, ISLAND + 1.5, 0.9, 96, 1);
@@ -828,6 +843,50 @@ class City {
     if (id === "__ey" || !id) return null;
     const M = this.monuments.find((m) => m.id === id);
     return M ? Math.atan2(M.pos.x, M.pos.z) : null;
+  }
+
+  /**
+   * The colour the floor's water should read as on screen, in sRGB bytes:
+   * the average along the bottom of the walls, so floor and walls meet in
+   * one tone. The water is then nudged every second or so until the pixels
+   * actually drawn agree, which takes tone mapping and bloom into account.
+   */
+  setFloorTone(rgb) { this.toneTarget = rgb; this.toneAt = 0; }
+
+  _toneFloor() {
+    const now = performance.now();
+    if (!this.toneTarget || !this.water || now - (this.toneAt || 0) < 1000) return;
+    this.toneAt = now;
+    const r = this.stage.renderer, gl = r.getContext();
+    const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight;
+    const cx = w >> 1, cy = h >> 1, R = Math.min(w, h) / 2;
+    const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+    // a percentile of four short runs, one each side of the centre, between two radii
+    const med = (f0, f1, pct = 0.5) => {
+      const a = Math.round(R * f0), b = Math.round(R * f1), n = b - a;
+      const px = new Uint8Array(n * 4), sam = [[], [], []];
+      const take = () => { for (let i = 0; i < n; i++) for (let j = 0; j < 3; j++) sam[j].push(px[i * 4 + j]); };
+      gl.readPixels(cx + a, cy, n, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); take();
+      gl.readPixels(cx - b, cy, n, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); take();
+      gl.readPixels(cx, cy + a, 1, n, gl.RGBA, gl.UNSIGNED_BYTE, px); take();
+      gl.readPixels(cx, cy - b, 1, n, gl.RGBA, gl.UNSIGNED_BYTE, px); take();
+      return sam.map((s) => lin(s.sort((x, y) => x - y)[Math.floor(s.length * pct)]));   // a percentile ignores lines and lights
+    };
+    if (R < 40) return;
+    r.setRenderTarget(null);
+    const want = this.toneTarget.map(lin);
+    // open water between EY's platform and the ring of towers: scale its colour
+    const water = med(0.3, 0.42), U = this.water.material.uniforms.uColor.value;
+    ["r", "g", "b"].forEach((k, j) => {
+      const gain = Math.min(1.6, Math.max(0.6, Math.pow(Math.max(want[j], 1e-4) / Math.max(water[j], 1e-4), 0.6)));
+      U[k] = Math.min(1, Math.max(0.0005, U[k] * gain));
+    });
+    // the deck the outer towers stand on is near black from above: give it the water's own
+    // matched colour as light, so the streets between the roofs are the same tone as the sea
+    if (this.deckMat && this.lagoon) {
+      this.deckMat.color.setRGB(0.01, 0.01, 0.012);
+      this.deckMat.emissive.copy(U).multiplyScalar(0.8);
+    }
   }
 
   /** The floor's turn, kept in step with the walls'. */
