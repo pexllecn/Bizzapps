@@ -1,64 +1,79 @@
 /* ============================================================================
  *  EY BizApps - ey-gov.css
  *  The access gate, the audience-mode bar, the usage panel, the entry points
- *  and the diagram styling. Loaded by all three views after css/site.css so it
+ *  and the diagram styling. Loaded by all three views after ey-core.css so it
  *  inherits the same tokens rather than restating them.
  * ========================================================================== */
 
-/* ============================================================ 1 · THE GATE
-   The monument renders behind the gate, blurred, so the first thing anybody
-   sees is the place they are about to enter. */
+/* ============================================================ 1 · THE GATE */
 body.gated { overflow: hidden; }
-body.gated .ui, body.gated .labels, body.gated .bar{ opacity:0; pointer-events:none }
 
 .gate{
   position:fixed; inset:0; z-index:9000;
   display:grid; place-items:center; padding:24px;
-  opacity:1; transition:opacity .5s var(--ease);
+  opacity:1; transition:opacity .26s var(--ease);
 }
 .gate.out{ opacity:0; pointer-events:none }
 .gate-bg{
-  position:absolute; inset:0;
-  background:linear-gradient(180deg,rgba(11,10,8,.75),rgba(11,10,8,.7));
+  position:absolute; inset:0; background:
+    radial-gradient(120% 90% at 50% -10%, rgba(255,230,0,.10), transparent 62%),
+    radial-gradient(90% 70% at 80% 110%, rgba(179,155,232,.10), transparent 60%),
+    var(--bg);
+}
+.gate-bg::after{
+  content:""; position:absolute; inset:0; opacity:.5;
+  background-image:linear-gradient(rgba(255,255,255,.045) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:64px 64px;
+  mask-image:radial-gradient(70% 60% at 50% 40%,#000,transparent 78%);
 }
 .gate-card{
-  position:relative; width:min(420px,100%);
-  background:rgba(8,12,24,.96); border:1px solid var(--hair-2);
-  border-radius:22px; padding:40px 38px 28px;
-  box-shadow:0 50px 120px rgba(0,0,0,.55);
+  position:relative; width:min(392px,100%);
+  background:rgba(14,14,21,.92); border:1px solid var(--line-2);
+  border-radius:var(--r-lg); padding:32px 30px 24px;
+  box-shadow:0 40px 90px rgba(0,0,0,.6);
+  backdrop-filter:blur(14px);
 }
-.gate-ey{ width:52px; margin-bottom:26px }
-.gate-k{ margin:0 0 8px; font-size:10.5px; font-weight:700; letter-spacing:.24em; text-transform:uppercase; color:var(--ink-3) }
-.gate-card h1{ margin:0 0 12px; font-size:40px; font-weight:300; letter-spacing:-.03em; line-height:1 }
-.gate-l{ margin:0 0 26px; font-size:14px; line-height:1.55; color:var(--ink-2) }
+.gate-card::before{
+  content:""; position:absolute; left:30px; right:30px; top:0; height:2px;
+  background:var(--ey-yellow); border-radius:0 0 2px 2px;
+}
+.gate-ey{ width:46px; margin-bottom:20px }
+.gate-k{
+  margin:0 0 6px; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-3); font-family:var(--mono);
+}
+.gate-card h1{ margin:0 0 10px; font-size:27px; font-weight:300; letter-spacing:-.01em }
+.gate-l{ margin:0 0 22px; font-size:13.5px; line-height:1.5; color:var(--ink-2) }
 .gate-card label{
-  display:block; margin-bottom:14px;
-  font-size:10.5px; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-3);
+  display:block; margin-bottom:13px;
+  font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3);
 }
 .gate-card input{
-  display:block; width:100%; margin-top:8px; padding:0 2px; height:42px;
-  background:transparent; border:0; border-bottom:1px solid var(--hair-2); border-radius:0;
-  color:var(--ink); font:300 18px/1.2 var(--f); letter-spacing:normal; text-transform:none;
-  transition:border-color .3s;
+  display:block; width:100%; margin-top:7px; padding:11px 13px;
+  background:rgba(255,255,255,.05); border:1px solid var(--line-2);
+  border-radius:var(--r-sm); color:var(--ink);
+  font:400 14px/1.2 var(--f); letter-spacing:normal; text-transform:none;
 }
-.gate-card input:focus{ outline:none; border-color:var(--y) }
+.gate-card input:focus{ outline:none; border-color:var(--ey-yellow); background:rgba(255,255,255,.08) }
 .gate-err{
-  margin:0 0 12px; padding:9px 12px; border-radius:10px;
-  background:rgba(255,65,54,.12); border:1px solid rgba(255,65,54,.34);
-  color:#FF8A80; font-size:12.5px;
+  margin:0 0 12px; padding:9px 12px; border-radius:var(--r-sm);
+  background:rgba(245,118,154,.12); border:1px solid rgba(245,118,154,.34);
+  color:#F5769A; font-size:12.5px;
 }
 .gate-go{
-  width:100%; margin-top:14px; height:50px; border-radius:999px;
-  background:var(--y); color:#1A1A24; font-weight:700; font-size:14px;
-  transition:background .2s;
+  width:100%; margin-top:6px; padding:12px;
+  background:var(--ey-yellow); color:#1A1A24;
+  border-radius:var(--r-sm); font-weight:700; font-size:13.5px;
+  transition:transform .16s var(--ease), filter .16s var(--ease);
 }
-.gate-go:hover{ background:#fff27a }
-.gate-alt{ margin:18px 0 0; font-size:12.5px; color:var(--ink-2); text-align:center }
-.gate-alt a{ color:var(--y); text-decoration:none; border-bottom:1px solid rgba(255,230,0,.4) }
+.gate-go:hover{ filter:brightness(1.08); transform:translateY(-1px) }
+.gate-alt{ margin:16px 0 0; font-size:12.5px; color:var(--ink-2); text-align:center }
+.gate-alt a{ color:var(--ey-yellow); text-decoration:none; border-bottom:1px solid rgba(255,230,0,.4) }
 .gate-note{
-  margin:22px -38px -28px; padding:14px 38px;
-  border-top:1px solid var(--hair);
-  font-size:10.5px; line-height:1.5; color:var(--ink-3);
+  margin:18px -30px -24px; padding:12px 30px;
+  border-top:1px solid var(--line);
+  font-size:10.5px; line-height:1.45; color:var(--ink-3);
 }
 @keyframes gshake{ 10%,90%{transform:translateX(-2px)} 30%,70%{transform:translateX(3px)} 50%{transform:translateX(-3px)} }
 .gate-card.shake{ animation:gshake .34s }
@@ -66,7 +81,7 @@ body.gated .ui, body.gated .labels, body.gated .bar{ opacity:0; pointer-events:n
 /* ========================================================= 2 · MODE BAR */
 .govbar{
   position:fixed; left:0; right:0; bottom:0; z-index:800;
-  background:rgba(10,10,16,.93);
+  background:rgba(10,10,16,.93); backdrop-filter:blur(16px);
   border-top:1px solid var(--line-2);
 }
 .govbar::before{
@@ -125,7 +140,8 @@ body.has-govbar .c-note{ bottom:60px }
   width:min(400px,calc(100vw - 24px)); max-height:min(74vh,660px);
   display:flex; flex-direction:column;
   background:rgba(14,14,21,.97); border:1px solid var(--line-2);
-  border-radius:var(--r-lg); box-shadow:0 30px 70px rgba(0,0,0,.6); overflow:hidden;
+  border-radius:var(--r-lg); box-shadow:0 30px 70px rgba(0,0,0,.6);
+  backdrop-filter:blur(16px); overflow:hidden;
 }
 .tp-h{
   display:flex; align-items:center; justify-content:space-between;
@@ -293,8 +309,10 @@ body.has-govbar .c-note{ bottom:60px }
 @media (max-width:720px){ .jsum-next .ns-grid{ grid-template-columns:1fr } }
 
 /* ====================================== 8 · ENGAGEMENT INDEX, BRIEF FORM */
-/* Diagram components for the brief form. Kept here, apart from the page
-   stylesheets, so the diagram-led layout and the prose layout stay separable. */
+/* The components the rewritten index needs. Kept here rather than in
+   ey-doc.css so the diagram-led layout and the prose layout it replaced stay
+   separable - if the brief form is ever wrong for an audience, ey-doc.css
+   still has everything needed to render the long form on its own. */
 
 .dgwrap{
   padding:18px 20px; border:1px solid var(--line);

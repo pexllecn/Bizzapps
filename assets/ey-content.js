@@ -186,15 +186,15 @@ window.BIZ = {
     eyebrow: "EY · Microsoft AI - Business Applications",
     title: "BizApps",
     titleAccent: "City",
-    lede: "Every landmark on the skyline is a real client engagement EY has delivered on the Microsoft cloud. Explore the city, then open any landmark to see the challenge, what we built, and what it means for your organisation.",
+    lede: "Every landmark is a real client engagement EY has delivered on the Microsoft cloud. Explore the city, then step inside any building to see the challenge, what we built, and what it means for your organisation.",
     stats: [
       { v: "12", l: "Solutions shipped" },
       { v: "5",  l: "Client tenants" },
       { v: "40+", l: "EY specialists" },
       { v: "250K+", l: "Citizens reached" },
     ],
-    cta: "Enter BizApps City",
-    note: "Each landmark is one client's separate Microsoft tenant. Drag to orbit, scroll to zoom, shift-drag to pan, and select a landmark to open it.",
+    cta: "Explore the city",
+    note: "Each landmark is one client's separate Microsoft tenant. Drag to rotate the city, scroll to zoom, shift-drag to pan, and click a building to walk inside.",
 
     lifecycle: [
       { id: "advise", name: "Advise" },
@@ -597,7 +597,7 @@ window.BIZ = {
     core: {
       name: "EY",
       sub: "Microsoft AI Business Applications",
-      body: "EY stands at the centre of the city. Each landmark around it is a separate client in its own isolated Microsoft tenant with its own governed Dataverse - each is connected to the centre, never to one another. What they share is the standard EY brings to all of them: environment strategy, identity, DLP, lifecycle and Responsible AI controls.",
+      body: "EY sits at the centre of the city. Each landmark around it is a separate client in its own isolated Microsoft tenant with its own governed Dataverse - they are not joined to one another. What they share is the standard EY brings to all of them: environment strategy, identity, DLP, lifecycle and Responsible AI controls.",
     },
   },
   capability: {

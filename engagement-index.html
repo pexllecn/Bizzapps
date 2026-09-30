@@ -6,46 +6,44 @@
 <title>Engagement Index | EY Microsoft AI Business Applications</title>
 <meta name="description" content="The delivered EY Ireland Microsoft Business Applications engagements and the reusable capability patterns behind them.">
 <meta name="theme-color" content="#08080C">
-<link rel="stylesheet" href="assets/css/site.css">
-<link rel="stylesheet" href="assets/css/monograph.css">
-<link rel="stylesheet" href="assets/ey-gov.css">
-<link rel="stylesheet" href="assets/ey-print.css">
+<link rel="stylesheet" href="assets/ey-core.css">
+<link rel="stylesheet" href="assets/ey-doc.css">
 </head>
-<body class="mono">
+<body>
+<div class="spectrum"></div>
 
-<header class="bar" id="bar" data-solid="1">
-  <a class="brand" href="index.html" aria-label="EY Business Applications, the Showcase">
-    <img src="assets/img/ey.png" alt="EY">
-    <span class="t"><b>Business Applications</b><span>Microsoft AI · Customer &amp; Growth</span></span>
-  </a>
-  <nav class="links" id="links" aria-label="Sections">
-    <a href="#engagements">Engagements</a>
-    <a href="#capabilities">Capabilities</a>
-    <a href="#platform">Platform</a>
-  </nav>
-  <nav class="views" aria-label="Views">
-    <a href="index.html"><i>01</i><span class="tx">Showcase</span></a>
-    <a href="city.html"><i>02</i><span class="tx">BizApps City</span></a>
-    <a href="engagement-index.html" aria-current="page"><i>03</i><span class="tx">Index</span></a>
-  </nav>
-  <button class="navtog" aria-expanded="false" aria-controls="links" aria-label="Menu"><span></span><span></span></button>
-</header>
+<!-- ======================================================== navigation -->
+<nav class="nav">
+  <div class="shell nav-in">
+    <div class="nav-brand">
+      <img class="ey-mark" alt="EY" hidden>
+      <div class="t">
+        <b>Microsoft AI Business Applications</b>
+        <span>EY Ireland · Technology Consulting</span>
+      </div>
+    </div>
+    <div class="nav-links">
+      <a href="#engagements">Engagements</a>
+      <a href="#capabilities">Capabilities</a>
+      <a href="#platform">Platform</a>
+      <nav class="vswitch" aria-label="Views">
+        <a href="index.html"><span class="n">01</span><span class="t">Showcase</span></a>
+        <a href="city.html"><span class="n">02</span><span class="t">City</span></a>
+        <a href="engagement-index.html" aria-current="page"><span class="n">03</span><span class="t">Index</span></a>
+      </nav>
+    </div>
+  </div>
+</nav>
 
 <!-- ============================================================== hero -->
-<header class="m-hero">
-  <div class="wrap">
-    <div class="m-mast">
-      <span class="cap">Volume 03 · The Engagement Index</span>
-      <span class="cap" id="heroDate"></span>
-    </div>
-    <div class="kicker" id="heroKicker"></div>
+<header class="hero">
+  <div class="shell hero-in">
+    <div class="kicker y" id="heroKicker"></div>
     <h1 id="heroTitle"></h1>
-    <div class="m-hero-b">
-      <p class="sub" id="heroSub"></p>
-      <div class="hero-cta">
-        <a class="btn btn-y" href="#engagements">Open the index <span class="ar">&darr;</span></a>
-        <a class="btn btn-o" href="#capabilities">Browse capabilities</a>
-      </div>
+    <p class="sub" id="heroSub"></p>
+    <div class="hero-cta">
+      <a class="btn btn-y" href="#engagements">Open the engagement index</a>
+      <a class="btn btn-o" href="#capabilities">Browse capabilities</a>
     </div>
     <div class="hero-stats" id="heroStats"></div>
   </div>
@@ -53,9 +51,9 @@
 
 <!-- ======================================================= engagements -->
 <section id="engagements">
-  <div class="wrap">
+  <div class="shell">
     <div class="sec-head">
-      <div class="kicker"><span class="n">01</span>Delivered work</div>
+      <div class="kicker">01 · Delivered work</div>
       <h2>Five engagements, in production.</h2>
       <p id="heroNote"></p>
     </div>
@@ -99,9 +97,9 @@
 
 <!-- ======================================================= capabilities -->
 <section class="alt" id="capabilities">
-  <div class="wrap">
+  <div class="shell">
     <div class="sec-head">
-      <div class="kicker"><span class="n">02</span>Reusable patterns</div>
+      <div class="kicker">02 · Reusable patterns</div>
       <h2><span id="capCount"></span> capabilities we deploy.</h2>
       <p>Each engagement is assembled from the same set of proven capability patterns rather than built from nothing. Open one to see the value case, the commercial shape and where it already runs in production.</p>
     </div>
@@ -111,9 +109,9 @@
 
 <!-- =========================================================== platform -->
 <section id="platform">
-  <div class="wrap">
+  <div class="shell">
     <div class="sec-head">
-      <div class="kicker"><span class="n">03</span><span id="stackKicker"></span></div>
+      <div class="kicker" id="stackKicker"></div>
       <h2 id="stackTitle"></h2>
       <p id="stackLede"></p>
     </div>
@@ -123,7 +121,7 @@
 
 <!-- ============================================================ footer -->
 <footer class="foot">
-  <div class="wrap foot-in">
+  <div class="shell foot-in">
     <div class="l">
       <img class="ey-mark" alt="EY" hidden>
       Microsoft AI Business Applications<br>
@@ -147,9 +145,6 @@
 
 <script src="assets/ey-content.js"></script>
 <script src="assets/ey-icons.js"></script>
-<script src="assets/ey-gov.js"></script>
-<script>EYGOV.apply(window.BIZ);</script>
-<script src="assets/ui.js"></script>
 <script>
 /* ==========================================================================
  *  BizApps Engagement Index - runtime
@@ -222,8 +217,8 @@
      the few lines that describe a city are stated here instead of rewriting
      the model, which stays the single source of truth for everything else. */
   var COPY = {
-    title: "The work,",
-    accent: "on the record.",
+    title: "BizApps",
+    accent: "Engagement Index",
     lede: "Every entry is a real client engagement EY Ireland has delivered on the Microsoft cloud. Open one to see the challenge, what we built, the capabilities behind it and what it means for your organisation.",
     stackLede: "Every engagement we run is assembled from the same five layers. Open any product to see what it does and where we have put it into production.",
   };
@@ -231,8 +226,7 @@
   function buildHero() {
     var h = D.hero;
     $("#heroKicker").textContent = C.eyebrow;
-    $("#heroTitle").innerHTML = esc(COPY.title) + "<br><em>" + esc(COPY.accent) + "</em>";
-    $("#heroDate").textContent = "Edition " + (window.EYGOV ? "v" + EYGOV.meta.version + " · " : "") + new Date().toLocaleDateString("en-IE", { month: "long", year: "numeric" });
+    $("#heroTitle").innerHTML = esc(COPY.title) + " <em>" + esc(COPY.accent) + "</em>";
     $("#heroSub").textContent = COPY.lede;
     $("#heroStats").innerHTML = C.stats.map(function (s) {
       return '<div class="st"><div class="v">' + esc(s.v) + '</div><div class="l">' + esc(s.l) + "</div></div>";
@@ -331,7 +325,7 @@
               }).join("") + "</div></div>"
           : "") +
 
-        (c.collab ? '<div class="delivered">Delivered with ' + esc(c.collab) + "</div>" : "") +
+        '<div class="delivered">Delivered with ' + esc(c.collab) + "</div>" +
       "</div>";
 
     $$(".solcard", d).forEach(function (b) {
@@ -457,7 +451,7 @@
     $("#capCount").textContent = ids.length;
     $("#capGrid").innerHTML = ids.map(function (sid) {
       var s = C.solutions[sid], at = deployedAt(sid);
-      return '<button class="capc" data-sid="' + sid + '">' +
+      return '<button class="cap" data-sid="' + sid + '">' +
         '<div class="row">' + img(s.icons[0]) + "<h4>" + esc(s.name) + "</h4></div>" +
         "<p>" + esc(s.what) + "</p>" +
         '<div class="ft"><span>In production at <b>' + at.length + "</b> " +
@@ -467,7 +461,7 @@
           }).join(" · ")) + "</span></div>" +
       "</button>";
     }).join("");
-    $$("#capGrid .capc").forEach(function (b) {
+    $$("#capGrid .cap").forEach(function (b) {
       b.addEventListener("click", function () { openSolution(b.dataset.sid, null); });
     });
   }
@@ -578,7 +572,6 @@
 
   /* ================================================================== init */
   function init() {
-    UI.bar();
     brand();
     buildHero();
     buildEngNav();
