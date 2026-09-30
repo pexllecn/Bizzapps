@@ -460,6 +460,9 @@
      it is satisfied. Resolves immediately if this tab is already unlocked, so
      moving between views inside a session does not re-prompt. */
   GOV.gate = function (onPass) {
+    // Password gate removed for now: the city view opens without a sign-in.
+    // To restore it, delete the next line; the prompt below is left intact.
+    onPass(); return;
     if (GOV.unlocked()) { onPass(); return; }
 
     var host = document.createElement("div");
