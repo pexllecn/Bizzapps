@@ -109,7 +109,6 @@ export class Stage {
     this.clock = new THREE.Clock();
     this.time = 0;
     this.frameHooks = [];
-    this.afterHooks = [];
     this.running = false;
     this.visible = true;
     this.dirty = 2;
@@ -164,8 +163,6 @@ export class Stage {
   }
 
   onFrame(fn) { this.frameHooks.push(fn); }
-  /** Runs straight after a frame is drawn, while the drawing buffer can still be read. */
-  onAfter(fn) { this.afterHooks.push(fn); }
 
   start() {
     if (this.running) return;
@@ -185,7 +182,6 @@ export class Stage {
     for (const fn of this.frameHooks) fn(dt, this.time);
     this.grade.uniforms.uTime.value = this.time;
     this.composer.render(dt);
-    for (const fn of this.afterHooks) fn();
     requestAnimationFrame(this._tick);
   }
 

@@ -64,7 +64,6 @@
   <div class="row">
     <button class="b" data-c="home">Overview</button>
     <button class="b" id="tour">Self-running tour</button>
-    <button class="b" id="spin">Auto-rotate</button>
   </div>
   <div class="row" style="margin-top:8px" id="times"></div>
   <div class="row" style="margin-top:8px">
@@ -112,7 +111,6 @@
   $$("[data-turn]").forEach(function (b) { b.addEventListener("click", function () { room.send({ type: "turn", deg: +b.dataset.turn }); }); });
   $("#tour").addEventListener("click", function () { room.send({ type: "tour", on: !st.tour }); });
   $("#card").addEventListener("click", function () { room.send({ type: "card", on: !st.card }); });
-  $("#spin").addEventListener("click", function () { room.send({ type: "spin", on: !st.spin }); });
   $("#times").innerHTML = ["night", "blue", "dawn"].map(function (k) {
     return '<button class="b" data-time="' + k + '">' + ({ night: "Night", blue: "Blue hour", dawn: "Dawn" })[k] + "</button>";
   }).join("");
@@ -133,7 +131,6 @@
     $$("#lm [data-id]").forEach(function (b) { b.classList.toggle("on", b.dataset.id === st.id); });
     $("#tour").classList.toggle("on", !!st.tour);
     $("#card").classList.toggle("on", !!st.card);
-    $("#spin").classList.toggle("on", !!st.spin);
     $$("[data-time]").forEach(function (b) { b.classList.toggle("on", b.dataset.time === st.time); });
     var c = C.clients.filter(function (x) { return x.id === st.id; })[0];
     var line = "Overview: the whole city, the intro card at the front.";
