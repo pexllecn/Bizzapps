@@ -4,307 +4,494 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>BizApps City | EY Microsoft AI Business Applications</title>
-<meta name="description" content="The EY Ireland Microsoft Business Applications portfolio as a digital city at night: five landmark towers, one per delivered client engagement, around the standard EY brings to all of them.">
-<meta name="theme-color" content="#0B0A08">
-<link rel="stylesheet" href="assets/css/site.css">
-<link rel="stylesheet" href="assets/css/city.css">
+<meta name="description" content="An architectural model of the EY Ireland Microsoft Business Applications portfolio. Each landmark is a delivered client engagement.">
+<meta name="theme-color" content="#05060A">
+<link rel="stylesheet" href="assets/ey-core.css">
+<link rel="stylesheet" href="assets/ey-city.css">
 <link rel="stylesheet" href="assets/ey-gov.css">
 <link rel="stylesheet" href="assets/ey-print.css">
 </head>
 <body>
 
-<div class="stage" id="stage">
-  <canvas id="gl" tabindex="0" role="application"
-          aria-label="BizApps City, a three-dimensional skyline. Each landmark tower is a client engagement. Use the list of engagements or the view buttons to navigate."></canvas>
-  <div class="shade"></div>
-</div>
-<div class="c-fallback" id="fallback">
-  <div class="nogl">
-    <div>
-      <p class="cap y">BizApps City</p>
-      <h2 class="h3" style="margin-top:12px">This view needs hardware graphics</h2>
-      <p>This browser or machine has WebGL turned off, so the city cannot be drawn. The same engagements are covered in full in the Engagement Index, which is plain HTML and works anywhere.</p>
-      <a class="btn pri" href="engagement-index.html">Open the Engagement Index <span class="ar">&rarr;</span></a>
+<div class="city">
+  <canvas class="city-gl" id="gl" tabindex="0" role="application"
+          aria-label="Three-dimensional model of the BizApps City. Use the view controls or the client list to navigate."></canvas>
+  <div class="city-grade" aria-hidden="true"></div>
+  <div class="city-vig" aria-hidden="true"></div>
+  <div class="c-labels" id="labels" aria-hidden="true"></div>
+
+  <!-- journey: capability nodes anchored in the scene, and the flow between them -->
+  <svg class="j-links" id="jLinks" aria-hidden="true"></svg>
+  <div class="j-nodes" id="jNodes" aria-hidden="true"></div>
+
+  <!-- WebGL unavailable -->
+  <div class="c-fallback" id="fallback">
+    <div class="in">
+      <h2>The 3D model needs hardware graphics</h2>
+      <p>This browser or machine has WebGL disabled, so the city cannot be drawn.
+         The same engagements are covered in full in the Engagement Index, which
+         is plain HTML and works anywhere.</p>
+      <a class="btn" href="engagement-index.html">Open the Engagement Index</a>
     </div>
   </div>
-</div>
-<div class="labels" id="labels" aria-hidden="true"></div>
-<div class="jnodes" id="jNodes" aria-hidden="true"></div>
 
-<header class="bar" id="bar">
-  <a class="brand" href="index.html" aria-label="EY Business Applications, the Showcase">
-    <img src="assets/img/ey.png" alt="EY">
-    <span class="t"><b>Business Applications</b><span>Microsoft AI · Customer &amp; Growth</span></span>
-  </a>
-  <nav class="views" aria-label="Views" style="margin-left:auto">
-    <a href="index.html"><i>01</i><span class="tx">Showcase</span></a>
-    <a href="city.html" aria-current="page"><i>02</i><span class="tx">BizApps City</span></a>
-    <a href="engagement-index.html"><i>03</i><span class="tx">Index</span></a>
-  </nav>
-  <button class="fsb" id="fsBtn" title="Full screen (F)" aria-label="Full screen" style="display:inline-grid">
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M1.5 5.5v-4h4M10.5 1.5h4v4M14.5 10.5v4h-4M5.5 14.5h-4v-4"/></svg>
-    <span class="sr" id="fsTxt">Full screen</span>
-  </button>
-</header>
+  <header class="ui c-head">
+    <div class="c-title">
+      <p class="ey"><span class="dot"></span><span id="eyebrow"></span></p>
+      <h1 id="title"></h1>
+      <p id="lede"></p>
+    </div>
+    <div class="c-head-r">
+      <nav class="vswitch" aria-label="Views">
+        <a href="index.html"><span class="n">01</span><span class="t">Showcase</span></a>
+        <a href="city.html" aria-current="page"><span class="n">02</span><span class="t">City</span></a>
+        <a href="engagement-index.html"><span class="n">03</span><span class="t">Index</span></a>
+      </nav>
+      <button class="pill" id="fs" title="Full screen (F)"><span id="fsTxt">Full screen</span></button>
+    </div>
+  </header>
 
-<header class="ui c-title">
-  <p class="kick" style="margin:0"><span class="beam"></span><span class="cap" id="eyebrow"></span></p>
-  <h1 id="title"></h1>
-  <p class="l" id="lede"></p>
-</header>
+  <div class="ui c-roster" id="roster" role="group" aria-label="Client engagements"></div>
 
-<nav class="ui roster" id="roster" aria-label="Client engagements"></nav>
-
-<div class="ui tools">
-  <div class="row view" role="group" aria-label="View">
-    <button class="ib" data-act="rotL" aria-label="Orbit left" title="Orbit left (A)">&#8630;</button>
-    <button class="ib" data-act="rotR" aria-label="Orbit right" title="Orbit right (D)">&#8631;</button>
-    <button class="ib" data-act="tiltU" aria-label="Look from higher" title="Higher (W)">&#9650;</button>
-    <button class="ib" data-act="tiltD" aria-label="Look from lower" title="Lower (S)">&#9660;</button>
-    <button class="ib" data-act="in" aria-label="Zoom in" title="Zoom in (+)">+</button>
-    <button class="ib" data-act="out" aria-label="Zoom out" title="Zoom out (-)">&minus;</button>
-    <button class="ib" data-act="reset" aria-label="Reset the view" title="Reset (R)">&#8635;</button>
-  </div>
-  <div class="row">
-    <div class="seg" role="group" aria-label="Time of day" id="tod"></div>
+  <div class="ui c-tools">
     <button class="pill" id="btnTour">Fly through</button>
-    <button class="pill" id="btnBrief" title="Print or save a brief of what is on screen">Export brief</button>
+    <button class="pill" id="btnExit" disabled>Back to city</button>
   </div>
-  <p class="hint" id="note"></p>
-</div>
 
-<!-- journey narration -->
-<section class="ui jrny" id="jrny" aria-label="Engagement journey">
-  <div class="jmain">
+  <div class="ui c-view" role="group" aria-label="View controls">
+    <div class="vhead">View</div>
+    <div class="vrow"><span class="vlab">Orbit</span>
+      <div class="vpair">
+        <button class="vbtn" data-act="rotL" aria-label="Orbit left">&#8630;</button>
+        <button class="vbtn" data-act="rotR" aria-label="Orbit right">&#8631;</button>
+      </div>
+    </div>
+    <div class="vrow"><span class="vlab">Tilt</span>
+      <div class="vpair">
+        <button class="vbtn" data-act="tiltU" aria-label="Raise the eye">&#9650;</button>
+        <button class="vbtn" data-act="tiltD" aria-label="Lower the eye">&#9660;</button>
+      </div>
+    </div>
+    <div class="vrow"><span class="vlab">Pan</span>
+      <div class="vpad">
+        <button class="vbtn u" data-act="panU" aria-label="Pan up">&#9650;</button>
+        <button class="vbtn l" data-act="panL" aria-label="Pan left">&#9664;</button>
+        <button class="vbtn d" data-act="panD" aria-label="Pan down">&#9660;</button>
+        <button class="vbtn r" data-act="panR" aria-label="Pan right">&#9654;</button>
+      </div>
+    </div>
+    <div class="vrow"><span class="vlab">Zoom</span>
+      <div class="vpair">
+        <button class="vbtn" data-act="out" aria-label="Zoom out">&minus;</button>
+        <button class="vbtn" data-act="in" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+    <button class="vreset" data-act="reset"><span class="t">Reset view</span><span aria-hidden="true">&#8635;</span></button>
+    <div class="vtip">Drag to orbit. Shift-drag to pan. Scroll to zoom.</div>
+  </div>
+
+  <p class="ui c-note" id="note"></p>
+
+  <!-- journey narration -->
+  <section class="ui jrny" id="jrny" aria-label="Engagement journey">
     <div class="jt">
       <span class="js" id="jStep"></span>
-      <span class="jnm" id="jName"></span>
+      <span class="jn" id="jName"></span>
       <button class="jdet" id="jDetail">Capability detail</button>
     </div>
-    <p class="jtx" id="jText"></p>
+    <p id="jText"></p>
+    <!-- the outcome, not just the mechanism: what the client actually got -->
     <p class="jout" id="jOut"></p>
     <div class="jdots" id="jDots" aria-hidden="true"></div>
     <div class="jctl">
       <button id="jPrev">&#9664; Back</button>
       <button id="jNext">Next &#9654;</button>
-      <button id="jAuto" aria-pressed="true" title="Advance automatically">Auto</button>
+      <button class="jauto on" id="jAuto" aria-pressed="true"
+              title="Advance automatically">Auto</button>
       <span class="sp"></span>
       <button id="jStop">End</button>
     </div>
-  </div>
-  <div class="jsum" id="jSum" hidden>
-    <div class="jsh" id="jSumH"></div>
-    <p id="jSumP"></p>
-    <div class="kpis" id="jSumS"></div>
-    <div id="jNext2"></div>
-    <div class="jctl">
-      <button id="jAgain">&#8635; Replay</button>
-      <button id="jOpen">Full engagement</button>
-      <span class="sp"></span>
-      <button id="jDone">Close</button>
-    </div>
-  </div>
-</section>
-<p class="sr" id="live" aria-live="polite"></p>
 
-<!-- dossier -->
-<aside class="dossier" id="dossier" aria-hidden="true" aria-label="Engagement detail">
-  <div class="dh">
-    <button class="x" id="dClose" aria-label="Close">&#10005;</button>
-    <div class="mk" id="dMark"></div>
-    <p class="cap" id="dSec"></p>
-    <h2 id="dName"></h2>
-    <div class="sub" id="dSub"></div>
-    <div class="acts">
-      <button class="btn sm pri" id="dRun"><span id="dRunTxt">Run the journey</span> <span class="ar">&rarr;</span></button>
-      <button class="btn sm" id="dBrief">Export brief</button>
+    <!-- closing frame: what the engagement delivered, in the client's numbers -->
+    <div class="jsum" id="jSum" hidden>
+      <div class="jsum-h" id="jSumH"></div>
+      <p id="jSumP"></p>
+      <div class="jsum-s" id="jSumS"></div>
+      <!-- the two routes in. The journey used to end on a Close button. -->
+      <div class="jsum-next" id="jNext2"></div>
+      <div class="jctl">
+        <button id="jAgain">&#8635; Replay</button>
+        <button id="jOpen">Full engagement</button>
+        <span class="sp"></span>
+        <button id="jDone">Close</button>
+      </div>
     </div>
-  </div>
-  <div class="db" id="dBody" tabindex="-1"></div>
-</aside>
+  </section>
+  <p class="sr" id="live" aria-live="polite"></p>
+
+  <!-- dossier -->
+  <aside class="dossier" id="dossier" aria-hidden="true" aria-label="Engagement detail">
+    <div class="dh">
+      <div class="bar"></div>
+      <button class="x" id="dClose" aria-label="Close">&#10005;</button>
+      <div class="mark" id="dMark"></div>
+      <div class="sec" id="dSec"></div>
+      <h2 id="dName"></h2>
+      <div class="sub" id="dSub"></div>
+      <button class="d-run" id="dRun"><span class="tri"></span><span id="dRunTxt">Run the journey</span></button>
+    </div>
+    <div class="db" id="dBody" tabindex="-1"></div>
+  </aside>
+</div>
 
 <script src="assets/ey-content.js"></script>
 <script src="assets/ey-icons.js"></script>
 <script src="assets/ey-gov.js"></script>
 <script src="assets/ey-diagram.js"></script>
 <script src="assets/ey-brief.js"></script>
-<script src="assets/ey-fs.js"></script>
-<script src="assets/ui.js"></script>
-<script src="assets/js/worlds.js"></script>
+<script src="assets/ey-gl.js"></script>
+<script src="assets/ey-city.js"></script>
+
 <script>
-/* Governance first: EYGOV.apply rewrites the content model in place, so the
-   monument is built from sanitised identities and a client that may not be
-   named never has its mark set into the stone. */
+/* ----------------------------------------------------------------------------
+ *  Governance bootstrap. This runs BEFORE the city controller below, and that
+ *  ordering is the whole point: EYGOV.apply rewrites the content model in
+ *  place, and EYCITY.build reads client logos out of that model to bake the
+ *  facade decals. Apply first and a sanitised session simply has no logos to
+ *  bake. Apply afterwards and the names are already burned into the geometry.
+ * ------------------------------------------------------------------------- */
 EYGOV.apply(window.BIZ);
 EYGOV.gate(function () { EYGOV.track("city.open", {}); });
 </script>
+
 <script>
 /* ============================================================================
  *  BizApps City - page controller
  * ========================================================================== */
 (function () {
   "use strict";
-  var $ = UI.$, $$ = UI.$$, esc = UI.esc, icon = UI.icon, REDUCED = UI.REDUCED;
-  var BIZ = window.BIZ, C = BIZ.city;
+
+  var $  = function (s) { return document.querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  var esc = function (s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (m) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[m];
+    });
+  };
+
+  var BIZ = window.BIZ, C = BIZ.city, ICONS = window.ICONS || {};
+  var icon = function (k) { return ICONS[k] || ""; };
+  /* A client's own mark for use in a list row, or nothing if none was
+     supplied - the row then falls back to text alone rather than to a
+     placeholder or somebody else's logo. */
+  function mark(c) {
+    return icon(c.logo)
+      ? '<span class="rmk"><img alt="" src="' + icon(c.logo) + '"></span>' : "";
+  }
   var client = function (id) { return C.clients.filter(function (c) { return c.id === id; })[0]; };
   var sol = function (id) { return C.solutions[id]; };
 
-  UI.bar(); UI.fullscreen();
-  $("#bar").dataset.solid = "0";
+  var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  $("#eyebrow").textContent = C.eyebrow;
-  $("#title").innerHTML = esc(C.title) + " <em>" + esc(C.titleAccent) + "</em>";
-  $("#lede").textContent = C.lede;
-  $("#note").textContent = "Drag to orbit · scroll to zoom · shift-drag to pan · 1–5 to visit";
-
-  if (!window.EYCITY || !EYCITY.supported()) { $("#fallback").classList.add("on"); return; }
-  var W;
-  try { W = EYCITY.mount($("#gl"), BIZ, { mode: "explore" }); }
-  catch (e) { $("#fallback").classList.add("on"); return; }
-
-  var state = { active: null, view: null, tour: null, hover: null };
-
-  /* ------------------------------------------------------ framing */
-  function panelPx() {
-    if (!document.body.classList.contains("panel-open") || innerWidth <= 760) return 0;
-    return $("#dossier").getBoundingClientRect().width / 2;
-  }
-  function frame() {
-    if (J) return;
-    var px = panelPx();
-    if (!state.active) W.homeShift(px);
-    else if (state.active === "__ey") W.focusCore({ shiftPx: px });
-    else W.focus(state.active, { shiftPx: px });
-  }
-  function goHome() {
-    state.active = null;
-    W.setSelected(null);
-    W.home();
-    markRoster(null);
-  }
-  function focusOn(id) {
-    state.active = id;
-    W.setSelected(id);
-    markRoster(id);
-    frame();
-  }
-
-  /* ----------------------------------------------------- controls */
+  /* ------------------------------------------------------------ renderer */
   var canvas = $("#gl");
-  W.rig.attach(canvas, {
-    onTap: function (x, y) {
-      var id = W.pickAt(x, y);
-      if (J) stopJourney(false);
-      if (id === "__ey") { focusOn("__ey"); showCore(); }
-      else if (id) { focusOn(id); showClient(id); }
-      else if (state.active) { closePanel(); goHome(); }
-    },
-    onHover: function (x, y) {
-      var id = W.pickAt(x, y);
-      if (id !== state.hover) { state.hover = id; W.setHover(id); canvas.classList.toggle("hot", !!id); }
-    },
-    onUser: function () { stopTour(); },
+  var R = new window.EYGL.Renderer(canvas);
+  if (R.failed) { $("#fallback").classList.add("on"); return; }
+
+  var SCENE = window.EYCITY.build(BIZ);
+  R.upload(SCENE.builder);
+  R.setDecals(SCENE.decals);          // the EY mark, as the original asset
+  R.onAsset = function () { dirty(); };
+  var LMS = SCENE.landmarks;
+  var HQ_ID = window.EYCITY.HQ_ID;
+  /* the shadow box has to cover the diagonal of the built area, not its half
+     width, or the corner blocks fall outside the map and stop casting */
+  var SHADOW_R = SCENE.shadowR;
+
+  /* Home view. The elevation and distance were set by rendering the scene and
+     looking at it, not by guessing: at a shallower angle the plan collapses,
+     and any closer than this and the outer two landmarks leave the frame. */
+  var HOME = { az: -0.86, el: 0.54, dist: 0, tgt: [0, 0, 5] };
+  HOME.dist = SCENE.FRAME / Math.tan(R.cam.fov / 2) * 0.86;
+
+  var state = { active: null, view: null, tour: null, hoverId: -1 };
+
+  /* ------------------------------------------------------- camera framing */
+  /* The dossier covers the right-hand side of the stage. Rather than guessing
+     a reserved margin - v1 reserved 240px while the panel was 480px wide, so
+     the landmark could sit underneath it - the look-at point is offset along
+     the camera's own screen-right vector by exactly half the panel width,
+     converted from pixels into world units at the current distance. */
+  function panelPx() {
+    var d = $("#dossier");
+    if (!document.body.classList.contains("panel-open")) return 0;
+    if (window.innerWidth <= 720) return 0;          // bottom sheet, not a side panel
+    return d.getBoundingClientRect().width;
+  }
+  function shiftWorld(dist) {
+    var px = panelPx() / 2;
+    if (!px) return [0, 0, 0];
+    var k = px * dist * Math.tan(R.cam.fov / 2) / (R.h / 2);
+    var az = R.cam.azT;
+    return [-Math.sin(az) * k, Math.cos(az) * k, 0];
+  }
+  function applyShift() {
+    if (!state.active) { retarget(HOME.tgt, R.cam.distT); return; }
+    if (state.active === "__ey") { retarget([0, 0, SCENE.hq.top * 0.40], R.cam.distT); return; }
+    var L = lmOf(state.active);
+    if (L) retarget([L.x, L.y, L.top * 0.42], R.cam.distT);
+  }
+  function retarget(base, dist) {
+    var s = shiftWorld(dist);
+    R.cam.tgtT = [base[0] + s[0], base[1] + s[1], base[2] + s[2]];
+    dirty();
+  }
+  function lmOf(id) { return LMS.filter(function (l) { return l.c.id === id; })[0]; }
+
+  function goHome(instant) {
+    state.active = null;
+    R.sel = -1;
+    R.cam.azT = HOME.az; R.cam.elT = HOME.el; R.cam.distT = HOME.dist;
+    retarget(HOME.tgt, HOME.dist);
+    if (instant) {
+      R.cam.az = R.cam.azT; R.cam.el = R.cam.elT; R.cam.dist = R.cam.distT;
+      R.cam.tgt = R.cam.tgtT.slice();
+    }
+    markRoster(null);
+    $("#btnExit").disabled = true;
+    dirty();
+  }
+
+  function focusOn(id) {
+    var L = lmOf(id); if (!L) return;
+    state.active = id;
+    R.sel = LMS.indexOf(L) + 1;
+    /* Pulled back from 2.6x/+14. At the old distance the camera sat so close
+       that the roof plate was cropped by the top of the frame and the
+       building filled the stage, so selecting a client hid the very mark that
+       identifies it. This holds the whole massing plus its signage, and the
+       slightly higher eye keeps the roof in view rather than looking at the
+       facade edge-on. */
+    var d = Math.max(46, L.top * 3.9 + 30);
+    R.cam.distT = d;
+    R.cam.elT = 0.47;
+    /* approach from the side of the plan the building faces the centre from,
+       so the camera never ends up looking through the fabric */
+    R.cam.azT = Math.atan2(L.y, L.x) + 0.55;
+    retarget([L.x, L.y, L.top * 0.42], d);
+    markRoster(id);
+    $("#btnExit").disabled = false;
+    dirty();
+  }
+
+  /* ------------------------------------------------------------- controls */
+  var drag = false, panning = false, moved = 0, lastX = 0, lastY = 0, pid = null;
+
+  canvas.addEventListener("pointerdown", function (e) {
+    drag = true; moved = 0; lastX = e.clientX; lastY = e.clientY; pid = e.pointerId;
+    panning = e.shiftKey || e.button === 1;
+    canvas.classList.add("grab");
+    stopTour();
+    try { canvas.setPointerCapture(pid); } catch (x) {}
   });
 
-  $$(".tools [data-act]").forEach(function (b) {
+  canvas.addEventListener("pointermove", function (e) {
+    var r = canvas.getBoundingClientRect();
+    var mx = e.clientX - r.left, my = e.clientY - r.top;
+    if (!drag) { hoverAt(mx, my); return; }
+    var dx = e.clientX - lastX, dy = e.clientY - lastY;
+    lastX = e.clientX; lastY = e.clientY;
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (panning) {
+      var k = R.cam.dist * Math.tan(R.cam.fov / 2) / (R.h / 2);
+      var az = R.cam.azT;
+      var rx = -Math.sin(az), ry = Math.cos(az);
+      var ux = -Math.cos(az), uy = -Math.sin(az);
+      R.cam.tgtT[0] -= (rx * dx + ux * dy) * k;
+      R.cam.tgtT[1] -= (ry * dx + uy * dy) * k;
+      R.cam.tgt[0] = R.cam.tgtT[0]; R.cam.tgt[1] = R.cam.tgtT[1];
+    } else {
+      R.cam.azT -= dx * 0.0062;
+      R.cam.elT += dy * 0.0038;
+      R.cam.clamp();
+      R.cam.az = R.cam.azT; R.cam.el = R.cam.elT;
+    }
+    dirty();
+  });
+
+  ["pointerup", "pointercancel"].forEach(function (ev) {
+    canvas.addEventListener(ev, function (e) {
+      if (drag && moved < 6) {
+        var r = canvas.getBoundingClientRect();
+        clickAt(e.clientX - r.left, e.clientY - r.top);
+      }
+      drag = false; canvas.classList.remove("grab");
+      if (pid !== null) { try { canvas.releasePointerCapture(pid); } catch (x) {} pid = null; }
+    });
+  });
+
+  canvas.addEventListener("pointerleave", function () {
+    if (state.hoverId !== -1) { state.hoverId = -1; R.hover = -1; canvas.classList.remove("hot"); dirty(); }
+  });
+
+  canvas.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    stopTour();
+    R.cam.distT *= Math.exp(e.deltaY * 0.0011);
+    R.cam.clamp();
+    dirty();
+  }, { passive: false });
+
+  /* Picking runs a dedicated id pass, so a click resolves to the exact pixel.
+     v1 selected the nearest client centre within a radius, which meant empty
+     sky could open a building and overlapping landmarks resolved wrongly. */
+  var pickPending = false;
+  function hoverAt(mx, my) {
+    if (pickPending) return;
+    pickPending = true;
+    requestAnimationFrame(function () {
+      pickPending = false;
+      var id = R.pickAt(mx, my);
+      var h = id > 0 ? id : -1;
+      if (h !== state.hoverId) {
+        state.hoverId = h; R.hover = h;
+        canvas.classList.toggle("hot", h > 0);
+        dirty();
+      }
+    });
+  }
+  function clickAt(mx, my) {
+    var id = R.pickAt(mx, my);
+    if (J) stopJourney(false);
+    if (id === HQ_ID) { focusHQ(); showCore(); return; }
+    var L = id > 0 ? LMS[id - 1] : null;
+    if (L) { focusOn(L.c.id); showClient(L.c.id); }
+    else if (state.active) { closePanel(); goHome(); }
+  }
+
+  /* ---------------------------------------------------------------- EY HQ */
+  function focusHQ() {
+    state.active = "__ey";
+    R.sel = HQ_ID;
+    /* matched to the client framing so moving between the HQ and a landmark
+       does not jump scale */
+    var d = Math.max(72, SCENE.hq.top * 3.9 + 30);
+    R.cam.distT = d; R.cam.elT = 0.50; R.cam.azT = -0.86;
+    retarget([0, 0, SCENE.hq.top * 0.40], d);
+    markRoster("__ey");
+    $("#btnExit").disabled = false;
+    dirty();
+  }
+  function showCore() {
+    var core = C.core;
+    state.view = { kind: "core" };
+    var d = $("#dossier");
+    d.style.setProperty("--c", "#FFE600");
+    $("#dSec").textContent = "The firm";
+    $("#dName").textContent = core.name;
+    $("#dMark").innerHTML = icon("ey") ? '<img alt="EY" src="' + icon("ey") + '">' : "";
+    $("#dSub").innerHTML = '<span class="tag-s on">' + esc(core.sub) + "</span>";
+    $("#dRunTxt").textContent = "Run the journey";
+    $("#dRun").classList.remove("stop");
+    $("#dRun").style.display = "none";          // the HQ has no journey of its own
+    $("#dBody").innerHTML =
+      '<p class="theme">' + esc(core.body) + "</p>" +
+      '<div class="blk"><h3>Practice</h3><p>' + esc(BIZ.brand.practice) + " &middot; " +
+        esc(BIZ.brand.unit) + " &middot; " + esc(BIZ.brand.firm) + "</p></div>" +
+      '<div class="blk"><h3>Engagements in the city</h3><div class="dlinks" id="coreLinks">' +
+        C.clients.map(function (x) {
+          return '<button data-id="' + x.id + '">' + mark(x) +
+                 "<span><b>" + esc(x.name) + "</b>" + esc(x.sector) + "</span></button>";
+        }).join("") + "</div></div>";
+    $$("#coreLinks button").forEach(function (b) {
+      b.addEventListener("click", function () { focusOn(b.dataset.id); showClient(b.dataset.id); });
+    });
+    openPanel();
+  }
+
+  $$(".c-view [data-act]").forEach(function (b) {
     b.addEventListener("click", function () {
       stopTour();
-      var a = b.dataset.act, r = W.rig;
-      if (a === "rotL") r.azT += 0.22;
-      if (a === "rotR") r.azT -= 0.22;
-      if (a === "tiltU") r.elT += 0.08;
-      if (a === "tiltD") r.elT -= 0.08;
-      if (a === "in") r.distT *= 0.84;
-      if (a === "out") r.distT *= 1.19;
-      if (a === "reset") { if (J) stopJourney(false); closePanel(); goHome(); return; }
-      r.clamp();
+      var a = b.dataset.act, cam = R.cam;
+      var k = cam.dist * 0.11;
+      var az = cam.azT;
+      if (a === "rotL") cam.azT += 0.20;
+      if (a === "rotR") cam.azT -= 0.20;
+      if (a === "tiltU") cam.elT += 0.10;
+      if (a === "tiltD") cam.elT -= 0.10;
+      if (a === "in")   cam.distT *= 0.84;
+      if (a === "out")  cam.distT *= 1.19;
+      if (a === "panL" || a === "panR") {
+        var s = a === "panL" ? -1 : 1;
+        cam.tgtT[0] += -Math.sin(az) * k * s; cam.tgtT[1] += Math.cos(az) * k * s;
+      }
+      if (a === "panU" || a === "panD") {
+        var s2 = a === "panU" ? 1 : -1;
+        cam.tgtT[0] += Math.cos(az) * k * s2; cam.tgtT[1] += Math.sin(az) * k * s2;
+      }
+      if (a === "reset") { closePanel(); goHome(); return; }
+      cam.clamp(); dirty();
     });
   });
 
-  /* time of day */
-  var tod = $("#tod");
-  Object.keys(EYCITY.TIMES).forEach(function (k) {
-    var b = document.createElement("button");
-    b.textContent = EYCITY.TIMES[k].name;
-    b.setAttribute("aria-pressed", k === "night" ? "true" : "false");
-    b.addEventListener("click", function () {
-      W.setTime(k);
-      $$("button", tod).forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
-      EYGOV.track("time.change", { to: k });
-    });
-    tod.appendChild(b);
-  });
-
-  /* ------------------------------------------------------- roster */
+  /* --------------------------------------------------------------- roster */
   function buildRoster() {
-    $("#roster").innerHTML = '<p class="hd">The landmarks</p>' +
-      C.clients.map(function (c, i) {
-        return '<button data-id="' + c.id + '" style="--c:' + c.tone + '"><span class="ix">0' + (i + 1) + '</span><span class="sw"></span>' + esc(c.short) + "</button>";
-      }).join("") +
-      '<button data-id="__ey" style="--c:#FFE600"><span class="ix">00</span><span class="sw"></span>EY · the hub</button>';
-    $$("#roster button").forEach(function (b) {
+    $("#roster").innerHTML =
+      '<button class="pill ey" data-id="__ey" style="--c:#FFE600">' +
+      '<span class="sw"></span>EY HQ</button>' +
+      C.clients.map(function (c) {
+        return '<button class="pill" data-id="' + c.id + '" style="--c:' + c.tone + '">' +
+               '<span class="sw"></span>' + esc(c.short) + "</button>";
+      }).join("");
+    $$("#roster .pill").forEach(function (b) {
       b.addEventListener("click", function () {
-        stopTour(); if (J) stopJourney(false);
+        stopTour();
+        if (J) stopJourney(false);
         var id = b.dataset.id;
         if (state.active === id) { closePanel(); goHome(); return; }
-        focusOn(id);
-        if (id === "__ey") showCore(); else showClient(id);
+        if (id === "__ey") { focusHQ(); showCore(); }
+        else { focusOn(id); showClient(id); }
       });
     });
   }
   function markRoster(id) {
-    $$("#roster button").forEach(function (b) {
+    $$("#roster .pill").forEach(function (b) {
       var on = b.dataset.id === id;
       b.classList.toggle("on", on);
       b.setAttribute("aria-pressed", on ? "true" : "false");
     });
   }
 
-  /* ------------------------------------------------------ dossier */
+  /* -------------------------------------------------------------- dossier */
   function openPanel() {
-    $("#dossier").classList.add("open"); $("#dossier").setAttribute("aria-hidden", "false");
+    var d = $("#dossier");
+    d.classList.add("open"); d.setAttribute("aria-hidden", "false");
     document.body.classList.add("panel-open");
     $("#dBody").scrollTop = 0;
-    setTimeout(frame, 30);
+    setTimeout(applyShift, 30);
   }
   function closePanel() {
-    $("#dossier").classList.remove("open"); $("#dossier").setAttribute("aria-hidden", "true");
+    var d = $("#dossier");
+    d.classList.remove("open"); d.setAttribute("aria-hidden", "true");
     document.body.classList.remove("panel-open");
     state.view = null;
-    setTimeout(frame, 30);
+    setTimeout(applyShift, 30);
   }
   $("#dClose").addEventListener("click", function () { closePanel(); goHome(); });
 
-  function mark(c) { return icon(c.logo) ? '<span class="rm"><img alt="" src="' + icon(c.logo) + '"></span>' : ""; }
-  function tags(on) {
-    return C.lifecycle.map(function (l) { return '<span class="tag' + (on[l.id] ? " on" : "") + '">' + esc(l.name) + "</span>"; }).join("");
+  function tagList(c) {
+    var ids = {};
+    c.solutions.forEach(function (s) { (sol(s).lifecycle || []).forEach(function (l) { ids[l] = 1; }); });
+    return C.lifecycle.map(function (l) {
+      return '<span class="tag-s' + (ids[l.id] ? " on" : "") + '">' + esc(l.name) + "</span>";
+    }).join("");
   }
-  function lifeOf(c) { var on = {}; c.solutions.forEach(function (s) { (sol(s).lifecycle || []).forEach(function (l) { on[l] = 1; }); }); return on; }
   function platformOf(c) {
     var seen = {}, out = [];
-    c.solutions.forEach(function (s) { (sol(s).icons || []).forEach(function (k) { if (!seen[k]) { seen[k] = 1; out.push(k); } }); });
+    c.solutions.forEach(function (s) {
+      (sol(s).icons || []).forEach(function (k) { if (!seen[k]) { seen[k] = 1; out.push(k); } });
+    });
     return out;
-  }
-
-  function showCore() {
-    var core = C.core;
-    state.view = { kind: "core" };
-    var d = $("#dossier");
-    d.style.setProperty("--c", "#FFE600");
-    $("#dSec").textContent = "At the centre";
-    $("#dName").textContent = "EY · the hub";
-    $("#dMark").className = "mk dark";
-    $("#dMark").innerHTML = '<span><img alt="EY" src="assets/img/ey.png" style="max-height:48px"></span>';
-    $("#dSub").innerHTML = '<span class="tag on">' + esc(core.sub) + "</span>";
-    $("#dRun").style.display = "none";
-    $("#dBody").innerHTML =
-      '<p class="theme">' + esc(core.body) + "</p>" +
-      '<div class="blk"><h3>Practice</h3><p>' + esc(BIZ.brand.practice) + " · " + esc(BIZ.brand.unit) + " · " + esc(BIZ.brand.firm) + "</p></div>" +
-      '<div class="blk"><h3>The five landmarks</h3><div class="dlinks" id="coreLinks">' +
-        C.clients.map(function (x) { return '<button data-id="' + x.id + '">' + mark(x) + "<span><b>" + esc(x.name) + "</b>" + esc(x.sector) + "</span></button>"; }).join("") +
-      "</div></div>";
-    $$("#coreLinks button").forEach(function (b) { b.addEventListener("click", function () { focusOn(b.dataset.id); showClient(b.dataset.id); }); });
-    openPanel();
   }
 
   function showClient(id) {
@@ -313,310 +500,634 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
     EYGOV.track("client.open", { client: c.realId || c.id });
     var d = $("#dossier");
     d.style.setProperty("--c", c.tone);
-    $("#dSec").textContent = c.sector;
+    $("#dSec").textContent = "Client engagement";
     $("#dName").textContent = c.name;
-    $("#dMark").className = "mk";
-    $("#dMark").innerHTML = icon(c.logo) ? '<span><img alt="' + esc(c.name) + '" src="' + icon(c.logo) + '"></span>' : "";
-    $("#dSub").innerHTML = tags(lifeOf(c));
-    $("#dRun").style.display = "";
+    $("#dMark").innerHTML = icon(c.logo)
+      ? '<img alt="' + esc(c.name) + '" src="' + icon(c.logo) + '">' : "";
+    $("#dSub").innerHTML = tagList(c);
     $("#dRunTxt").textContent = "Run the journey";
+    $("#dRun").classList.remove("stop");
+    $("#dRun").style.display = "";
+
     $("#dBody").innerHTML =
-      (c.illustrative ? '<span class="tag on">Illustrative composite</span>' : "") +
+      (c.illustrative ? '<span class="flag">Illustrative composite</span>' : "") +
       '<p class="theme">' + esc(c.tagline) + "</p>" +
-      '<div class="kpis">' + c.stats.map(function (s) { return "<div><b>" + esc(s.v) + "</b><span>" + esc(s.l) + "</span></div>"; }).join("") + "</div>" +
+      '<div class="stats">' + c.stats.map(function (s) {
+        return '<div class="s"><div class="v">' + esc(s.v) + '</div><div class="l">' + esc(s.l) + "</div></div>";
+      }).join("") + "</div>" +
       '<div class="blk"><h3>The challenge</h3><p>' + esc(c.challenge) + "</p></div>" +
       '<div class="blk"><h3>The outcome</h3><p>' + esc(c.outcome) + "</p></div>" +
-      '<div class="blk"><h3>What we built</h3><div class="chips" id="sChips">' +
+      '<div class="blk"><h3>Solutions</h3><div class="chips" id="sChips">' +
         c.solutions.map(function (sid) {
           var s = sol(sid);
-          return '<button class="chip" data-sid="' + sid + '">' + (icon(s.icons[0]) ? '<img alt="" src="' + icon(s.icons[0]) + '">' : "") + esc(s.short || s.name) + "</button>";
+          return '<button class="chip act" data-sid="' + sid + '">' +
+                 (icon(s.icons[0]) ? '<img alt="" src="' + icon(s.icons[0]) + '">' : "") +
+                 esc(s.short || s.name) + "</button>";
         }).join("") + "</div></div>" +
       '<div class="blk"><h3>Microsoft platform</h3><div class="chips">' +
-        platformOf(c).map(function (k) { var p = BIZ.products[k]; return '<span class="chip">' + (icon(k) ? '<img alt="" src="' + icon(k) + '">' : "") + esc(p ? p.name : k) + "</span>"; }).join("") + "</div></div>" +
-      '<div class="blk hl"><h3>The EY difference</h3><p>' + esc(c.eyDiff) + "</p></div>" +
-      (c.collab ? '<div class="blk"><h3>Delivered with</h3><p>' + esc(c.collab) + "</p></div>" : "");
-    $$("#sChips .chip").forEach(function (b) { b.addEventListener("click", function () { showSolution(b.dataset.sid, id); }); });
+        platformOf(c).map(function (k) {
+          var p = BIZ.products[k];
+          return '<span class="chip">' + (icon(k) ? '<img alt="" src="' + icon(k) + '">' : "") +
+                 esc(p ? p.name : k) + "</span>";
+        }).join("") + "</div></div>" +
+      '<div class="blk hl"><h3>The EY difference</h3><p>' + esc(c.eyDiff) + "</p></div>";
+
+    $$("#sChips .chip").forEach(function (b) {
+      b.addEventListener("click", function () { showSolution(b.dataset.sid, id); });
+    });
     openPanel();
   }
 
   function showSolution(sid, cid) {
+    EYGOV.track("solution.open", { solution: sid, client: cid });
     var s = sol(sid), c = client(cid); if (!s) return;
-    EYGOV.track("solution.open", { solution: sid, client: c ? (c.realId || c.id) : null });
     state.view = { kind: "solution", id: sid, client: cid };
     $("#dSec").textContent = "Capability" + (c ? " · " + c.short : "");
     $("#dName").textContent = s.name;
-    $("#dMark").className = "mk";
-    $("#dMark").innerHTML = icon(s.icons[0]) ? '<span><img alt="" src="' + icon(s.icons[0]) + '"></span>' : "";
-    var on = {}; (s.lifecycle || []).forEach(function (l) { on[l] = 1; });
-    $("#dSub").innerHTML = tags(on);
-    $("#dRun").style.display = "none";
-    var elsewhere = C.clients.filter(function (x) { return x.id !== cid && x.solutions.indexOf(sid) > -1; });
+    $("#dMark").innerHTML = icon(s.icons[0])
+      ? '<img alt="" src="' + icon(s.icons[0]) + '">' : "";
+    $("#dSub").innerHTML = C.lifecycle.map(function (l) {
+      return '<span class="tag-s' + ((s.lifecycle || []).indexOf(l.id) > -1 ? " on" : "") + '">' +
+             esc(l.name) + "</span>";
+    }).join("");
+    $("#dRun").style.display = "none";          // a capability has no journey
+
+    var elsewhere = C.clients.filter(function (x) {
+      return x.id !== cid && x.solutions.indexOf(sid) > -1;
+    });
+
     $("#dBody").innerHTML =
       '<p class="theme">' + esc(s.what) + "</p>" +
       s.value.map(function (v) {
-        return '<div class="blk"><h3>' + esc(v.t) + "</h3><p>" + esc(v.b) + (v.indicative ? '<span class="ind">Indicative</span>' : "") + "</p></div>";
+        return '<div class="blk"><h3>' + esc(v.t) + "</h3><p>" + esc(v.b) +
+               (v.indicative ? ' <span class="tag-s">Indicative</span>' : "") + "</p></div>";
       }).join("") +
       '<div class="blk hl"><h3>Why this matters to you</h3><p>' + esc(s.relevant) + "</p></div>" +
-      (s.pod ? '<div class="blk"><h3>Delivery pod</h3><p>' + esc(s.pod.n) + " specialists, led by " + esc(s.pod.lead) + ".</p></div>" : "") +
-      (elsewhere.length ? '<div class="blk"><h3>Also running at</h3><div class="dlinks" id="elsew">' +
-        elsewhere.map(function (x) { return '<button data-id="' + x.id + '">' + mark(x) + "<span><b>" + esc(x.name) + "</b>" + esc(x.sector) + "</span></button>"; }).join("") +
-        "</div></div>" : "") +
-      '<div class="blk"><div class="dlinks"><button id="backC"><span><b>&larr; Back to ' + esc(c ? c.name : "the engagement") + "</b>All solutions in this engagement</span></button></div></div>";
-    var bc = $("#backC"); if (bc) bc.addEventListener("click", function () { showClient(cid); });
-    $$("#elsew button").forEach(function (b) { b.addEventListener("click", function () { focusOn(b.dataset.id); showSolution(sid, b.dataset.id); }); });
+      (s.pod ? '<div class="blk"><h3>Delivery pod</h3><p>' + esc(s.pod.n) +
+               " specialists, led by " + esc(s.pod.lead) + ".</p></div>" : "") +
+      (elsewhere.length
+        ? '<div class="blk"><h3>Also running at</h3><div class="dlinks" id="elsew">' +
+          elsewhere.map(function (x) {
+            return '<button data-id="' + x.id + '">' + mark(x) +
+                   "<span><b>" + esc(x.name) + "</b>" + esc(x.sector) + "</span></button>";
+          }).join("") + "</div></div>"
+        : "") +
+      '<div class="blk"><div class="dlinks"><button id="backC"><b>&larr; Back to ' +
+        esc(c ? c.name : "the engagement") + "</b>All solutions in this engagement</button></div></div>";
+
+    var bc = $("#backC");
+    if (bc) bc.addEventListener("click", function () { showClient(cid); });
+    $$("#elsew button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        focusOn(b.dataset.id); showSolution(sid, b.dataset.id);
+      });
+    });
     openPanel();
   }
 
-  /* ---------------------------------------------------- the brief */
-  function brief() {
-    var cid = J ? J.c.id : state.view ? (state.view.client || (state.view.kind === "client" ? state.view.id : null)) : (state.active !== "__ey" ? state.active : null);
-    EYGOV.track("brief.print", { client: cid ? ((client(cid) || {}).realId || cid) : null });
-    window.EYBRIEF.print(cid ? client(cid) : null);
-  }
-  $("#btnBrief").addEventListener("click", brief);
-  $("#dBrief").addEventListener("click", brief);
-
-  /* ------------------------------------------------------ journey */
-  var J = null, jRAF = null, STEP_MS = 7000, jAuto = true;
-  try { var jp = sessionStorage.getItem("ey-journey-auto"); if (jp !== null) jAuto = jp === "1"; } catch (e) {}
+  /* -------------------------------------------------------------- journey */
+  /* The journey is the product story: an engagement told as the sequence of
+     capabilities that carry it. v1 played it as a caption and a camera move,
+     which read as a slideshow bolted to a model. Each step now has a presence
+     in the scene - a capability node anchored in world space beside the
+     building, carrying the real product mark, wired to the next one, with the
+     flow visibly moving along the wire. */
+  var J = null, jRAF = null, STEP_MS = 7000;
+  /* Advance is MANUAL by default. On a timer the deck fought whoever was
+     presenting it: 7 seconds is either dead air after they have made the point
+     or it moves on mid-sentence. Auto is now ON by default - the journey runs
+     itself the moment it opens, and a presenter who wants the wheel takes it
+     with Back / Next, the arrow keys or the Auto button. The choice is
+     remembered for the session either way. */
+  var jAuto = true;
+  try {
+    var jPref = sessionStorage.getItem("ey-journey-auto");
+    if (jPref !== null) jAuto = jPref === "1";
+  } catch (e) {}
+  var SVGNS = "http://www.w3.org/2000/svg";
 
   $("#dRun").addEventListener("click", function () {
     var cid = state.view ? (state.view.client || state.view.id) : state.active;
     if (J) stopJourney(); else startJourney(cid);
   });
 
+  /* Anchors climb a helix around the landmark: constant radius, rising height,
+     spread over about two-thirds of a turn. A ring at one height collapsed to
+     a line whenever the camera sat low, and a vertical stack hid behind the
+     building. This keeps every node clear of the mass and of its neighbours
+     at any orbit angle. */
+  function anchors(L, n) {
+    /* Radius and spread were solved by projecting the anchors for all five
+       engagements and measuring: this is the tightest arrangement where no
+       card is clipped by the frame or the narration panel, and the closest
+       pair still clears a card width. */
+    var out = [], base = Math.atan2(L.y, L.x) - 0.95;
+    var rad = 17.5, z0 = L.top * 0.34, z1 = L.top * 1.16 + 3.2;
+    for (var i = 0; i < n; i++) {
+      var u = n === 1 ? 0.5 : i / (n - 1);
+      var a = base + u * 4.9;
+      out.push([L.x + Math.cos(a) * rad, L.y + Math.sin(a) * rad, z0 + (z1 - z0) * u]);
+    }
+    return out;
+  }
+
   function startJourney(cid) {
     var c = client(cid); if (!c || !c.journey || !c.journey.length) return;
     stopTour();
+    var L = lmOf(cid); if (!L) return;
+
+    J = { c: c, L: L, i: 0, t0: performance.now(), acc: 0,
+          pts: anchors(L, c.journey.length), els: [], scr: [], done: false };
+
+    /* the stage belongs to the model while the journey runs; the narration
+       panel carries the words the dossier was carrying */
     closePanel();
-    state.active = cid; W.setSelected(cid); markRoster(cid);
-    J = { c: c, i: 0, t0: performance.now(), done: false, pts: W.journeyAnchors(cid, c.journey.length) };
-    W.focusJourney(cid, false);
-    W.setJourney(cid, J.pts, 0, c.tone);
+    focusOn(cid);
+    R.cam.distT = Math.max(66, L.top * 3.8 + 44);
+    R.cam.elT = 0.46;
+
     document.body.classList.add("journey");
-    var jr = $("#jrny");
-    jr.style.setProperty("--c", c.tone);
-    jr.classList.add("on"); jr.classList.remove("summary");
-    $("#jSum").hidden = true;
+    $("#jrny").classList.add("on");
+    $("#dRunTxt").textContent = "End the journey";
+    $("#dRun").classList.add("stop");
     $("#jDots").innerHTML = c.journey.map(function () { return "<i></i>"; }).join("");
+
+    $("#jSum").hidden = true;
+    $("#jrny").classList.remove("summary");
+    setAuto(jAuto);
     buildNodes();
-    setAuto(jAuto, false);
     renderStep();
+    if (jRAF) cancelAnimationFrame(jRAF);
+    jRAF = null;
     jPump();
   }
 
   function buildNodes() {
-    var host = $("#jNodes");
-    host.innerHTML = "";
+    var host = $("#jNodes"), svg = $("#jLinks");
+    host.innerHTML = ""; svg.innerHTML = "";
+    svg.style.setProperty("--c", J.c.tone);
+
+    /* one wire behind everything, plus the travelled portion drawn over it */
+    var base = document.createElementNS(SVGNS, "path");
+    base.setAttribute("class", "wire");
+    svg.appendChild(base);
+    var lit = document.createElementNS(SVGNS, "path");
+    lit.setAttribute("class", "wire lit");
+    svg.appendChild(lit);
+    J.wire = base; J.lit = lit;
+
+    /* A leader from the active capability down to the building it serves.
+       Without it the cards float over the scene and the model is a backdrop:
+       you could delete the city and lose nothing. This is what ties the story
+       to the thing it is about. */
+    J.lead = document.createElementNS(SVGNS, "path");
+    J.lead.setAttribute("class", "lead");
+    svg.appendChild(J.lead);
+
+    J.flow = [];
+    for (var f = 0; f < 3; f++) {
+      var d = document.createElementNS(SVGNS, "circle");
+      d.setAttribute("class", "flow"); d.setAttribute("r", 3.2);
+      svg.appendChild(d); J.flow.push(d);
+    }
+
     J.els = J.c.journey.map(function (st, i) {
-      var s = sol(st.sid) || {}, pk = s.icons && s.icons[0], pn = pk && BIZ.products[pk] ? BIZ.products[pk].name : "";
-      var e = document.createElement("button");
-      e.className = "jn";
-      e.style.setProperty("--c", J.c.tone);
-      e.innerHTML = '<span class="pin">' + (i + 1) + '</span><span class="ic">' + (icon(pk) ? '<img alt="" src="' + icon(pk) + '">' : "") + "</span>" +
-        "<span><b>" + esc(s.short || s.name || st.sid) + "</b><em>" + esc(pn) + "</em></span>";
-      e.addEventListener("click", function () { jGo(i); });
-      host.appendChild(e);
-      return e;
+      var sol0 = sol(st.sid) || {};
+      var el = document.createElement("button");
+      el.className = "j-node";
+      el.style.setProperty("--c", J.c.tone);
+      /* The sub-line names the Microsoft product doing the work. It used to
+         read Complete / Running / Ahead, which claimed live system state for
+         engagements that are all delivered and in production - and labelled
+         later steps "Ahead", implying not yet built. The pin number and the
+         visual state already say where you are in the story. */
+      var pkey = sol0.icons && sol0.icons[0];
+      var pname = pkey && BIZ.products[pkey] ? BIZ.products[pkey].name : "";
+      el.innerHTML =
+        '<span class="pin"><i></i></span>' +
+        '<span class="ic">' + (icon(pkey) ? '<img alt="" src="' + icon(pkey) + '">' : "") + "</span>" +
+        '<span class="tx"><b>' + esc(sol0.short || sol0.name || st.sid) + "</b>" +
+        '<em class="st">' + esc(pname) + "</em></span>";
+      el.addEventListener("click", function () { jGo(i, true); });
+      host.appendChild(el);
+      return el;
     });
   }
 
-  function jGo(i) {
+  /* `manual` marks a step the user asked for, by arrow key, transport button
+     or clicking a node. Manual steps never move the camera - see renderStep. */
+  function jGo(i, manual) {
     if (!J) return;
     if (J.done) hideSummary();
     J.i = Math.max(0, Math.min(J.c.journey.length - 1, i));
-    J.t0 = performance.now();
-    renderStep();
-    jPump();
+    J.t0 = performance.now(); J.acc = 0;
+    renderStep(manual);
+    jPump();                        // a click or key press must not leave the loop dead
   }
-  function renderStep() {
-    var st = J.c.journey[J.i], s = sol(st.sid) || {};
-    $("#jStep").textContent = String(J.i + 1).padStart(2, "0") + " / " + String(J.c.journey.length).padStart(2, "0");
-    $("#jName").textContent = s.name || st.sid;
-    $("#jText").textContent = st.t;
-    var out = (s.value || []).filter(function (v) { return /outcome/i.test(v.t); })[0];
-    $("#jOut").textContent = out ? out.b : "";
-    $("#jOut").style.display = out ? "" : "none";
-    $("#live").textContent = "Step " + (J.i + 1) + " of " + J.c.journey.length + ". " + (s.name ? s.name + ". " : "") + st.t;
-    $$("#jDots i").forEach(function (d, k) { d.classList.toggle("done", k < J.i); if (k !== J.i) d.style.removeProperty("--p"); });
-    J.els.forEach(function (e, k) {
-      e.classList.remove("done", "now", "ahead");
-      e.classList.add(k < J.i ? "done" : k === J.i ? "now" : "ahead");
-    });
-    W.setJourneyStep(J.i);
-  }
-  function jPump() { if (J && jRAF === null) jRAF = requestAnimationFrame(tick); }
-  function tick(t) {
-    jRAF = null;
-    if (!J) return;
-    if (jAuto && !J.done) {
-      var p = Math.min(1, (t - J.t0) / STEP_MS);
-      var d = $$("#jDots i")[J.i]; if (d) d.style.setProperty("--p", (p * 100).toFixed(1) + "%");
-      if (p >= 1) jNext();
-    } else {
-      J.t0 = t;
-      var d2 = $$("#jDots i")[J.i]; if (d2) d2.style.setProperty("--p", "100%");
-    }
-    jPump();
-  }
-  function jNext() { if (!J || J.done) return; if (J.i >= J.c.journey.length - 1) { showSummary(); return; } jGo(J.i + 1); }
-  function jPrev() { if (!J) return; if (J.done) { hideSummary(); jGo(J.c.journey.length - 1); return; } if (J.i > 0) jGo(J.i - 1); }
-  function setAuto(v, persist) {
-    jAuto = !!v;
-    if (persist !== false) { try { sessionStorage.setItem("ey-journey-auto", jAuto ? "1" : "0"); } catch (e) {} }
-    $("#jAuto").setAttribute("aria-pressed", jAuto ? "true" : "false");
-    if (J) { J.t0 = performance.now(); jPump(); }
-  }
+
   function stopJourney(reopen) {
     if (!J) return;
     var cid = J.c.id;
     J = null;
-    if (jRAF) { cancelAnimationFrame(jRAF); jRAF = null; }
-    W.clearJourney();
-    $("#jNodes").innerHTML = "";
-    $("#jrny").classList.remove("on", "summary");
+    if (jRAF) cancelAnimationFrame(jRAF), jRAF = null;
+    $("#jNodes").innerHTML = ""; $("#jLinks").innerHTML = "";
     $("#jSum").hidden = true;
+    $("#jrny").classList.remove("summary");
     document.body.classList.remove("journey");
-    if (reopen !== false) { focusOn(cid); showClient(cid); } else frame();
+    $("#jrny").classList.remove("on");
+    $("#dRunTxt").textContent = "Run the journey";
+    $("#dRun").classList.remove("stop");
+    if (reopen !== false) showClient(cid);
+    dirty();
   }
 
+  function renderStep(manual) {
+    if (!J) return;
+    var st = J.c.journey[J.i], s = sol(st.sid) || {};
+    $("#jStep").textContent = String(J.i + 1).padStart(2, "0") + " / " +
+                              String(J.c.journey.length).padStart(2, "0");
+    $("#jName").textContent = s.name || st.sid;
+    $("#jText").textContent = st.t;
+
+    /* The business outcome, alongside the mechanism. The journey used to
+       narrate only what the technology does in what order - the "so what" was
+       sitting unused in the content model while the client was watching. */
+    var outcome = (s.value || []).filter(function (v) { return /outcome/i.test(v.t); })[0];
+    $("#jOut").textContent = outcome ? outcome.b : "";
+    $("#jOut").style.display = outcome ? "" : "none";
+
+    $("#live").textContent = "Step " + (J.i + 1) + " of " + J.c.journey.length + ". " +
+                             (s.name ? s.name + ". " : "") + st.t;
+
+    $$("#jDots i").forEach(function (d, k) {
+      d.classList.toggle("done", k < J.i);
+      d.classList.toggle("now", k === J.i);
+      if (k !== J.i) d.style.removeProperty("--p");
+    });
+
+    J.els.forEach(function (el, k) {
+      var stt = k < J.i ? "done" : (k === J.i ? "now" : "ahead");
+      el.classList.remove("done", "now", "ahead");
+      el.classList.add(stt);
+      el.querySelector(".pin i").textContent = String(k + 1);
+    });
+
+    /* A slow quarter turn per step, but ONLY when the story is advancing on
+       its own. This was firing on every step change, so arrowing through the
+       journey swung the camera a further 0.30 rad each press - skip four
+       steps and the model had rotated more than a right angle out from under
+       you. When the user is driving, the view holds still. */
+    if (!manual && !REDUCED) R.cam.azT += 0.30;
+    dirty();
+  }
+
+  /* project the anchors and lay the nodes and the wire over the scene */
+  function layoutJourney() {
+    if (!J) return;
+    var i, p, pts = [];
+    for (i = 0; i < J.pts.length; i++) {
+      var a = J.pts[i];
+      p = R.toScreen(a[0], a[1], a[2]);
+      pts.push(p);
+      var el = J.els[i];
+      if (!p || p.x < -220 || p.x > R.w + 220 || p.y < -140 || p.y > R.h + 140) {
+        el.classList.remove("vis");
+      } else {
+        el.classList.add("vis");
+        el.style.transform = "translate(-50%,-50%) translate(" +
+                             p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px)";
+      }
+    }
+
+    var svg = $("#jLinks");
+    svg.setAttribute("viewBox", "0 0 " + R.w + " " + R.h);
+
+    /* a smooth spline through the projected anchors */
+    /* Quadratic smoothing through the midpoints: each anchor becomes the
+       control point and the curve passes through the midpoint between
+       neighbours, which is the standard way to get one continuous curve
+       through a polyline without corners. */
+    function pathFor(from, to) {
+      var v = [];
+      for (var k = from; k <= to; k++) if (pts[k]) v.push(pts[k]);
+      if (v.length < 2) return "";
+      var d = "M" + v[0].x.toFixed(1) + "," + v[0].y.toFixed(1);
+      for (var j = 1; j < v.length - 1; j++) {
+        var mx = (v[j].x + v[j + 1].x) / 2, my = (v[j].y + v[j + 1].y) / 2;
+        d += " Q" + v[j].x.toFixed(1) + "," + v[j].y.toFixed(1) +
+             " " + mx.toFixed(1) + "," + my.toFixed(1);
+      }
+      var last = v[v.length - 1];
+      d += " L" + last.x.toFixed(1) + "," + last.y.toFixed(1);
+      return d;
+    }
+    J.wire.setAttribute("d", pathFor(0, pts.length - 1));
+    J.lit.setAttribute("d", J.i > 0 ? pathFor(0, J.i) : "M0,0");
+
+    /* leader from the active card to the roof of the building */
+    var act = pts[J.i];
+    var roof = R.toScreen(J.L.x, J.L.y, J.L.top * 0.94);
+    if (act && roof && !J.done) {
+      var cx = (act.x + roof.x) / 2, cy = Math.max(act.y, roof.y) + 26;
+      J.lead.setAttribute("d",
+        "M" + act.x.toFixed(1) + "," + act.y.toFixed(1) +
+        " Q" + cx.toFixed(1) + "," + cy.toFixed(1) +
+        " " + roof.x.toFixed(1) + "," + roof.y.toFixed(1));
+      J.lead.setAttribute("opacity", "1");
+    } else {
+      J.lead.setAttribute("opacity", "0");
+    }
+
+    /* Flow travelling into the active node. On step one there is no previous
+       node, so source and target were the same point and the flow sat still -
+       every journey opened on a dead wire. It now runs up from the building
+       itself, which is where the data actually comes from. */
+    var a0 = J.i > 0 ? pts[J.i - 1] : roof, a1 = pts[J.i];
+    if (a0 && a1 && (a0.x !== a1.x || a0.y !== a1.y)) {
+      var t = performance.now() / 1000;
+      for (i = 0; i < J.flow.length; i++) {
+        var u = ((t * 0.55 + i / J.flow.length) % 1);
+        var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+        J.flow[i].setAttribute("cx", (a0.x + (a1.x - a0.x) * e).toFixed(1));
+        J.flow[i].setAttribute("cy", (a0.y + (a1.y - a0.y) * e).toFixed(1));
+        J.flow[i].setAttribute("opacity", (Math.sin(u * Math.PI) * 0.9).toFixed(2));
+      }
+    } else {
+      for (i = 0; i < J.flow.length; i++) J.flow[i].setAttribute("opacity", "0");
+    }
+  }
+
+  /* One place that owns the frame handle. The loop used to be restarted with
+     `if (!jRAF)`, but jRAF still held the handle of the frame that had just
+     fired, so the test was always false and nothing was ever rescheduled: the
+     journey froze on the first advance and the flow stopped moving. The handle
+     is now cleared the moment a frame runs, so it means "a frame is pending"
+     and nothing else. */
+  function jPump() {
+    if (J && jRAF === null) jRAF = requestAnimationFrame(tick);
+  }
+
+  function tick(t) {
+    jRAF = null;                    // this frame has fired; the handle is spent
+    if (!J) return;
+    if (jAuto && !J.done) {
+      var el = J.acc + (t - J.t0);
+      var p = Math.min(1, el / STEP_MS);
+      var now = document.querySelector("#jDots i.now");
+      if (now) now.style.setProperty("--p", (p * 100).toFixed(1) + "%");
+      if (p >= 1) jNext(false);     // keeps running: the loop is pumped below
+    } else {
+      J.t0 = t - J.acc;
+      /* manual: the active dot is simply full, not creeping toward a deadline */
+      var d = document.querySelector("#jDots i.now");
+      if (d) d.style.setProperty("--p", "100%");
+    }
+    dirty(2);                       // the flow is animating, so keep drawing
+    jPump();
+  }
+
+  /* `manual` is threaded through so the auto-advance keeps its camera move
+     while a user-driven step does not. tick() is the only caller that passes
+     false. */
+  function jNext(manual) {
+    if (!J || J.done) return;          // already on the closing frame
+    if (J.i >= J.c.journey.length - 1) { showSummary(); jPump(); return; }
+    jGo(J.i + 1, manual);
+    jPump();
+  }
+  function jPrev(manual) {
+    if (!J) return;
+    if (J.done) { hideSummary(); jGo(J.c.journey.length - 1, manual); return; }
+    if (J.i > 0) jGo(J.i - 1, manual); else jPump();
+  }
+  /* `persist` is false for a pause the code imposes rather than one the user
+     chose - opening the capability detail, for instance. Writing those to the
+     session would silently turn auto-play off for every journey afterwards. */
+  function setAuto(v, persist) {
+    jAuto = !!v;
+    if (persist !== false) {
+      try { sessionStorage.setItem("ey-journey-auto", jAuto ? "1" : "0"); } catch (e) {}
+    }
+    var b = $("#jAuto");
+    b.setAttribute("aria-pressed", jAuto ? "true" : "false");
+    b.classList.toggle("on", jAuto);
+    if (J) { J.t0 = performance.now(); J.acc = 0; jPump(); }
+  }
+
+  /* ---------------------------------------------------- the closing frame */
+  /* The journey used to stop dead on the last step. An engagement walkthrough
+     has to land on what it delivered, in the client's own numbers - which were
+     sitting in the content model, shown nowhere. */
+  /* The two routes in, rendered wherever they are asked for. Kept in one
+     place so the city, the index and the printed brief cannot drift into
+     offering the client three different next steps. */
   function renderEntry(host, c) {
-    var ctx = c ? " · " + c.name : "";
-    host.innerHTML = '<div class="ns-row">' + EYGOV.entry.map(function (e) {
-      return '<a class="ns" style="--c:' + esc(e.tone) + '" data-e="' + esc(e.id) + '" href="' +
-        esc(EYGOV.mailto(e, "BizApps · " + e.name + ctx, "Following the BizApps session, we would like to talk about a " + e.name + ".")) + '">' +
-        '<span class="w">' + esc(e.when) + "</span><h5>" + esc(e.name) + '</h5><span class="own">Owner <b>' + esc(e.owner) + '</b></span><span class="go">Start the conversation &rarr;</span></a>';
-    }).join("") + "</div>";
+    if (!host) return;
+    var ctx = c ? (" · " + c.name) : "";
+    host.innerHTML =
+      '<p class="k">Where this goes next</p>' +
+      '<div class="ns-grid">' +
+        EYGOV.entry.map(function (e) {
+          return '<a class="ns" style="--c:' + esc(e.tone) + '" data-e="' + esc(e.id) + '" href="' +
+            esc(EYGOV.mailto(e, "BizApps · " + e.name + ctx,
+              "Following the BizApps session, we would like to talk about a " + e.name + ".")) + '">' +
+            '<span class="w">' + esc(e.when) + "</span>" +
+            "<h5>" + esc(e.name) + "</h5>" +
+            "<p>" + esc(e.body) + "</p>" +
+            "<ul>" + e.gives.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul>" +
+            '<span class="own">Owner <b>' + esc(e.owner) + '</b><span class="go">Start the conversation &rarr;</span></span>' +
+          "</a>";
+        }).join("") +
+      "</div>";
     $$("[data-e]", host).forEach(function (a) {
-      a.addEventListener("click", function () { EYGOV.track("entry.open", { entry: a.dataset.e, client: c ? (c.realId || c.id) : null }); });
+      a.addEventListener("click", function () {
+        EYGOV.track("entry.open", { entry: a.dataset.e, client: c ? (c.realId || c.id) : null });
+      });
     });
   }
+
   function showSummary() {
+    if (!J) return;
     J.done = true;
     var c = J.c;
-    $("#jSumH").innerHTML = (icon(c.logo) ? '<img alt="" src="' + icon(c.logo) + '">' : "") + "<span>" + esc(c.name) + "</span>";
+    $("#jSumH").innerHTML = (icon(c.logo)
+        ? '<img class="jsum-lg" alt="" src="' + icon(c.logo) + '">' : "") +
+      "<span>" + esc(c.name) + "</span>";
     $("#jSumP").textContent = c.outcome;
-    $("#jSumS").innerHTML = c.stats.map(function (s) { return "<div><b>" + esc(s.v) + "</b><span>" + esc(s.l) + "</span></div>"; }).join("");
+    $("#jSumS").innerHTML = (c.stats || []).map(function (st) {
+      return '<div class="s"><div class="v">' + esc(st.v) + '</div>' +
+             '<div class="l">' + esc(st.l) + "</div></div>";
+    }).join("");
     renderEntry($("#jNext2"), c);
     EYGOV.track("journey.complete", { client: c.realId || c.id });
     $("#jSum").hidden = false;
     $("#jrny").classList.add("summary");
     $("#live").textContent = "Journey complete. " + c.name + ". " + c.outcome;
-    $$("#jDots i").forEach(function (d) { d.classList.add("done"); });
-    J.els.forEach(function (e) { e.classList.remove("now", "ahead"); e.classList.add("done"); });
-    W.setJourneyStep(c.journey.length);
-    W.focusJourney(c.id, true);
+    $$("#jDots i").forEach(function (d) { d.classList.add("done"); d.classList.remove("now"); });
+    J.els.forEach(function (el) {
+      el.classList.remove("now", "ahead"); el.classList.add("done");
+    });
+    /* pull back to hold the whole engagement in frame */
+    R.cam.distT = Math.max(78, J.L.top * 4.4 + 52);
+    R.cam.elT = 0.52;
+    dirty();
   }
   function hideSummary() {
     if (!J) return;
     J.done = false;
     $("#jSum").hidden = true;
     $("#jrny").classList.remove("summary");
-    W.focusJourney(J.c.id, false);
+    R.cam.distT = Math.max(66, J.L.top * 3.8 + 44);
+    dirty();
+    jPump();
   }
-  $("#jNext").addEventListener("click", jNext);
-  $("#jPrev").addEventListener("click", jPrev);
+
+  /* passed explicitly rather than relying on the click Event arriving in the
+     `manual` slot and happening to be truthy */
+  $("#jNext").addEventListener("click", function () { jNext(true); });
+  $("#jPrev").addEventListener("click", function () { jPrev(true); });
   $("#jAuto").addEventListener("click", function () { setAuto(!jAuto); });
   $("#jStop").addEventListener("click", function () { stopJourney(); });
-  $("#jAgain").addEventListener("click", function () { hideSummary(); jGo(0); });
+  $("#jAgain").addEventListener("click", function () { hideSummary(); jGo(0, true); });
   $("#jDone").addEventListener("click", function () { stopJourney(); });
-  $("#jOpen").addEventListener("click", function () { var cid = J.c.id; stopJourney(false); focusOn(cid); showClient(cid); });
-  $("#jDetail").addEventListener("click", function () {
-    if (!J) return;
-    if (jAuto) setAuto(false, false);
-    showSolution(J.c.journey[J.i].sid, J.c.id);
+  $("#jOpen").addEventListener("click", function () {
+    var cid = J ? J.c.id : null;
+    stopJourney(false);
+    if (cid) { focusOn(cid); showClient(cid); }
   });
 
-  /* ------------------------------------------------- fly through */
+  /* The capability behind the step: what it is, how long, what it costs, why
+     EY. During the journey this was unreachable - the dossier was closed, and
+     the node click only jumped steps - so the client could see a capability
+     named at exactly the moment of most interest and not open it. */
+  $("#jDetail").addEventListener("click", function () {
+    if (!J) return;
+    /* stop the clock: reading the commercial detail must not have the story
+       advancing underneath you */
+    if (jAuto) setAuto(false, false);
+    var st = J.c.journey[J.i];
+    showSolution(st.sid, J.c.id);
+  });
+
+  /* ----------------------------------------------------------- fly through */
   function toggleTour() {
     if (state.tour) { stopTour(); return; }
     if (J) stopJourney(false);
     closePanel();
     var i = 0;
     var advance = function () {
-      var c = C.clients[i % C.clients.length];
-      state.active = c.id; W.setSelected(c.id); markRoster(c.id);
-      W.focus(c.id, { swing: (i % 2 ? -0.45 : 0.45) });
+      focusOn(C.clients[i % C.clients.length].id);
       i++;
     };
     advance();
-    state.tour = setInterval(advance, 6200);
-    $("#btnTour").setAttribute("aria-pressed", "true");
+    state.tour = setInterval(advance, 5600);
+    $("#btnTour").classList.add("on");
     $("#btnTour").textContent = "Stop";
   }
   function stopTour() {
     if (!state.tour) return;
     clearInterval(state.tour); state.tour = null;
-    $("#btnTour").setAttribute("aria-pressed", "false");
+    $("#btnTour").classList.remove("on");
     $("#btnTour").textContent = "Fly through";
   }
   $("#btnTour").addEventListener("click", toggleTour);
+  $("#btnExit").addEventListener("click", function () { stopTour(); closePanel(); goHome(); });
 
-  /* ------------------------------------------------------- labels */
-  var host = $("#labels"), labels = {};
-  W.labelPoints().forEach(function (pt) {
-    var c = client(pt.id), ey = pt.id === "__ey";
-    var ix = ey ? "00" : "0" + (C.clients.indexOf(c) + 1);
+  /* -------------------------------------------------------------- labels */
+  /* Each landmark is signed with the client's own mark on a rotating plate.
+     The plate is a real six-face solid, and its width is derived from the
+     mark's own aspect ratio once the image reports its intrinsic size, so a
+     wide wordmark and a square device carry the same optical weight. */
+  var LBL_H = 58, LBL_MIN = 68, LBL_MAX = 148, LBL_PAD = 16;
+
+  /* Each landmark now carries its client's mark as real signage on the roof
+     and on the facade, so the floating label does not repeat it. It names the
+     landmark and gets out of the way. The previous version was a six-face CSS
+     3D plate spinning continuously above every roof: it pulled the eye off
+     the model it was labelling, and a rotating logo is not something to put
+     in front of a client. */
+  function buildLabel(cls, tone, name) {
     var e = document.createElement("div");
-    e.className = "lb" + (ey ? " ey" : "");
-    e.style.setProperty("--c", ey ? "#FFE600" : c.tone);
-    e.innerHTML = '<span class="tg"><i></i><em>' + ix + "</em>" + esc(ey ? "EY" : c.short) + '</span><span class="st"></span>';
-    host.appendChild(e);
-    labels[pt.id] = { el: e, p: pt.p };
-  });
+    e.className = "c-lbl" + (cls ? " " + cls : "");
+    e.style.setProperty("--c", tone);
+    e.innerHTML = '<div class="tag"><span class="sw"></span>' + esc(name) +
+                  '</div><div class="stem"></div>';
+    $("#labels").appendChild(e);
+    return e;
+  }
 
-  W.on("frame", function () {
-    /* place each label over its tower, then lift any that would sit on a
-       neighbour, so towers standing one behind another stay legible */
-    var placed = [];
-    Object.keys(labels).forEach(function (id) {
-      var L = labels[id], p = W.project(L.p);
-      if (!p || p.x < -100 || p.x > innerWidth + 100 || p.y < -60 || p.y > innerHeight + 60) { L.el.classList.remove("on"); return; }
-      var sel = state.active === id, show = !state.active || sel || state.hover === id;
-      L.el.classList.toggle("on", show);
-      L.el.classList.toggle("sel", sel);
-      if (!L.w) L.w = L.el.firstChild.getBoundingClientRect().width || 110;
-      placed.push({ L: L, x: p.x, y: p.y, show: show });
-    });
-    placed.sort(function (a, b) { return b.y - a.y; });
-    placed.forEach(function (a, i) {
-      if (a.show) for (var j = 0; j < i; j++) {
-        var b = placed[j];
-        if (!b.show) continue;
-        if (Math.abs(a.x - b.x) < (a.L.w + b.L.w) / 2 + 6 && Math.abs(a.y - b.y) < 34) a.y = b.y - 36;
-      }
-      a.L.el.style.transform = "translate(-50%,-100%) translate(" + a.x.toFixed(1) + "px," + a.y.toFixed(1) + "px)";
-    });
-    if (J && J.els) {
-      J.pts.forEach(function (pt, i) {
-        var p = W.project(pt), e = J.els[i];
-        if (!p || p.x < -200 || p.x > innerWidth + 200) { e.classList.remove("vis"); return; }
-        e.classList.add("vis");
-        /* cards alternate either side of their point, so neighbours never stack */
-        var left = i % 2 === 1;
-        e.style.transform = "translate(" + (left ? "calc(-100% - 14px)" : "14px") + ",-50%) translate(" + p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px)";
-      });
+  var labelEls = LMS.map(function (L) { return buildLabel("", L.c.tone, L.c.short); });
+  var hqLabel  = buildLabel("hq", "#FFE600", "EY HQ");
+
+  function place(e, p, show, sel) {
+    if (!p || p.x < -140 || p.x > R.w + 140 || p.y < -70 || p.y > R.h + 70) {
+      e.classList.remove("on"); return;
+    }
+    e.classList.toggle("on", show);
+    e.classList.toggle("sel", sel);
+    e.style.transform = "translate(-50%,-100%) translate(" +
+                        p.x.toFixed(1) + "px," + p.y.toFixed(1) + "px)";
+  }
+
+  function layoutLabels() {
+    var hqSel = state.active === "__ey";
+    place(hqLabel, R.toScreen(0, 0, SCENE.hq.top + 2.4),
+          !state.active || hqSel || state.hoverId === HQ_ID, hqSel);
+    for (var i = 0; i < LMS.length; i++) {
+      var L = LMS[i], sel = state.active === L.c.id;
+      /* while a landmark is open the others step back */
+      place(labelEls[i], R.toScreen(L.x, L.y, L.top + 2.2),
+            !state.active || sel || state.hoverId === i + 1, sel);
+    }
+  }
+
+  /* ------------------------------------------------------------ full screen */
+  var fsBtn = $("#fs");
+  function fsOn() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  fsBtn.addEventListener("click", function () {
+    if (fsOn()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else {
+      var el = document.documentElement;
+      (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
     }
   });
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(function (ev) {
+    document.addEventListener(ev, function () {
+      $("#fsTxt").textContent = fsOn() ? "Exit full screen" : "Full screen";
+      fsBtn.classList.toggle("on", fsOn());
+      setTimeout(function () { R.resize(); applyShift(); dirty(); }, 60);
+    });
+  });
 
-  /* ----------------------------------------------------- keyboard */
+  /* --------------------------------------------------------------- keyboard */
+  /* Every shortcut is guarded on the modifier keys. v1 bound bare a/d/w/s/r/f,
+     so Cmd+F blocked browser find, Cmd+A broke select-all and Cmd+R reset the
+     camera on its way out of the page. */
   document.addEventListener("keydown", function (e) {
     var t = e.target;
     if (t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable)) return;
-    if (e.metaKey || e.ctrlKey || e.altKey || document.body.classList.contains("gated")) return;
-    var k = e.key, lk = k.length === 1 ? k.toLowerCase() : k, r = W.rig, hit = true;
-    if (lk === "a") r.azT += 0.18;
-    else if (lk === "d") r.azT -= 0.18;
-    else if (lk === "w") r.elT += 0.08;
-    else if (lk === "s") r.elT -= 0.08;
-    else if (k === "+" || k === "=") r.distT *= 0.86;
-    else if (k === "-" || k === "_") r.distT *= 1.16;
-    else if (lk === "r") { if (J) stopJourney(false); closePanel(); goHome(); }
-    else if (k === "ArrowLeft") { if (J) jPrev(); else r.azT += 0.18; }
-    else if (k === "ArrowRight") { if (J) jNext(); else r.azT -= 0.18; }
-    else if (k === "ArrowUp") { if (!J) r.elT += 0.08; }
-    else if (k === "ArrowDown") { if (!J) r.elT -= 0.08; }
-    else if (k === " ") { if (J) jNext(); else if (state.active && state.active !== "__ey") startJourney(state.active); else hit = false; }
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var k = e.key, lk = k.length === 1 ? k.toLowerCase() : k;
+    var cam = R.cam, hit = true;
+
+    if (lk === "a") cam.azT += 0.18;
+    else if (lk === "d") cam.azT -= 0.18;
+    else if (lk === "w") cam.elT += 0.09;
+    else if (lk === "s") cam.elT -= 0.09;
+    else if (k === "+" || k === "=") cam.distT *= 0.86;
+    else if (k === "-" || k === "_") cam.distT *= 1.16;
+    else if (lk === "r") { closePanel(); goHome(); }
+    else if (lk === "f") { fsBtn.click(); }
+    /* While a journey is running the arrow keys belong to the story, not the
+       camera. Left and right step the narration; up and down do nothing at
+       all. Stepping and simultaneously swinging the view made it impossible
+       to skip forward without losing your place in the model. Orbit and tilt
+       stay available on A/D/W/S and the view dock. */
+    else if (k === "ArrowLeft")  { if (J) jPrev(true); else cam.azT += 0.18; }
+    else if (k === "ArrowRight") { if (J) jNext(true); else cam.azT -= 0.18; }
+    else if (k === "ArrowUp")    { if (!J) cam.elT += 0.09; }
+    else if (k === "ArrowDown")  { if (!J) cam.elT -= 0.09; }
+    else if (k === " ") { J ? jNext(true) : (state.active && startJourney(state.active)); }
     else if (k === "Escape") {
       if (J) stopJourney(false);
       else if (state.view && state.view.kind === "solution") showClient(state.view.client);
@@ -624,29 +1135,80 @@ EYGOV.gate(function () { EYGOV.track("city.open", {}); });
       else hit = false;
     } else if (k >= "1" && k <= "5") {
       var c = C.clients[+k - 1];
-      if (c) { stopTour(); if (J) stopJourney(false); focusOn(c.id); showClient(c.id); } else hit = false;
+      if (c) { stopTour(); if (J) stopJourney(false); focusOn(c.id); showClient(c.id); }
+      else hit = false;
     } else hit = false;
-    if (hit) { e.preventDefault(); stopTour(); r.clamp(); }
+
+    if (hit) { e.preventDefault(); stopTour(); cam.clamp(); dirty(); }
   });
-  addEventListener("resize", function () { setTimeout(frame, 60); });
 
-  /* --------------------------------------------------------- init */
-  buildRoster();
-  /* arrival: from high over the water, settling onto the skyline */
-  if (!REDUCED) { W.rig.dist = 760; W.rig.el = 0.55; W.rig.az = W.HOME.az - 0.6; }
-  W.home();
+  /* ------------------------------------------------------------- the loop */
+  /* Renders only while something is changing. v1 ran requestAnimationFrame
+     flat out with no visibilitychange handler, so the city kept drawing at
+     full rate in a background tab. */
+  var needFrames = 0, running = true;
+  function dirty(n) { needFrames = Math.max(needFrames, n === undefined ? 90 : n); }
 
-  /* deep link: city.html?c=<client>&s=<solution> */
-  var q = new URLSearchParams(location.search), qc = q.get("c"), qs = q.get("s");
-  if (qc && client(qc)) {
-    setTimeout(function () { focusOn(qc); if (qs && sol(qs)) showSolution(qs, qc); else showClient(qc); }, REDUCED ? 0 : 900);
+  function frame() {
+    if (!running) return;
+    R.cam.step(REDUCED ? 1 : 0.11);
+    R.cam.clamp();
+    if (needFrames > 0 || !R.cam.settled()) {
+      R.resize();
+      R.draw(SHADOW_R);
+      layoutLabels();
+      layoutJourney();
+      if (R.cam.settled()) needFrames--;
+      else needFrames = Math.max(needFrames, 2);
+    }
+    requestAnimationFrame(frame);
   }
 
-  window.BizApps = {
-    client: function (id) { focusOn(id); showClient(id); },
-    solution: showSolution, journey: startJourney, home: function () { closePanel(); goHome(); },
-    world: function () { return W; },
-  };
+  document.addEventListener("visibilitychange", function () {
+    running = !document.hidden;
+    if (running) {
+      dirty();
+      requestAnimationFrame(frame);
+      /* A hidden tab stops firing frames. Without resetting the clock the
+         first frame back carries the whole away-time and the journey jumps a
+         step the moment you return to it. */
+      if (J) { J.t0 = performance.now(); J.acc = 0; }
+      jPump();
+    }
+  });
+  window.addEventListener("resize", function () { R.resize(); applyShift(); dirty(); });
+
+  /* ----------------------------------------------------------------- init */
+  $("#eyebrow").textContent = C.eyebrow;
+  $("#title").innerHTML = esc(C.title) + " <em>" + esc(C.titleAccent) + "</em>";
+  $("#lede").textContent = C.lede;
+  $("#note").textContent = "Drag to orbit · scroll to zoom · click a landmark";
+  buildRoster();
+  R.resize();
+  goHome(true);
+
+  /* arrival: open a touch higher and wider, then settle into the home view */
+  if (!REDUCED) {
+    R.cam.dist = HOME.dist * 1.55;
+    R.cam.el = Math.min(R.cam.maxEl, HOME.el + 0.34);
+    R.cam.az = HOME.az - 0.42;
+  }
+  dirty(240);
+  requestAnimationFrame(frame);
+
+  
+
+  /* deep link: city.html?c=<client>&s=<solution> */
+  (function () {
+    var q = new URLSearchParams(location.search);
+    var cid = q.get("c"), sid = q.get("s");
+    if (cid && client(cid)) {
+      setTimeout(function () {
+        focusOn(cid);
+        if (sid && sol(sid)) showSolution(sid, cid); else showClient(cid);
+      }, REDUCED ? 0 : 900);
+    }
+  })();
 })();
 </script>
 </body>
