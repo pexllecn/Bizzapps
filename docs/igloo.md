@@ -5,9 +5,9 @@ the lagoon, with the skyline all the way round them on the walls and the city se
 
 | Surface | Page | What it does |
 | --- | --- | --- |
-| Walls | `igloo.html` | One continuous 360° canvas. The city turns slowly round the room by itself (2° a second, a full turn every three minutes) and holds still while a landmark is on the front wall. The skyline all round the room, the five landmark towers named over their tops, the brand four times round so everyone has it in front of them. Selecting a landmark turns the city until it is on the front wall and opens its panel and journey beside it. |
-| Floor | `igloo-floor.html` | The city from directly above, EY's platform under the audience's feet, lit rooftops and all. Turns with the walls, so the top of the floor is always the front wall. Toward its edge it fades into the colours along the bottom of the walls, bearing by bearing, so floor and walls meet as one picture. The name of what is on screen reads upright from all four sides. Takes no input. |
-| Controller | `igloo-control.html` | For the facilitator's phone or laptop. Landmarks, journey steps, overview, the self-running tour, auto-rotate on or off, time of night, turning the room, the join card and reloading the walls. Behind the presentation gate. |
+| Walls | `igloo.html` | One continuous 360° canvas. The skyline all round the room, the five landmark towers named over their tops, the brand four times round so everyone has it in front of them. Selecting a landmark turns the city until it is on the front wall and opens its panel and journey beside it. |
+| Floor | `igloo-floor.html` | The city from directly above, EY's platform under the audience's feet. Follows the walls, including their turn, so the top of the floor is always the front wall. The name of what is on screen reads upright from all four sides. Takes no input. |
+| Controller | `igloo-control.html` | For the facilitator's phone or laptop. Landmarks, journey steps, overview, the self-running tour, time of night, turning the room, the join card and reloading the walls. Behind the presentation gate. |
 
 The walls own the room: they decide what is on screen and publish it; the controller only sends
 commands and the floor only follows. There is never a second version of what the room is showing.
@@ -39,8 +39,6 @@ Walls (`igloo.html`):
 | `room` | `main` | Room code shared with the floor and the controller |
 | `tour` | `1` | Run the city by itself until the controller takes over (`0` to start still) |
 | `idle` | `180` | Seconds without a command before the tour resumes |
-| `spin` | `2` | Degrees a second the room turns by itself; `0` to stand still |
-| `hold` | `1` | Stop turning while a landmark is on the front wall; `0` keeps turning |
 | `card` | `1` | Show the join card (controller and floor addresses) for the first 30 seconds |
 | `q` | `high` | `high` / `mid` / `low` |
 | `face` | by `q` (2048 / 1536 / 1024) | Cap on the cube-map face size |
@@ -50,7 +48,7 @@ Walls (`igloo.html`):
 | `pointer` | `0` | `1` shows the mouse cursor (hidden by default on the walls) |
 | `debug` | `0` | `1` shows frame rate and cube-map size |
 
-Floor (`igloo-floor.html`): `room`, `dim` (0.2–1, brightness), `rot` (degrees), `scale` (size of the city on the floor), `blend` (0.2–0.95, default 0.6: where the city starts fading into the walls' colours, as a fraction of its radius), `q` (default `mid`).
+Floor (`igloo-floor.html`): `room`, `dim` (0.2–1, brightness), `rot` (degrees), `scale` (size of the circle), `q` (default `mid`).
 
 Controller (`igloo-control.html`): `room`.
 
@@ -63,16 +61,6 @@ at the edges of the projectors. Turning the room is a uniform, not a re-render o
 The cube face is sized to the canvas (about a quarter of its width) and scaled down automatically
 if the frame rate drops. Bloom runs at a third of the resolution and nothing uses `backdrop-filter`
 over the canvas.
-
-## How the floor meets the walls
-
-Every couple of seconds the walls read the row of pixels along their bottom edge, straight after drawing
-it, and average it into 48 colours by world bearing. That goes out with the room's state. The floor lays
-those colours round its edge as a ring that turns with the room (the colour under each wall is the colour
-at the foot of that wall), fades the city into it, and tunes its own water and streets until the pixels it
-actually draws match the walls' average tone. This works for night, blue hour and dawn with no
-settings, and follows a selection as it lights up. It needs nothing but the room channel. With the floor
-and walls in different browsers and no key store, the floor falls back to a neutral dusk tone.
 
 ## Joining the room across networks
 
@@ -95,7 +83,6 @@ after the last write. A wall that opens never replays commands sent before it op
 - **Black or flickering walls.** Try `?q=mid` or `?face=1024`, then `?msaa=0`. Add `?debug=1` to see the frame rate. If the GPU driver resets, the page reloads itself.
 - **Chosen landmark not on the front wall.** Set `front`.
 - **Floor turned against the walls.** Set `rot` on the floor.
-- **The turning is distracting during a talk.** Turn off Auto-rotate on the controller, or open the walls with `?spin=0`.
 - **Controller says "Walls not open".** The walls have not published in 30 seconds: check the wall layer is running and uses the same `room`.
 - **Controller says "store not answering".** The key store is configured but failing; check it in the Vercel dashboard.
 

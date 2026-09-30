@@ -11,16 +11,12 @@
 <!--
   BizApps City for the Igloo: the floor. The city from directly above, the
   room standing on EY's platform at its centre. Takes no input; it follows
-  the walls, including their turn, so the top of the floor is always the
-  front wall. The city fades out toward the edge into the colours along the
-  bottom of the walls, bearing by bearing, so floor and walls meet as one
-  picture. Parameters: room=main, dim=1 (0.2-1), rot=0 (degrees, to square
-  the floor with the walls), scale=1, blend=0.6 (where the fade starts, as a
-  fraction of the radius), q=mid.
+  the walls, including their turn, so north on the floor is always the front
+  wall. Parameters: room=main, dim=1 (0.2-1), rot=0 (degrees, to square the
+  floor with the walls), scale=1, q=mid.
 -->
-<div class="fl" id="fl">
-  <div class="edge" id="edge"></div>
-  <div class="floor" id="floor"><canvas id="gl"></canvas></div>
+<div class="floor" id="floor">
+  <canvas id="gl"></canvas>
   <div class="read" id="read"></div>
 </div>
 <script src="assets/ey-content.js"></script>
@@ -36,76 +32,43 @@
   var num = function (k, d) { var v = parseFloat(q.get(k)); return isFinite(v) ? v : d; };
   var BIZ = window.BIZ, C = BIZ.city;
   var esc = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
-  var fl = document.getElementById("fl"), floor = document.getElementById("floor"), edge = document.getElementById("edge");
+  var floor = document.getElementById("floor");
   function size() {
     var s = Math.min(innerWidth, innerHeight) * num("scale", 1);
     floor.style.width = s + "px"; floor.style.height = s + "px";
   }
   size();
   addEventListener("resize", size);
-  var B = Math.max(0.2, Math.min(0.95, num("blend", 0.6)));
-  var mask = "radial-gradient(circle closest-side, #000 " + (B * 100).toFixed(0) + "%, rgba(0,0,0,.55) " + ((B + (1 - B) * 0.5) * 100).toFixed(0) + "%, transparent 100%)";
-  floor.style.webkitMaskImage = mask; floor.style.maskImage = mask;
-  fl.style.opacity = Math.max(0.2, Math.min(1, num("dim", 1)));
+  floor.style.opacity = Math.max(0.2, Math.min(1, num("dim", 1)));
+  if (!window.EYCITY || !EYCITY.supported()) return;
+  var W = EYCITY.mount(document.getElementById("gl"), BIZ, { mode: "floor", quality: q.get("q") || "mid" });
   var ROT = num("rot", 0) * Math.PI / 180;
-
-  // the colours along the bottom of the walls, by bearing. On the floor, the
-  // bearing theta sits at yaw - theta clockwise from the top, so the list runs
-  // backwards from bearing 0 and the whole ring turns with the room.
-  var lastEdge = "", tone = null, W = null;
-  function paintEdge(hex) {
-    var key = hex ? hex.join("") : "";
-    if (!hex || !hex.length || key === lastEdge) return;
-    lastEdge = key;
-    var n = hex.length, stops = [];
-    for (var k = 0; k <= n; k++) stops.push("#" + hex[(n - k) % n] + " " + (k / n * 360).toFixed(2) + "deg");
-    edge.style.background = "conic-gradient(from 0deg, " + stops.join(",") + ")";
-    // and the water under the city takes their average, so nothing reads as a disc
-    var avg = [0, 0, 0];
-    hex.forEach(function (x) { for (var j = 0; j < 3; j++) avg[j] += parseInt(x.substr(j * 2, 2), 16) / n; });
-    tone = avg;
-    if (W) W.setFloorTone(avg);
-    fl.style.background = "rgb(" + avg.map(Math.round).join(",") + ")";
-  }
+  var yaw = 0, yawT = 0;
 
   // the same words at all four sides, upright from each, so nobody has to walk round
   var read = document.getElementById("read");
   function words(st) {
     var c = st && st.id && st.id !== "__ey" ? C.clients.filter(function (x) { return x.id === st.id; })[0] : null;
     var t = c ? '<i style="--c:' + c.tone + '">●</i> ' + esc(c.name) : st && st.id === "__ey" ? "<i>●</i> EY · the hub" : "BizApps <i>City</i>";
-    if (t === read._t) return;
-    read._t = t;
     read.innerHTML = [0, 90, 180, 270].map(function (a) {
-      return '<div style="transform:rotate(' + a + 'deg)"><span>' + t + "</span></div>";
+      return '<div style="position:absolute;inset:0;transform:rotate(' + a + 'deg)"><span>' + t + "</span></div>";
     }).join("");
   }
   words(null);
 
   var room = ROOM.connect("floor");
-  W = window.EYCITY && EYCITY.supported() ? EYCITY.mount(document.getElementById("gl"), BIZ, { mode: "floor", quality: q.get("q") || "mid" }) : null;
-  // follow the walls' turn: their target, carried forward at their rate, eased as they ease it
-  var yaw = null, base = 0, rate = 0, baseAt = performance.now();
   room.on("state", function (st) {
-    if (typeof st.yaw === "number") { base = st.yaw; baseAt = performance.now(); if (yaw === null) yaw = base; }
-    rate = +st.rate || 0;
-    paintEdge(st.edge);
-    words(st);
-    if (!W) return;
     W.setSelected(st.id || null);
+    if (typeof st.yaw === "number") yawT = st.yaw;
     if (st.time && EYCITY.TIMES[st.time] && st.time !== W.timeKey) { W.timeKey = st.time; W.setTime(st.time); }
+    words(st);
   });
-  var last = performance.now();
-  (function loop(now) {
+  (function loop() {
     requestAnimationFrame(loop);
-    var dt = Math.min(0.1, (now - last) / 1000); last = now;
-    var target = base + rate * (now - baseAt) / 1000;
-    if (yaw === null) yaw = target;
-    var d = Math.atan2(Math.sin(target - yaw), Math.cos(target - yaw));
-    yaw += d * (1 - Math.exp(-1.6 * dt));
-    var a = yaw + ROT;
-    if (W) W.setFloorYaw(a);
-    edge.style.transform = "translate(-50%,-50%) rotate(" + a.toFixed(5) + "rad)";
-  })(last);
+    var d = Math.atan2(Math.sin(yawT - yaw), Math.cos(yawT - yaw));
+    yaw += d * 0.03;
+    W.setFloorYaw(yaw + ROT);
+  })();
 })();
 </script>
 </body>
